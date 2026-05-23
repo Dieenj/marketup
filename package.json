@@ -1,0 +1,32 @@
+{
+  "name": "marketup",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Personal Storefront SaaS — create your own online shop in minutes",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter=api",
+    "dev:web": "turbo run dev --filter=web",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml}\"",
+    "db:generate": "turbo run db:generate --filter=@marketup/database",
+    "db:migrate": "turbo run db:migrate --filter=@marketup/database",
+    "db:studio": "pnpm --filter=@marketup/database studio",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

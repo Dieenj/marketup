@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9
+        
+    - name: Set node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Generate Prisma Client
+      run: pnpm run db:generate
+
+    - name: Build
+      run: pnpm run build
+
+    - name: Test Build API Docker Image
+      run: docker build -f apps/api/Dockerfile -t marketup-api-test .
+
+    - name: Test Build Web Docker Image
+      run: docker build -f apps/web/Dockerfile -t marketup-web-test .

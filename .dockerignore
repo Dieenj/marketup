@@ -1,0 +1,38 @@
+# Local development folders
+node_modules/
+.next/
+dist/
+.turbo/
+out/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Version control
+.git/
+.gitignore
+.github/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
