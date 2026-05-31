@@ -99,7 +99,7 @@ export default function CategoriesPage() {
     },
   });
 
-  // Auto-generate slug from name
+  // Tự động tạo slug từ tên danh mục
   const handleNameChange = (name: string) => {
     form.setValue('name', name);
     const slug = name

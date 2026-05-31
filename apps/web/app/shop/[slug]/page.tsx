@@ -97,7 +97,7 @@ export default function StorefrontPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Phần ảnh bìa Hero Section */}
       <section className="bg-[#111111] text-white px-4 py-20 text-center">
         <div className="container mx-auto max-w-2xl space-y-4">
           <h1 className="text-5xl font-extrabold tracking-tight">{shop.name}</h1>
@@ -129,7 +129,7 @@ export default function StorefrontPage() {
       </section>
 
       <div className="container mx-auto px-4 py-10 space-y-8">
-        {/* Search & Filters */}
+        {/* Phần tìm kiếm và bộ lọc sản phẩm */}
         <section className="space-y-4">
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -170,7 +170,7 @@ export default function StorefrontPage() {
           )}
         </section>
 
-        {/* Product Grid */}
+        {/* Lưới hiển thị danh sách sản phẩm */}
         <section>
           {filteredProducts.length === 0 ? (
             <div className="py-24 text-center">
@@ -199,14 +199,14 @@ export default function StorefrontPage() {
                 const availableStock = hasVariants ? variantStock : Number(product.stock || 0);
                 const isOutOfStock = availableStock <= 0;
                 
-                // Calculate price range from variants
+                // Tính toán khoảng giá từ các biến thể (variants)
                 const prices = (product.variants || [])
                   .filter(v => v.price != null)
                   .map(v => Number(v.price));
                 const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                 const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
                 
-                // Calculate compare price for discount badge
+                // Tính toán giá so sánh để hiển thị nhãn giảm giá (discount badge)
                 const comparePrices = (product.variants || [])
                   .filter(v => v.comparePrice != null && Number(v.comparePrice) > 0)
                   .map(v => Number(v.comparePrice));
@@ -221,9 +221,9 @@ export default function StorefrontPage() {
                     key={product.id}
                     className="group bg-white rounded-2xl overflow-hidden flex flex-col border border-border/60 hover:border-foreground/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300"
                   >
-                    {/* Image */}
+                    {/* Hình ảnh sản phẩm */}
                     <Link href={`/shop/${slug}/products/${product.id}`} className="block relative">
-                      <div className="aspect-[4/3] relative bg-[#f5f5f5] overflow-hidden">
+                      <div className="aspect-4/3 relative bg-[#f5f5f5] overflow-hidden">
                         {product.imageUrl ? (
                           <img
                             src={product.imageUrl}
@@ -235,7 +235,7 @@ export default function StorefrontPage() {
                             <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
                           </div>
                         )}
-                        {/* Badges */}
+                        {/* Nhãn giảm giá / hết hàng */}
                         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                           {product.category && (
                             <span className="text-[10px] font-semibold uppercase tracking-wide bg-black/60 text-white backdrop-blur-sm px-2.5 py-0.5 rounded-full">
@@ -258,7 +258,7 @@ export default function StorefrontPage() {
                       </div>
                     </Link>
 
-                    {/* Info */}
+                    {/* Thông tin sản phẩm */}
                     <div className="flex flex-col flex-1 p-4 gap-3">
                       <Link href={`/shop/${slug}/products/${product.id}`}>
                         <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors">
@@ -266,7 +266,7 @@ export default function StorefrontPage() {
                         </h3>
                       </Link>
 
-                      {/* Price display */}
+                      {/* Giá bán hiển thị */}
                       <div className="flex items-baseline gap-1.5 mt-auto">
                         {minPrice === maxPrice ? (
                           <>

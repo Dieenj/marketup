@@ -14,7 +14,7 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to add the JWT token to headers
+// Thêm một request interceptor để đính kèm JWT token vào các headers
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {

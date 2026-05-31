@@ -49,7 +49,7 @@ export default function DashboardReviewsPage() {
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  // 1. Fetch Seller's Shop
+  // 1. Lấy thông tin cửa hàng của người bán
   const { data: shop } = useQuery({
     queryKey: ['my-shop'],
     queryFn: async () => {
@@ -59,7 +59,7 @@ export default function DashboardReviewsPage() {
     enabled: !!user,
   });
 
-  // 2. Fetch Reviews for Moderation
+  // 2. Lấy danh sách đánh giá để kiểm duyệt
   const { data: reviews, isLoading } = useQuery<Review[]>({
     queryKey: ['manage-reviews', shop?.id, ratingFilter, statusFilter],
     queryFn: async () => {
@@ -72,7 +72,7 @@ export default function DashboardReviewsPage() {
     enabled: !!shop?.id,
   });
 
-  // 3. Fetch Shop General Ratings stats
+  // 3. Lấy thông số điểm đánh giá chung của cửa hàng
   const { data: stats } = useQuery({
     queryKey: ['shop-stats', shop?.id],
     queryFn: async () => {
@@ -82,7 +82,7 @@ export default function DashboardReviewsPage() {
     enabled: !!shop?.id,
   });
 
-  // 4. Mutations
+  // 4. Các mutation để cập nhật dữ liệu (duyệt/trả lời/xóa)
   const approveMutation = useMutation({
     mutationFn: async (reviewId: string) => {
       return api.patch(`/reviews/${reviewId}/approve`);
@@ -154,7 +154,7 @@ export default function DashboardReviewsPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Các thẻ thống kê đánh giá */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
@@ -202,7 +202,7 @@ export default function DashboardReviewsPage() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Bộ lọc đánh giá */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-border/60 rounded-2xl p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground mr-1" />
@@ -257,7 +257,7 @@ export default function DashboardReviewsPage() {
         </div>
       </div>
 
-      {/* Reviews List */}
+      {/* Danh sách các đánh giá */}
       {!reviews || reviews.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 py-20 text-center">
           <MessageSquare className="h-12 w-12 text-muted-foreground/40 mb-4" />
@@ -363,7 +363,7 @@ export default function DashboardReviewsPage() {
                 </p>
               )}
 
-              {/* Replying input area */}
+              {/* Khu vực nhập câu trả lời của người bán */}
               {replyingId === rev.id ? (
                 <div className="bg-[#fafafa] border rounded-xl p-4 space-y-3 ml-6 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">

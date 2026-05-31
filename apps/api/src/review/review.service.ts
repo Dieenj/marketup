@@ -19,15 +19,15 @@ export class ReviewService {
       throw new BadRequestException('Rating must be between 1 and 5');
     }
 
-    // Verify purchase
+    // Xác thực lượt mua hàng
     let isVerified = false;
     
-    // Find matching completed orders for this email
+    // Tìm kiếm các đơn hàng đã hoàn thành khớp với email này
     const orders = await this.prisma.order.findMany({
       where: {
         buyerEmail: buyerEmail,
         shopId: shopId,
-        status: 'DELIVERED', // Must be delivered successfully
+        status: 'DELIVERED', // Phải ở trạng thái đã giao hàng thành công
       },
       include: {
         items: true,
@@ -36,12 +36,12 @@ export class ReviewService {
 
     if (orders.length > 0) {
       if (productId) {
-        // Must contain an OrderItem with this productId
+        // Phải chứa một chi tiết đơn hàng (OrderItem) khớp với productId này
         isVerified = orders.some((order) =>
           order.items.some((item) => item.productId === productId),
         );
       } else {
-        // For general shop review, any delivered order in this shop is enough
+        // Đối với đánh giá chung của cửa hàng, chỉ cần có bất kỳ đơn hàng nào đã giao tại cửa hàng này
         isVerified = true;
       }
     }
@@ -55,7 +55,7 @@ export class ReviewService {
         buyerName,
         buyerEmail,
         isVerified,
-        status: 'PENDING', // All reviews start as PENDING for seller moderation
+        status: 'PENDING', // Tất cả đánh giá đều bắt đầu với trạng thái PENDING để người bán kiểm duyệt
       },
     });
   }
@@ -131,7 +131,7 @@ export class ReviewService {
   }
 
   async findForModeration(userId: string, shopId: string, query: { rating?: number; status?: string }) {
-    // Verify shop ownership
+    // Xác thực quyền sở hữu cửa hàng
     const shop = await this.prisma.shop.findUnique({
       where: { id: shopId },
     });

@@ -33,7 +33,7 @@ export class ProductService {
       throw new ForbiddenException('You do not own this shop');
     }
 
-    // Upload multiple images
+    // Upload nhiều hình ảnh sản phẩm lên Cloudinary
     let imageUrls: string[] = [];
     if (images && images.length > 0) {
       imageUrls = await Promise.all(
@@ -65,7 +65,7 @@ export class ProductService {
       throw new BadRequestException('Invalid variants format');
     }
 
-    // Validate: Product must have at least one variant
+    // Kiểm tra hợp lệ: Sản phẩm phải có ít nhất một biến thể (variant)
     if (!Array.isArray(variants) || variants.length === 0) {
       throw new BadRequestException('Product must have at least one variant');
     }
@@ -95,7 +95,7 @@ export class ProductService {
       data: {
         ...productData,
         shopId,
-        imageUrl: imageUrls[0] || null, // First image as main
+        imageUrl: imageUrls[0] || null, // Lấy ảnh đầu tiên làm ảnh đại diện chính
         images: imageUrls,
         attributes:
           attributes.length > 0
@@ -172,7 +172,7 @@ export class ProductService {
       throw new ForbiddenException('Access denied');
     }
 
-    // Upload new images if provided
+    // Tải lên các hình ảnh mới nếu được cung cấp
     let imageUrls = product.images;
     let imageUrl = product.imageUrl;
     if (images && images.length > 0) {
@@ -191,7 +191,7 @@ export class ProductService {
     const rawAttr = attributesRaw ?? _attrField;
     const rawVar = variantsRaw ?? _varField;
 
-    // Replace attributes & variants if provided
+    // Thay thế các thuộc tính và biến thể sản phẩm nếu được cung cấp
     if (rawAttr !== undefined) {
       const attributes: CreateAttributeDto[] = JSON.parse(rawAttr);
       await this.prisma.productAttribute.deleteMany({
@@ -209,36 +209,66 @@ export class ProductService {
     }
 
     if (rawVar !== undefined) {
-      const variants: CreateVariantDto[] = JSON.parse(rawVar);
+      const incomingVariants: (CreateVariantDto & { id?: string })[] = JSON.parse(rawVar);
 
-      // Validate: Product must have at least one variant
-      if (variants.length === 0) {
+      // Kiểm tra hợp lệ: Sản phẩm phải có ít nhất một biến thể (variant)
+      if (incomingVariants.length === 0) {
         throw new BadRequestException('Product must have at least one variant');
       }
 
-      await this.prisma.productVariant.deleteMany({ where: { productId: id } });
-      if (variants.length > 0) {
-        await this.prisma.productVariant.createMany({
-          data: variants.map((v) => {
-            const price =
-              v.price !== undefined && v.price !== null
-                ? Number(v.price)
-                : undefined;
-            if (price === undefined || Number.isNaN(price)) {
-              throw new BadRequestException(
-                'Each variant must have a valid price',
-              );
-            }
-            return {
-              label: v.label,
-              options: v.options,
-              price: price,
-              stock: Number(v.stock ?? 0),
-              sku: v.sku ?? null,
-              productId: id,
-            };
-          }),
+      // Lấy tất cả các biến thể hiện có của sản phẩm này
+      const existingVariants = await this.prisma.productVariant.findMany({
+        where: { productId: id },
+      });
+
+      const incomingIds = incomingVariants.map((v) => v.id).filter(Boolean) as string[];
+
+      // Các biến thể cần xóa là các biến thể có trong DB nhưng không có trong danh sách gửi lên
+      const idsToDelete = existingVariants
+        .map((v) => v.id)
+        .filter((dbId) => !incomingIds.includes(dbId));
+
+      if (idsToDelete.length > 0) {
+        await this.prisma.productVariant.deleteMany({
+          where: { id: { in: idsToDelete } },
         });
+      }
+
+      // Cập nhật hoặc tạo mới các biến thể được gửi lên
+      for (const v of incomingVariants) {
+        const price =
+          v.price !== undefined && v.price !== null
+            ? Number(v.price)
+            : undefined;
+        if (price === undefined || Number.isNaN(price)) {
+          throw new BadRequestException(
+            'Each variant must have a valid price',
+          );
+        }
+
+        const variantData = {
+          label: v.label,
+          options: v.options as any,
+          price: price,
+          stock: Number(v.stock ?? 0),
+          sku: v.sku ?? null,
+        };
+
+        if (v.id) {
+          // Cập nhật biến thể hiện có
+          await this.prisma.productVariant.update({
+            where: { id: v.id },
+            data: variantData,
+          });
+        } else {
+          // Tạo biến thể mới
+          await this.prisma.productVariant.create({
+            data: {
+              ...variantData,
+              productId: id,
+            },
+          });
+        }
       }
     }
 

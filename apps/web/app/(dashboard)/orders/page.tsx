@@ -51,8 +51,6 @@ interface Order {
   shippingCity?: string;
   totalAmount: number | string;
   subtotal: number | string;
-  paymentStatus: string;
-  paymentMethod?: string;
   status: string;
   items?: OrderItem[];
 }
@@ -135,7 +133,6 @@ export default function OrdersPage() {
               <TableHead>Date</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Total</TableHead>
-              <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -143,7 +140,7 @@ export default function OrdersPage() {
           <TableBody>
             {orders?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-48 text-center">
+                <TableCell colSpan={6} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <ShoppingCart className="h-10 w-10 mb-1" />
                     <p className="font-medium">No orders yet</p>
@@ -163,18 +160,6 @@ export default function OrdersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="font-semibold">${Number(order.totalAmount).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        order.paymentStatus === 'PAID'
-                          ? 'text-green-600 border-green-200 bg-green-50'
-                          : ''
-                      }
-                    >
-                      {order.paymentStatus}
-                    </Badge>
-                  </TableCell>
                   <TableCell>
                     <Badge className={statusColors[order.status] || ''}>{order.status}</Badge>
                   </TableCell>
@@ -216,7 +201,7 @@ export default function OrdersPage() {
         </Table>
       </div>
 
-      {/* Order Detail Dialog */}
+      {/* Hộp thoại chi tiết đơn hàng */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
         <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>

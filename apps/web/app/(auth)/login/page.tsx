@@ -55,9 +55,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left branding panel */}
+      {/* Panel thương hiệu bên trái */}
       <div className="hidden lg:flex lg:w-[480px] xl:w-[560px] flex-col bg-[#111111] text-white p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.06)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.06)_0%,transparent_60%)]" />
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-white flex items-center justify-center">
@@ -77,7 +77,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right form panel */}
+      {/* Panel form đăng nhập bên phải */}
       <div className="flex-1 flex items-center justify-center p-6 bg-[#fafafa]">
         <div className="w-full max-w-[400px]">
           <div className="lg:hidden flex items-center gap-2 mb-8">

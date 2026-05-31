@@ -1,5 +1,5 @@
-// This is your Prisma schema file
-// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Đây là file schema Prisma của bạn
+// Tìm hiểu thêm trong tài liệu: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -11,7 +11,7 @@ datasource db {
 }
 
 // ============================================================
-// Enums
+// Các Enum
 // ============================================================
 
 enum Role {
@@ -20,28 +20,17 @@ enum Role {
 }
 
 enum OrderStatus {
-  PENDING    // Awaiting confirmation
-  CONFIRMED  // Confirmed
-  PROCESSING // Processing
-  SHIPPING   // Shipping
-  DELIVERED  // Delivered
-  CANCELLED  // Cancelled
+  PENDING    // Đang chờ xác nhận
+  CONFIRMED  // Đã xác nhận
+  PROCESSING // Đang xử lý
+  SHIPPING   // Đang giao hàng
+  DELIVERED  // Đã giao hàng
+  CANCELLED  // Đã hủy
 }
 
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum PaymentMethod {
-  STRIPE
-  COD
-}
 
 // ============================================================
-// Models
+// Các Model
 // ============================================================
 
 model User {
@@ -55,7 +44,7 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relations
+  // Các mối quan hệ
   shop Shop?
 
   @@map("users")
@@ -75,7 +64,7 @@ model Shop {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
+  // Các mối quan hệ
   owner      User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId    String       @unique
   products   Product[]
@@ -93,7 +82,7 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
+  // Các mối quan hệ
   shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shopId    String
   products  Product[]
@@ -112,7 +101,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
+  // Các mối quan hệ
   shop        Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shopId      String
   category    Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -129,35 +118,32 @@ model Order {
   id              String        @id @default(cuid())
   orderNumber     String        @unique // VD: ORD-2024-001
   
-  // Buyer info (guest checkout - không cần account)
+  // Thông tin người mua (thanh toán khách - không cần tài khoản)
   buyerName       String
   buyerEmail      String
   buyerPhone      String
   
-  // Shipping
+  // Giao hàng
   shippingAddress String
   shippingCity    String
   shippingDistrict String?
   shippingNote    String?
   
-  // Pricing
+  // Giá cả
   subtotal        Decimal       @db.Decimal(12, 2)
   shippingFee     Decimal       @default(0) @db.Decimal(12, 2)
   discount        Decimal       @default(0) @db.Decimal(12, 2)
   totalAmount     Decimal       @db.Decimal(12, 2)
   
-  // Status
+  // Trạng thái
   status          OrderStatus   @default(PENDING)
-  paymentStatus   PaymentStatus @default(PENDING)
-  paymentMethod   PaymentMethod @default(COD)
-  stripePaymentId String?
   
-  // Timestamps
+  // Mốc thời gian
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   deliveredAt     DateTime?
 
-  // Relations
+  // Các mối quan hệ
   shop            Shop          @relation(fields: [shopId], references: [id], onDelete: Restrict)
   shopId          String
   items           OrderItem[]
@@ -171,9 +157,9 @@ model OrderItem {
   priceAtPurchase  Decimal         @db.Decimal(12, 2)
   productName      String
   productImage     String?
-  variantLabel     String?         // Snapshot: "Size: M / Color: Red"
+  variantLabel     String?         // Lưu ảnh chụp (Snapshot): "Size: M / Color: Red"
 
-  // Relations
+  // Các mối quan hệ
   order            Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId          String
   product          Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -186,8 +172,8 @@ model OrderItem {
 
 model ProductAttribute {
   id        String   @id @default(cuid())
-  name      String   // "Size", "Color", "Material"
-  options   String[] // ["S", "M", "L", "XL"]
+  name      String   // Ví dụ: "Kích cỡ", "Màu sắc", "Chất liệu"
+  options   String[] // Ví dụ: ["S", "M", "L", "XL"]
   createdAt DateTime @default(now())
 
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -198,13 +184,13 @@ model ProductAttribute {
 
 model ProductVariant {
   id           String   @id @default(cuid())
-  label        String   // "Size: M / Color: Red" or "Default" if no variants
-  options      Json     // {"Size": "M", "Color": "Red"} or {}
+  label        String   // Ví dụ: "Size: M / Color: Red" hoặc "Mặc định" nếu không có biến thể
+  options      Json     // Ví dụ: {"Size": "M", "Color": "Red"} hoặc {}
   price        Decimal  @db.Decimal(12, 2)
   comparePrice Decimal? @db.Decimal(12, 2)
   stock        Int      @default(0)
   sku          String?
-  isDefault    Boolean  @default(false) // Default variant to display
+  isDefault    Boolean  @default(false) // Biến thể mặc định để hiển thị
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -217,17 +203,17 @@ model ProductVariant {
 
 model Review {
   id           String   @id @default(cuid())
-  rating       Int      // 1 to 5 stars
+  rating       Int      // Từ 1 đến 5 sao
   comment      String?  @db.Text
   buyerName    String
   buyerEmail   String
   isVerified   Boolean  @default(false)
-  status       String   @default("PENDING") // PENDING, APPROVED
+  status       String   @default("PENDING") // PENDING (Chờ duyệt), APPROVED (Đã duyệt)
   sellerReply  String?  @db.Text
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relations
+  // Các mối quan hệ
   shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shopId       String
   product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)

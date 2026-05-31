@@ -10,8 +10,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/database/package.json ./packages/database/
 COPY apps/api/package.json ./apps/api/
 
-# Install workspace dependencies
-RUN pnpm install --frozen-lockfile
+# Install workspace dependencies (ignore scripts — postinstall needs prisma schema which isn't copied yet)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Build the NestJS application
 FROM node:20-alpine AS builder
@@ -38,8 +38,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Copy pruned workspace node_modules and prisma client
+# Copy root node_modules (.pnpm contains actual package files)
 COPY --from=builder /app/node_modules ./node_modules
+# Copy api's own node_modules (pnpm workspace symlinks point into .pnpm above)
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/packages/database ./packages/database
 
 # Copy built API dist folder and package JSON

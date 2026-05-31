@@ -57,11 +57,11 @@ export default function CheckoutPage() {
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof checkoutSchema>) => {
-      // 1. Get shopId from slug first (or we could have it in cart items)
+      // 1. Lấy shopId từ slug trước (hoặc lấy từ cart items)
       const shopRes = await api.get(`/shops/${slug}`);
       const shopId = shopRes.data.id;
 
-      // 2. Format order items
+      // 2. Định dạng danh sách các chi tiết đơn hàng (order items)
       const orderItems = items.map(item => ({
         productId: item.id,
         quantity: item.quantity,
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
         ...(item.variantLabel ? { variantLabel: item.variantLabel } : {}),
       }));
 
-      // 3. Create order
+      // 3. Gọi API tạo đơn hàng mới
       return api.post('/orders', {
         ...values,
         shopId,
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Left Side: Form */}
+        {/* Phía bên trái: Form nhập thông tin mua hàng */}
         <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Checkout</h1>
@@ -219,7 +219,7 @@ export default function CheckoutPage() {
           </Form>
         </div>
 
-        {/* Right Side: Summary */}
+        {/* Phía bên phải: Tóm tắt thông tin đơn hàng và tổng tiền */}
         <div className="space-y-8">
            <Card className="sticky top-24 border-2 shadow-lg">
              <CardHeader>

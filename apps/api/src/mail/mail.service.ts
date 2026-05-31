@@ -18,7 +18,7 @@ export class MailService {
       this.transporter = nodemailer.createTransport({
         host,
         port: Number(port),
-        secure: Number(port) === 465, // SSL
+        secure: Number(port) === 465, // Kết nối bảo mật SSL
         auth: { user, pass },
       });
       this.isMailConfigured = true;
@@ -266,7 +266,7 @@ Body: (HTML length: ${String(options.html).length} characters)
     const baseUrl = this.getBaseUrl();
     const shopSlug = order.shop?.slug || '';
     
-    // Create review links for items in the order
+    // Tạo liên kết đánh giá cho các sản phẩm trong đơn hàng
     const firstItem = order.items?.[0];
     const reviewUrl = firstItem
       ? `${baseUrl}/shop/${shopSlug}/products/${firstItem.productId}`

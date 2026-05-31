@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global validation pipe
+  // Pipe kiểm thử dữ liệu toàn cục (Global validation pipe)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -14,13 +14,13 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // Cấu hình chia sẻ tài nguyên nguồn gốc chéo (CORS)
   app.enableCors({
     origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     credentials: true,
   });
 
-  // Global prefix
+  // Tiền tố đường dẫn toàn cục (Global prefix)
   app.setGlobalPrefix('api');
 
   const port = process.env.API_PORT || 3001;

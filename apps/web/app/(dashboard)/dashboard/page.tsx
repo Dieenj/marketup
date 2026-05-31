@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   TrendingUp,
-  Users,
   Package,
   ShoppingBag,
   Clock,
@@ -56,7 +55,7 @@ export default function DashboardPage() {
     {
       title: "Total Revenue",
       value: `$${Number(stats?.totalRevenue || 0).toFixed(2)}`,
-      description: "From paid orders",
+      description: "From delivered orders",
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
@@ -89,7 +88,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {/* Tiêu đề đầu trang */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
@@ -102,7 +101,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* Thẻ thống kê */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <div key={stat.title} className="bg-white rounded-2xl border border-border/60 p-5 hover:shadow-sm transition-shadow">
@@ -122,7 +121,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts */}
+      {/* Biểu đồ xu hướng */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4 bg-white rounded-2xl border border-border/60 p-6 hover:shadow-sm transition-shadow">
           <div className="mb-5">

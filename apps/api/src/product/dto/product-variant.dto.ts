@@ -3,10 +3,14 @@ import { Type } from 'class-transformer';
 
 export class CreateVariantDto {
   @IsString()
-  @IsNotEmpty()
-  label: string; // "Size: M / Color: Red"
+  @IsOptional()
+  id?: string;
 
-  options: Record<string, string>; // {"Size": "M", "Color": "Red"}
+  @IsString()
+  @IsNotEmpty()
+  label: string; // Ví dụ: "Size: M / Color: Red"
+
+  options: Record<string, string>; // Ví dụ: {"Size": "M", "Color": "Red"}
 
   @IsNumber()
   @IsOptional()
@@ -25,7 +29,7 @@ export class CreateVariantDto {
 export class CreateAttributeDto {
   @IsString()
   @IsNotEmpty()
-  name: string; // "Size"
+  name: string; // Ví dụ: "Size" hoặc "Color"
 
-  options: string[]; // ["S", "M", "L", "XL"]
+  options: string[]; // Ví dụ: ["S", "M", "L", "XL"]
 }

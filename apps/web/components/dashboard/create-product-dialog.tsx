@@ -48,13 +48,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Các kiểu dữ liệu (Types) ────────────────────────────────────────────────────────────────────
 export interface AttributeDef {
   name: string;
   options: string[];
 }
 
 export interface VariantDef {
+  id?: string;
   label: string;
   options: Record<string, string>;
   price: string;
@@ -62,7 +63,7 @@ export interface VariantDef {
   sku: string;
 }
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
+// ─── Schema kiểm thử dữ liệu ───────────────────────────────────────────────────────────────────
 const productSchema = z.object({
   name: z.string().min(2, 'Product name is required (min 2 characters)'),
   description: z.string().optional(),
@@ -75,7 +76,7 @@ interface CreateProductDialogProps {
   shopId: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Các hàm bổ trợ (Helpers) ──────────────────────────────────────────────────────────────────
 function cartesian(arrays: string[][]): string[][] {
   return arrays.reduce<string[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
@@ -89,7 +90,7 @@ const STEPS = [
   { id: 3, label: 'Images', icon: ImagePlus },
 ];
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Component chính ───────────────────────────────────────────────────────────
 export default function CreateProductDialog({ open, onOpenChange, shopId }: CreateProductDialogProps) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
@@ -99,7 +100,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Attribute input states
+  // Quản lý trạng thái đầu vào của các thuộc tính
   const [newAttrName, setNewAttrName] = useState('');
   const [optionInputs, setOptionInputs] = useState<Record<number, string>>({});
 
@@ -123,7 +124,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
     onOpenChange(isOpen);
   };
 
-  // ─── Categories ─────────────────────────────────────────────────────────────
+  // ─── Quản lý danh mục ─────────────────────────────────────────────────────────────
   const { data: categories } = useQuery({
     queryKey: ['categories', shopId],
     queryFn: async () => {
@@ -133,7 +134,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
     enabled: !!shopId && open,
   });
 
-  // ─── Variant Builder Logic ───────────────────────────────────────────────────
+  // ─── Logic xây dựng các biến thể sản phẩm ───────────────────────────────────────────────────
   const addAttribute = () => {
     if (!newAttrName.trim()) return;
     const updated = [...attributes, { name: newAttrName.trim(), options: [] }];
@@ -184,7 +185,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   const canGenerate = attributes.length > 0 && attributes.every((a) => a.options.length > 0);
   const totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
 
-  // ─── Image Upload ────────────────────────────────────────────────────────────
+  // ─── Logic xử lý tải lên hình ảnh ────────────────────────────────────────────────────────────
   const handleFiles = (files: File[]) => {
     const imgFiles = files.filter((f) => f.type.startsWith('image/'));
     setImages((prev) => [...prev, ...imgFiles]);
@@ -200,7 +201,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
     setImages(images.filter((_, i) => i !== idx));
   };
 
-  // ─── Submit ──────────────────────────────────────────────────────────────────
+  // ─── Logic lưu sản phẩm (Submit) ──────────────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof productSchema>) => {
       if (variants.length === 0) throw new Error('Product must have at least one variant');
@@ -238,7 +239,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
     },
   });
 
-  // ─── Step Navigation ─────────────────────────────────────────────────────────
+  // ─── Logic điều hướng các bước ─────────────────────────────────────────────────────────
   const handleNext = async () => {
     if (step === 1) {
       const valid = await form.trigger(['name']);
@@ -255,7 +256,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
 
   const handleSubmit = form.handleSubmit((values) => mutation.mutate(values));
 
-  // ─── Step Completion States ───────────────────────────────────────────────────
+  // ─── Logic kiểm tra trạng thái hoàn thành mỗi bước ───────────────────────────────────────────────────
   const step1Done = !!form.watch('name') && form.watch('name').length >= 2;
   const step2Done = variants.length > 0;
   const step3Done = images.length > 0;
@@ -263,7 +264,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="p-0 gap-0 max-w-2xl w-full overflow-hidden rounded-2xl border-border">
-        {/* ── Header ── */}
+        {/* ── Phần đầu (Header) ── */}
         <DialogHeader className="px-6 pt-6 pb-0">
           <div className="flex items-center gap-3 mb-5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0">
@@ -275,7 +276,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
             </div>
           </div>
 
-          {/* Step indicators */}
+          {/* Bộ chỉ số các bước thực hiện */}
           <div className="flex items-center gap-0">
             {STEPS.map((s, idx) => {
               const done = (s.id === 1 && step1Done) || (s.id === 2 && step2Done) || (s.id === 3 && step3Done);
@@ -313,12 +314,12 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
           </div>
         </DialogHeader>
 
-        {/* ── Body ── */}
+        {/* ── Phần thân nội dung (Body) ── */}
         <Form {...form}>
           <form onSubmit={handleSubmit}>
             <div className="px-6 py-5 min-h-[380px] max-h-[55vh] overflow-y-auto">
 
-              {/* ── Step 1: Basic Info ── */}
+              {/* ── Bước 1: Thông tin cơ bản ── */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
                   <FormField
@@ -386,10 +387,10 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                 </div>
               )}
 
-              {/* ── Step 2: Variants ── */}
+              {/* ── Bước 2: Các biến thể sản phẩm ── */}
               {step === 2 && (
                 <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-200">
-                  {/* Attributes */}
+                  {/* Thuộc tính sản phẩm */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -403,7 +404,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                       )}
                     </div>
 
-                    {/* Attribute list */}
+                    {/* Danh sách thuộc tính sản phẩm */}
                     {attributes.length > 0 && (
                       <div className="space-y-2">
                         {attributes.map((attr, i) => (
@@ -424,7 +425,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                               </button>
                             </div>
 
-                            {/* Option pills */}
+                            {/* Các nhãn tùy chọn (Option pills) */}
                             <div className="flex flex-wrap gap-1.5">
                               {attr.options.map((opt, j) => (
                                 <span
@@ -443,7 +444,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                               ))}
                             </div>
 
-                            {/* Add option */}
+                            {/* Thêm tùy chọn mới */}
                             <div className="flex gap-2">
                               <Input
                                 placeholder={
@@ -473,7 +474,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                       </div>
                     )}
 
-                    {/* New attribute input */}
+                    {/* Nhập thông tin thuộc tính mới */}
                     <div className="flex gap-2">
                       <Input
                         placeholder="Attribute name (e.g. Color, Size, Material)"
@@ -494,7 +495,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                     </div>
                   </div>
 
-                  {/* Generate button */}
+                  {/* Nút tự động tạo các biến thể sản phẩm */}
                   {canGenerate && (
                     <Button
                       type="button"
@@ -507,7 +508,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                     </Button>
                   )}
 
-                  {/* Variant inventory table */}
+                  {/* Bảng quản lý kho và giá các biến thể sản phẩm */}
                   {variants.length > 0 && (
                     <div className="space-y-2">
                       <div className="grid grid-cols-[1fr_90px_90px] gap-2 px-1">
@@ -560,7 +561,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                 </div>
               )}
 
-              {/* ── Step 3: Images ── */}
+              {/* ── Bước 3: Hình ảnh sản phẩm ── */}
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-200">
                   <div>
@@ -568,7 +569,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                     <p className="text-xs text-muted-foreground mt-0.5">Upload photos to show your product. First image will be the cover.</p>
                   </div>
 
-                  {/* Drop zone */}
+                  {/* Khu vực kéo thả hoặc click chọn hình ảnh */}
                   <div
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
@@ -604,7 +605,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                     />
                   </div>
 
-                  {/* Image previews */}
+                  {/* Xem trước các hình ảnh sản phẩm đã chọn */}
                   {images.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -639,7 +640,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                             </button>
                           </div>
                         ))}
-                        {/* Add more */}
+                        {/* Thêm nhiều ảnh khác */}
                         <div
                           onClick={() => fileInputRef.current?.click()}
                           className="aspect-square rounded-xl border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
@@ -653,7 +654,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
               )}
             </div>
 
-            {/* ── Footer ── */}
+            {/* ── Phần chân trang hộp thoại (Footer) ── */}
             <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-border bg-muted/30">
               <Button
                 type="button"
@@ -669,7 +670,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
               </Button>
 
               <div className="flex items-center gap-2">
-                {/* Step dots */}
+                {/* Dấu chấm các bước chỉ hiển thị trên di động */}
                 <div className="flex gap-1.5 mr-2">
                   {STEPS.map((s) => (
                     <div

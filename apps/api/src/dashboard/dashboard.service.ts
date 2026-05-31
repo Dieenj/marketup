@@ -23,7 +23,7 @@ export class DashboardService {
     ] = await Promise.all([
       this.prisma.order.count({ where: { shopId } }),
       this.prisma.order.aggregate({
-        where: { shopId, paymentStatus: 'PAID' },
+        where: { shopId, status: 'DELIVERED' },
         _sum: { totalAmount: true },
       }),
       this.prisma.product.count({ where: { shopId } }),
@@ -38,7 +38,7 @@ export class DashboardService {
       this.prisma.order.count({ where: { shopId, status: 'PENDING' } }),
     ]);
 
-    // Build last 7-day revenue trend
+    // Xây dựng xu hướng doanh thu trong 7 ngày qua
     const today = new Date();
     const revenueTrend = await Promise.all(
       Array.from({ length: 7 }).map(async (_, i) => {
@@ -49,7 +49,7 @@ export class DashboardService {
         const agg = await this.prisma.order.aggregate({
           where: {
             shopId,
-            paymentStatus: 'PAID',
+            status: 'DELIVERED',
             createdAt: { gte: start, lte: end },
           },
           _sum: { totalAmount: true },
@@ -84,7 +84,7 @@ export class DashboardService {
       throw new ForbiddenException('Access denied');
     }
 
-    // Rough top products by sales count from order items
+    // Thống kê sơ bộ các sản phẩm bán chạy nhất theo số lượng bán ra từ các chi tiết đơn hàng (order items)
     const topProducts = await this.prisma.orderItem.groupBy({
       by: ['productId'],
       where: { order: { shopId } },

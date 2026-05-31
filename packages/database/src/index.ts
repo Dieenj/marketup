@@ -8,13 +8,11 @@ export type {
   OrderItem,
   Role,
   OrderStatus,
-  PaymentStatus,
-  PaymentMethod,
 } from '@prisma/client';
 
 import { PrismaClient } from '@prisma/client';
 
-// Singleton pattern to avoid multiple connections in development
+// Áp dụng mô hình Singleton để tránh tạo nhiều kết nối trong môi trường phát triển (development)
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };

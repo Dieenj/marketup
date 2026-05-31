@@ -15,7 +15,8 @@
     "db:generate": "turbo run db:generate --filter=@marketup/database",
     "db:migrate": "turbo run db:migrate --filter=@marketup/database",
     "db:studio": "pnpm --filter=@marketup/database studio",
-    "clean": "turbo run clean && rimraf node_modules"
+    "clean": "turbo run clean && rimraf node_modules",
+    "postinstall": "turbo run db:generate"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

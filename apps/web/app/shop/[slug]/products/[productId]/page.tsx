@@ -77,7 +77,7 @@ export default function ProductPage() {
   const variants: Variant[] = useMemo(() => product?.variants ?? [], [product?.variants]);
   const hasVariants = variants.length > 0 && attributes.length > 0;
 
-  // Get all product images
+  // Lấy tất cả các hình ảnh sản phẩm
   const allImages = useMemo(() => {
     if (!product) return [];
     const images: string[] = [];
@@ -116,7 +116,7 @@ export default function ProductPage() {
     [variants],
   );
 
-  // Get price range from variants
+  // Lấy khoảng giá từ các biến thể (variants)
   const priceRange = useMemo(() => {
     if (variants.length === 0) return { min: 0, max: 0 };
     const prices = variants
@@ -132,7 +132,7 @@ export default function ProductPage() {
     : (variants[0]?.stock ?? 0);
   const effectivePrice = selectedVariant?.price != null
     ? Number(selectedVariant.price)
-    : priceRange.min; // Use min price from range
+    : priceRange.min; // Sử dụng giá nhỏ nhất từ khoảng giá
   const isSelectedVariantOutOfStock = allOptionsSelected && effectiveStock <= 0;
   const hasAnyStock = totalVariantStock > 0;
   const nextAttribute = hasVariants
@@ -229,7 +229,7 @@ export default function ProductPage() {
       </Link>
 
       <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-        {/* Image Carousel */}
+        {/* Trình chiếu hình ảnh (Image Carousel) */}
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted group">
             {allImages.length > 0 ? (
@@ -240,7 +240,7 @@ export default function ProductPage() {
                   className="h-full w-full object-cover"
                 />
                 
-                {/* Navigation buttons - only show if multiple images */}
+                {/* Nút điều hướng - chỉ hiển thị nếu có nhiều hình ảnh */}
                 {allImages.length > 1 && (
                   <>
                     <button
@@ -258,7 +258,7 @@ export default function ProductPage() {
                       <ChevronRight className="h-6 w-6" />
                     </button>
 
-                    {/* Image counter */}
+                    {/* Bộ đếm số thứ tự hình ảnh đang hiển thị */}
                     <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full font-medium">
                       {currentImageIndex + 1} / {allImages.length}
                     </div>
@@ -279,14 +279,14 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* Thumbnail navigation - only show if multiple images */}
+          {/* Bộ sưu tập ảnh thu nhỏ - chỉ hiển thị nếu có nhiều hình ảnh */}
           {allImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2">
               {allImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                     currentImageIndex === index
                       ? 'border-primary ring-2 ring-primary/20'
                       : 'border-border hover:border-primary/50'
@@ -441,7 +441,7 @@ export default function ProductPage() {
                 >
                   −
                 </Button>
-                <span className="min-w-[2.5rem] px-4 py-1 text-center font-semibold">
+                <span className="min-w-10 px-4 py-1 text-center font-semibold">
                   {normalizedQuantity}
                 </span>
                 <Button
@@ -501,7 +501,7 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* Reviews section */}
+      {/* Phần đánh giá và nhận xét của khách hàng */}
       <div className="mt-16 border-t border-border/60 pt-12 max-w-4xl">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-10">
           <div className="space-y-3">
@@ -541,7 +541,7 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Reviews list */}
+        {/* Danh sách các đánh giá của sản phẩm */}
         {!reviews || reviews.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 border border-dashed rounded-2xl">
             <MessageSquare className="h-9 w-9 text-muted-foreground/30 mx-auto mb-3" />

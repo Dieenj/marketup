@@ -44,7 +44,7 @@ export default function Sidebar() {
 
   return (
     <div className="flex h-full w-100 flex-col bg-[#111111] text-white">
-      {/* Logo */}
+      {/* Phần Logo */}
       <div className="flex h-16 items-center px-6 border-b border-white/8">
         <Link href="/dashboard" className="flex items-center gap-3 group">
           <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -54,7 +54,7 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Navigation */}
+      {/* Phần Menu Điều hướng */}
       <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-0.5">
         <p className="px-3 mb-3 text-[20px] font-semibold uppercase tracking-widest text-white/30">
           Menu
@@ -102,7 +102,7 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* User & Logout */}
+      {/* Phần người dùng và Đăng xuất */}
       <div className="p-4 border-t border-white/8 space-y-1">
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5">
           <div className="h-8 w-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">

@@ -81,7 +81,7 @@ export default function WriteReviewDialog({
       onOpenChange(false);
       if (onSuccess) onSuccess();
       
-      // Invalidate queries
+      // Làm mới các truy vấn (Invalidate queries)
       if (productId) {
         queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] });
         queryClient.invalidateQueries({ queryKey: ['product-rating', productId] });
@@ -128,7 +128,7 @@ export default function WriteReviewDialog({
 
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-5 py-2">
-            {/* Interactive Glowing Star Rating */}
+            {/* Bộ chọn đánh giá sao lấp lánh (Interactive Glowing Star Rating) */}
             <div className="flex flex-col items-center justify-center py-2.5 bg-[#fafafa] rounded-2xl border border-border/40 gap-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Your Rating

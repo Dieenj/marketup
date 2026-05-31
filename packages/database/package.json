@@ -7,6 +7,7 @@
     "db:migrate": "dotenv -e ../../.env -- prisma migrate dev",
     "db:migrate:prod": "dotenv -e ../../.env -- prisma migrate deploy",
     "db:push": "dotenv -e ../../.env -- prisma db push",
+    "db:push:force": "dotenv -e ../../.env -- prisma db push --accept-data-loss",
     "db:seed": "dotenv -e ../../.env -- ts-node prisma/seed.ts",
     "studio": "dotenv -e ../../.env -- prisma studio",
     "clean": "rimraf node_modules dist"
@@ -25,11 +26,11 @@
   },
   "exports": {
     ".": {
-      "require": "./src/index.ts",
-      "import": "./src/index.ts",
+      "require": "./src/index.js",
+      "import": "./src/index.js",
       "types": "./src/index.ts"
     }
   },
-  "main": "./src/index.ts",
+  "main": "./src/index.js",
   "types": "./src/index.ts"
 }

@@ -110,6 +110,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
       setImages([]);
       setAttributes(product.attributes?.map((a) => ({ name: a.name, options: a.options })) || []);
       setVariants(product.variants?.map((v) => ({
+        id: v.id,
         label: v.label,
         options: v.options as Record<string, string>,
         price: v.price ? String(v.price) : '',
@@ -128,7 +129,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
     enabled: !!shopId && open,
   });
 
-  // ─── Variant Builder ──────────────────────────────────────────────────────
+  // ─── Logic xây dựng các biến thể sản phẩm ──────────────────────────────────────────────────────
   const addAttribute = () => {
     if (!newAttrName.trim()) return;
     setAttributes([...attributes, { name: newAttrName.trim(), options: [] }]);
@@ -176,7 +177,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
   const canGenerate = attributes.length > 0 && attributes.every((a) => a.options.length > 0);
   const totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
 
-  // ─── Submit ───────────────────────────────────────────────────────────────
+  // ─── Logic lưu sản phẩm (Submit) ───────────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (values: ProductFormValues) => {
       if (variants.length === 0) throw new Error('Product must have at least one variant');
@@ -190,6 +191,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
       formData.append('attributes', JSON.stringify(attributes));
       formData.append('variants', JSON.stringify(
         variants.map((v) => ({
+          id: v.id,
           label: v.label,
           options: v.options,
           stock: Number(v.stock) || 0,
@@ -260,7 +262,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
               </FormItem>
             )} />
 
-            {/* ─── Variant Builder ─── */}
+            {/* ─── Logic xây dựng các biến thể sản phẩm ─── */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -351,7 +353,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
               )}
             </div>
 
-            {/* ─── Images ─── */}
+            {/* ─── Hình ảnh sản phẩm ─── */}
             <div className="space-y-2">
               <Label>Product Images</Label>
               {previewUrls.length > 0 && (

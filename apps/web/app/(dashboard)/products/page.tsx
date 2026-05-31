@@ -65,7 +65,7 @@ interface Category {
 interface Product {
   id: string;
   name: string;
-  totalStock: number; // Sum of all variant stocks
+  totalStock: number; // Tổng số lượng tồn kho của tất cả các biến thể
   isVisible: boolean;
   imageUrl?: string;
   categoryId?: string;
@@ -209,7 +209,7 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Category filter tabs */}
+      {/* Các tab lọc theo danh mục sản phẩm */}
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => setSelectedCategoryId(null)}
@@ -270,7 +270,7 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      {/* Products Grid */}
+      {/* Lưới hiển thị danh sách sản phẩm */}
       {filteredProducts?.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 py-20 text-center">
           <PackageOpen className="h-12 w-12 text-muted-foreground/40 mb-4" />
@@ -303,8 +303,8 @@ export default function ProductsPage() {
                 key={product.id}
                 className="group relative bg-white border border-border/60 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-border transition-all duration-200 flex flex-col"
               >
-                {/* Product Image */}
-                <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+                {/* Hình ảnh sản phẩm */}
+                <div className="relative aspect-4/3 bg-muted overflow-hidden">
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}
@@ -318,7 +318,7 @@ export default function ProductsPage() {
                     </div>
                   )}
 
-                  {/* Visibility badge */}
+                  {/* Nhãn hiển thị/ẩn sản phẩm */}
                   <div className="absolute top-2.5 left-2.5">
                     <span className={cn(
                       'text-[10px] font-semibold px-2 py-0.5 rounded-full',
@@ -330,7 +330,7 @@ export default function ProductsPage() {
                     </span>
                   </div>
 
-                  {/* Actions dropdown */}
+                  {/* Menu thả xuống chứa các hành động */}
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <DropdownMenu>
                       <DropdownMenuTrigger className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm shadow-sm text-foreground hover:bg-white transition-colors">
@@ -358,21 +358,21 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
-                {/* Product Info */}
+                {/* Thông tin sản phẩm */}
                 <div className="flex flex-col flex-1 p-4 gap-3">
-                  {/* Category */}
+                  {/* Danh mục sản phẩm */}
                   {product.category?.name && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium w-fit">
                       <Tag className="h-3 w-3" /> {product.category.name}
                     </span>
                   )}
 
-                  {/* Name */}
+                  {/* Tên sản phẩm */}
                   <p className="font-semibold text-sm leading-snug line-clamp-2">
                     {product.name}
                   </p>
 
-                  {/* Price + Stock */}
+                  {/* Giá bán và tồn kho */}
                   <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
                     <span className="text-sm font-bold">
                       {priceDisplay || <span className="text-muted-foreground text-xs italic">No price</span>}
@@ -412,7 +412,7 @@ export default function ProductsPage() {
         </>
       )}
 
-      {/* Manage Categories Dialog */}
+      {/* Hộp thoại quản lý các danh mục */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
         <DialogContent className="sm:max-w-[440px]">
           <DialogHeader>

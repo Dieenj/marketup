@@ -22,65 +22,72 @@ export class OrderService {
   async create(dto: CreateOrderDto) {
     const { items, ...orderData } = dto;
 
-    // Calculate totals and verify products
-    let subtotal = 0;
-    const orderItemsData: any[] = [];
-
-    for (const item of items) {
-      const product = await this.prisma.product.findUnique({
-        where: { id: item.productId },
-        include: { variants: true },
-      });
-
-      if (!product || product.shopId !== dto.shopId) {
-        throw new BadRequestException(
-          `Product ${item.productId} not found in this shop`,
-        );
-      }
-
-      let price = 0;
-
-      // Use variant stock if variantId provided
-      if (item.variantId) {
-        const variant = product.variants.find((v) => v.id === item.variantId);
-        if (!variant) {
-          throw new BadRequestException(`Variant ${item.variantId} not found`);
-        }
-        if (variant.stock < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for variant ${variant.label}`,
-          );
-        }
-        price = Number(variant.price);
-      } else {
-        throw new BadRequestException(
-          `Variant selection required for ${product.name}`,
-        );
-      }
-
-      subtotal += price * item.quantity;
-
-      orderItemsData.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        priceAtPurchase: price,
-        productName: product.name,
-        productImage: product.imageUrl,
-        ...(item.variantId ? { variantId: item.variantId } : {}),
-        ...(item.variantLabel ? { variantLabel: item.variantLabel } : {}),
-      });
-    }
-
     const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const order = await this.prisma.$transaction(async (tx) => {
-      // 1. Create order
-      const orderDataResult = await tx.order.create({
+      let subtotal = 0;
+      const orderItemsData: any[] = [];
+
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          include: { variants: true },
+        });
+
+        if (!product || product.shopId !== dto.shopId) {
+          throw new BadRequestException(
+            `Product ${item.productId} not found in this shop`,
+          );
+        }
+
+        if (!item.variantId) {
+          throw new BadRequestException(
+            `Variant selection required for ${product.name}`,
+          );
+        }
+
+        // Lấy biến thể sản phẩm bên trong transaction để nhận trạng thái tồn kho mới nhất đã được khóa
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+        });
+
+        if (!variant || variant.productId !== item.productId) {
+          throw new BadRequestException(`Variant ${item.variantId} not found`);
+        }
+
+        if (variant.stock < item.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock for variant ${variant.label}. Available: ${variant.stock}, Requested: ${item.quantity}`,
+          );
+        }
+
+        const price = Number(variant.price);
+        subtotal += price * item.quantity;
+
+        orderItemsData.push({
+          productId: item.productId,
+          quantity: item.quantity,
+          priceAtPurchase: price,
+          productName: product.name,
+          productImage: product.imageUrl,
+          variantId: item.variantId,
+          variantLabel: variant.label, // Chụp lại thông tin trực tiếp từ cơ sở dữ liệu (Snapshot)!
+        });
+
+        // Giảm số lượng tồn kho của biến thể bên trong transaction
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
+
+      // Tạo đơn hàng
+      return tx.order.create({
         data: {
           ...orderData,
           orderNumber,
           subtotal,
-          totalAmount: subtotal, // For now, no shipping fee/discount logic
+          totalAmount: subtotal, // Hiện tại chưa có logic phí vận chuyển/giảm giá
           status: 'PENDING',
           items: {
             create: orderItemsData,
@@ -91,22 +98,9 @@ export class OrderService {
           shop: true,
         },
       });
-
-      // 2. Update variant stock
-      for (const item of items) {
-        if (item.variantId) {
-          await tx.productVariant.update({
-            where: { id: item.variantId },
-            data: { stock: { decrement: item.quantity } },
-          });
-        }
-        // Note: Products without variants cannot be ordered (all stock is variant-based)
-      }
-
-      return orderDataResult;
     });
 
-    // Send order confirmation email asynchronously
+    // Gửi email xác nhận đặt hàng bất đồng bộ
     this.mailService.sendOrderPlacedEmail(order).catch((err) => {
       this.logger.error(
         `Failed to send order confirmation email for ${order.orderNumber}:`,
@@ -136,20 +130,61 @@ export class OrderService {
   async updateStatus(userId: string, orderId: string, status: OrderStatus) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { shop: true },
+      include: { shop: true, items: true },
     });
 
     if (!order || order.shop.ownerId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    const updatedOrder = await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status },
-      include: { items: true, shop: true },
+    if (order.status === status) {
+      return order;
+    }
+
+    // Kiểm tra máy trạng thái đơn hàng (State machine check)
+    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
+      PENDING: ['CONFIRMED', 'CANCELLED'],
+      CONFIRMED: ['PROCESSING', 'CANCELLED'],
+      PROCESSING: ['SHIPPING', 'CANCELLED'],
+      SHIPPING: ['DELIVERED', 'CANCELLED'],
+      DELIVERED: [], // trạng thái kết thúc (terminal state)
+      CANCELLED: [], // trạng thái kết thúc (terminal state)
+    };
+
+    const allowed = validTransitions[order.status];
+    if (!allowed || !allowed.includes(status)) {
+      throw new BadRequestException(
+        `Cannot transition order status from ${order.status} to ${status}`,
+      );
+    }
+
+    // Chạy cập nhật trong transaction để xử lý hoàn trả kho hàng nếu đơn hàng bị hủy
+    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status,
+          ...(status === 'DELIVERED' ? { deliveredAt: new Date() } : {}),
+        },
+        include: { items: true, shop: true },
+      });
+
+      // Hoàn trả kho hàng nếu đơn hàng bị hủy
+      if (status === 'CANCELLED') {
+        for (const item of order.items) {
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
+        }
+      }
+
+      return updated;
     });
 
-    // Trigger emails asynchronously
+    // Kích hoạt gửi email bất đồng bộ
     if (status === 'SHIPPING') {
       this.mailService.sendOrderShippedEmail(updatedOrder).catch((err) => {
         this.logger.error(

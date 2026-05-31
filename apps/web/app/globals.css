@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -129,7 +129,7 @@
     scroll-behavior: smooth;
   }
 
-  /* Custom scrollbar */
+  /* Thanh cuộn tùy chỉnh */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

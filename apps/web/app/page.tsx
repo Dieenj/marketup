@@ -5,7 +5,7 @@ import { Store, ShoppingBag, BarChart3, Globe, ArrowRight, CheckCircle2 } from '
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar */}
+      {/* Thanh điều hướng */}
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
         <Link className="flex items-center justify-center gap-2" href="#">
           <Store className="h-6 w-6 text-primary" />
@@ -22,7 +22,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Phần Hero giới thiệu */}
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-linear-to-br from-white via-primary/5 to-white">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center space-y-4 text-center">
@@ -47,7 +47,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Phần tính năng nổi bật */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,7 +85,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Trust Section */}
+        {/* Phần cam kết tin cậy */}
         <section className="w-full py-12 md:py-24 bg-gray-50">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
