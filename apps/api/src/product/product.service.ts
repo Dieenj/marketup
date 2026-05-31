@@ -289,6 +289,21 @@ export class ProductService {
     if (!product || product.shop.ownerId !== userId) {
       throw new ForbiddenException('Access denied');
     }
+
+    // Kiểm tra xem product đã từng có đơn hàng chưa
+    const orderItemCount = await this.prisma.orderItem.count({
+      where: { productId: id },
+    });
+
+    if (orderItemCount > 0) {
+      // Soft delete: Ẩn sản phẩm để bảo toàn lịch sử đơn hàng
+      return this.prisma.product.update({
+        where: { id },
+        data: { isVisible: false },
+      });
+    }
+
+    // Hard delete: Sản phẩm chưa có đơn hàng nào, xóa thẳng
     return this.prisma.product.delete({ where: { id } });
   }
 

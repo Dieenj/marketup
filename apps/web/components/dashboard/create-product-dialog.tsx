@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -77,7 +77,7 @@ interface CreateProductDialogProps {
 }
 
 // ─── Các hàm bổ trợ (Helpers) ──────────────────────────────────────────────────────────────────
-function cartesian(arrays: string[][]): string[][] {
+export function cartesian(arrays: string[][]): string[][] {
   return arrays.reduce<string[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
     [[]]
@@ -191,11 +191,11 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
     setImages((prev) => [...prev, ...imgFiles]);
   };
 
-  const onDrop = useCallback((e: React.DragEvent) => {
+  const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     handleFiles(Array.from(e.dataTransfer.files));
-  }, []);
+  };
 
   const removeImage = (idx: number) => {
     setImages(images.filter((_, i) => i !== idx));
@@ -534,7 +534,6 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                               onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                               min="0"
                               step="0.01"
-                              required
                             />
                             <Input
                               type="number"
@@ -685,6 +684,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
 
                 {step < 3 ? (
                   <Button
+                    key="next-btn"
                     type="button"
                     onClick={handleNext}
                     className="gap-1.5 text-sm px-5"
@@ -693,6 +693,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                   </Button>
                 ) : (
                   <Button
+                    key="submit-btn"
                     type="submit"
                     disabled={mutation.isPending || variants.length === 0}
                     className="gap-2 text-sm px-5"

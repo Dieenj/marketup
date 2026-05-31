@@ -36,7 +36,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Loader2, Plus, Trash2, X, Sparkles, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
-import { AttributeDef, VariantDef } from './create-product-dialog';
+import { AttributeDef, VariantDef, cartesian } from './create-product-dialog';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -71,12 +71,6 @@ interface EditProductDialogProps {
   shopId: string;
 }
 
-function cartesian(arrays: string[][]): string[][] {
-  return arrays.reduce<string[][]>(
-    (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
-    [[]]
-  );
-}
 
 export default function EditProductDialog({ open, onOpenChange, product, shopId }: EditProductDialogProps) {
   const queryClient = useQueryClient();
@@ -340,7 +334,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
                     {variants.map((v, i) => (
                       <div key={i} className="grid grid-cols-[1fr_90px_90px] gap-2 items-center rounded-lg border border-border bg-muted/20 px-3 py-2">
                         <span className="text-xs font-medium truncate" title={v.label}>{v.label}</span>
-                        <Input type="number" placeholder="0.00" className="h-7 text-xs text-center px-2" value={v.price} onChange={(e) => updateVariant(i, 'price', e.target.value)} min="0" step="0.01" required />
+                        <Input type="number" placeholder="0.00" className="h-7 text-xs text-center px-2" value={v.price} onChange={(e) => updateVariant(i, 'price', e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} min="0" step="0.01" />
                         <Input type="number" placeholder="0" className="h-7 text-xs text-center px-2" value={v.stock} onChange={(e) => updateVariant(i, 'stock', e.target.value)} min="0" />
                       </div>
                     ))}
@@ -391,7 +385,7 @@ export default function EditProductDialog({ open, onOpenChange, product, shopId 
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending || variants.length === 0} className="gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button type="submit" disabled={mutation.isPending || variants.length === 0} className="gap-2">
                 {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>

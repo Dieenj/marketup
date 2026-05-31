@@ -121,9 +121,9 @@ jobs:
       - name: Build all packages
         run: pnpm run build
         env:
-          # Cần biến môi trường giả để Next.js build thành công
-          # Giá trị thực sẽ được inject khi chạy thật trên Vercel/Render
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          # Giá trị giả để Next.js build thành công trong CI
+          # Giá trị thực sẽ được inject khi deploy lên Vercel/Render
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
           NODE_ENV: production
 
   # ─── Stage 5: Docker Build Validation ─────────────────────────────────────

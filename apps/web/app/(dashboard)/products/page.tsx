@@ -27,6 +27,8 @@ import {
 import {
   Plus,
   Pencil,
+  Eye,
+  EyeOff,
   Trash2,
   MoreVertical,
   ImageIcon,
@@ -112,17 +114,19 @@ export default function ProductsPage() {
     },
     enabled: !!shop?.id,
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/products/${id}`);
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async ({ id, isVisible }: { id: string; isVisible: boolean }) => {
+      const formData = new FormData();
+      formData.append('isVisible', String(isVisible));
+      const { data } = await api.patch(`/products/${id}`, formData);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['products', shop?.id] });
-      toast.success('Product deleted successfully');
+      toast.success(data.isVisible ? 'Product is now visible' : 'Product is now hidden');
     },
     onError: () => {
-      toast.error('Failed to delete product');
+      toast.error('Failed to update product visibility');
     },
   });
 
@@ -341,17 +345,27 @@ export default function ProductsPage() {
                           className="gap-2 cursor-pointer"
                           onClick={() => setEditProduct(product)}
                         >
-                          <Pencil className="h-4 w-4" /> Edit
+                          <Pencil className="h-4 w-4" /> Edit Product
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="gap-2 text-red-600 cursor-pointer"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this product?')) {
-                              deleteMutation.mutate(product.id);
-                            }
-                          }}
+                          className="gap-2 cursor-pointer"
+                          onClick={() =>
+                            toggleVisibilityMutation.mutate({
+                              id: product.id,
+                              isVisible: !product.isVisible,
+                            })
+                          }
+                          disabled={toggleVisibilityMutation.isPending}
                         >
-                          <Trash2 className="h-4 w-4" /> Delete
+                          {product.isVisible ? (
+                            <>
+                              <EyeOff className="h-4 w-4 text-muted-foreground" /> Hide Product
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-4 w-4 text-emerald-600" /> Show Product
+                            </>
+                          )}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
