@@ -15,8 +15,22 @@ async function bootstrap() {
   );
 
   // Cấu hình chia sẻ tài nguyên nguồn gốc chéo (CORS)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      // Cho phép request không có origin (Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS blocked: ${origin}`));
+    },
     credentials: true,
   });
 
