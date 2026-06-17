@@ -20,10 +20,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/hooks/use-auth';
 import { useEffect } from 'react';
+import { ColorPicker } from '@/components/shop/color-picker';
+import { BannerImageInput } from '@/components/shop/banner-image-input';
 
 const shopSchema = z.object({
   name: z.string().min(2, 'Shop name is required'),
   description: z.string().optional(),
+  bannerUrl: z.string().optional(),
+  primaryColor: z.string(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
   address: z.string().optional(),
@@ -47,6 +51,8 @@ export default function SettingsPage() {
     defaultValues: {
       name: '',
       description: '',
+      bannerUrl: '',
+      primaryColor: '#111111',
       contactEmail: '',
       contactPhone: '',
       address: '',
@@ -58,6 +64,8 @@ export default function SettingsPage() {
       form.reset({
         name: shop.name,
         description: shop.description || '',
+        bannerUrl: shop.bannerUrl || '',
+        primaryColor: shop.primaryColor || '#111111',
         contactEmail: shop.contactEmail || '',
         contactPhone: shop.contactPhone || '',
         address: shop.address || '',
@@ -136,6 +144,40 @@ export default function SettingsPage() {
                     <FormControl>
                       <Textarea placeholder="Welcome to our store! We sell..." rows={4} {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="primaryColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand Color</FormLabel>
+                    <FormControl>
+                      <ColorPicker value={field.value} onChange={field.onChange} />
+                    </FormControl>
+                    <FormDescription>
+                      Main color used on your storefront — hero, buttons, accents.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="bannerUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Banner Image <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormControl>
+                      <BannerImageInput value={field.value ?? ''} onChange={field.onChange} />
+                    </FormControl>
+                    <FormDescription>
+                      Background image for your storefront hero section.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

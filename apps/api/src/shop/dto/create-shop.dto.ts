@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsEmail,
   IsPhoneNumber,
+  IsHexColor,
 } from 'class-validator';
 
 export class CreateShopDto {
@@ -22,6 +23,14 @@ export class CreateShopDto {
   @IsString()
   @IsOptional()
   logoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  bannerUrl?: string;
+
+  @IsHexColor()
+  @IsOptional()
+  primaryColor?: string;
 
   @IsEmail()
   @IsOptional()

@@ -18,11 +18,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Store, Loader2, ArrowRight } from 'lucide-react';
+import { Store, Loader2, ArrowRight, Link2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/hooks/use-auth';
 import Link from 'next/link';
+import { ColorPicker } from '@/components/shop/color-picker';
+import { getContrastColor } from '@/lib/color-utils';
 
 const setupSchema = z.object({
   name: z.string().min(2, 'Shop name must be at least 2 characters'),
@@ -33,6 +34,7 @@ const setupSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens allowed'),
   description: z.string().optional(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
+  primaryColor: z.string(),
 });
 
 export default function SetupPage() {
@@ -46,6 +48,7 @@ export default function SetupPage() {
       slug: '',
       description: '',
       contactEmail: user?.email || '',
+      primaryColor: '#111111',
     },
   });
 
@@ -73,6 +76,12 @@ export default function SetupPage() {
     form.setValue('slug', slug);
   };
 
+  const watchedName = form.watch('name');
+  const watchedSlug = form.watch('slug');
+  const watchedDescription = form.watch('description');
+  const watchedColor = form.watch('primaryColor') || '#111111';
+  const fg = getContrastColor(watchedColor);
+
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
       <header className="h-16 flex items-center px-6 border-b bg-white">
@@ -84,8 +93,8 @@ export default function SetupPage() {
         </Link>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-lg space-y-8">
+      <main className="flex-1 flex items-start justify-center p-6 pt-10">
+        <div className="w-full max-w-4xl space-y-8">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Set up your shop</h1>
             <p className="text-muted-foreground">
@@ -93,7 +102,9 @@ export default function SetupPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-border/60 p-8 shadow-sm space-y-6">
+          <div className="grid lg:grid-cols-[1fr_300px] gap-6 items-start">
+            {/* Form */}
+            <div className="bg-white rounded-2xl border border-border/60 p-8 shadow-sm">
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
@@ -136,9 +147,6 @@ export default function SetupPage() {
                             />
                           </div>
                         </FormControl>
-                        <FormDescription className="text-xs">
-                          Your store: <span className="font-medium text-foreground">/shop/{form.watch('slug') || '...'}</span>
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -158,6 +166,23 @@ export default function SetupPage() {
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="primaryColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">Brand Color</FormLabel>
+                        <FormControl>
+                          <ColorPicker value={field.value} onChange={field.onChange} />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Main color used on your storefront — hero, buttons, accents.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -198,6 +223,80 @@ export default function SetupPage() {
                   </Button>
                 </form>
               </Form>
+            </div>
+
+            {/* Live preview card */}
+            <div className="sticky top-24 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
+                Live Preview
+              </p>
+              <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+                {/* Mini header */}
+                <div
+                  className="h-10 flex items-center gap-2 px-3 transition-colors duration-300"
+                  style={{ backgroundColor: watchedColor }}
+                >
+                  <div className="h-5 w-5 rounded-md flex items-center justify-center bg-white/20">
+                    <Store className="h-3 w-3" style={{ color: fg }} />
+                  </div>
+                  <span className="text-xs font-bold truncate" style={{ color: fg }}>
+                    {watchedName || 'Shop Name'}
+                  </span>
+                </div>
+
+                {/* Mini hero */}
+                <div
+                  className="h-16 flex items-end px-3 pb-2.5 transition-colors duration-300"
+                  style={{ backgroundColor: watchedColor + '22' }}
+                >
+                  <div>
+                    <p className="text-xs font-bold text-foreground leading-tight">
+                      {watchedName || 'Shop Name'}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">
+                      {watchedDescription || 'Your description will appear here.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="p-3 space-y-2.5">
+                  {/* URL pill */}
+                  <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5">
+                    <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] text-muted-foreground truncate">
+                      marketup.com/shop/<span className="font-medium text-foreground">{watchedSlug || '...'}</span>
+                    </span>
+                  </div>
+
+                  {/* Mock product cards */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="bg-muted rounded-lg overflow-hidden">
+                        <div className="h-14 bg-muted-foreground/10 flex items-center justify-center">
+                          <ShoppingBag className="h-4 w-4 text-muted-foreground/30" />
+                        </div>
+                        <div className="p-1.5">
+                          <div className="h-2 bg-muted-foreground/15 rounded w-3/4 mb-1" />
+                          <div className="h-2 bg-muted-foreground/10 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA button */}
+                  <button
+                    className="w-full rounded-xl py-2 text-xs font-semibold transition-colors duration-300 flex items-center justify-center gap-1.5"
+                    style={{ backgroundColor: watchedColor, color: fg }}
+                    tabIndex={-1}
+                    type="button"
+                  >
+                    View Store
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

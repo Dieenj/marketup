@@ -6,7 +6,16 @@ import api from '@/lib/api-client';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ImageIcon, ShoppingBag, Search, ArrowRight, Star } from 'lucide-react';
+import {
+  ImageIcon,
+  ShoppingBag,
+  Search,
+  ArrowRight,
+  Star,
+  MapPin,
+  Phone,
+  Filter,
+} from 'lucide-react';
 import Link from 'next/link';
 import WriteReviewDialog from '@/components/shop/write-review-dialog';
 
@@ -21,8 +30,8 @@ interface Product {
   description?: string;
   imageUrl?: string;
   stock?: number;
-  variants?: Array<{ 
-    id: string; 
+  variants?: Array<{
+    id: string;
     stock: number;
     price: number | string;
     comparePrice?: number | string | null;
@@ -30,11 +39,27 @@ interface Product {
   category?: { id: string; name: string };
 }
 
+interface Review {
+  id: string;
+  buyerName: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  product?: { name: string };
+}
+
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+];
+
 export default function StorefrontPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState('default');
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const { data: shop, isLoading: shopLoading } = useQuery({
@@ -63,11 +88,22 @@ export default function StorefrontPage() {
     enabled: !!shop?.id,
   });
 
+  const { data: reviews } = useQuery<Review[]>({
+    queryKey: ['shop-reviews', shop?.id],
+    queryFn: async () => {
+      const { data } = await api.get(`/reviews/shop/${shop.id}?limit=3&status=APPROVED`);
+      return data;
+    },
+    enabled: !!shop?.id,
+  });
+
+  const primaryColor: string = shop?.primaryColor ?? '#111111';
+
   const categories: Category[] = shop?.categories || [];
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter((p: Product) => {
+    let list = products.filter((p: Product) => {
       const matchesSearch =
         !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,7 +112,27 @@ export default function StorefrontPage() {
         !selectedCategory || p.category?.id === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchQuery, selectedCategory]);
+
+    if (sortBy === 'price-asc') {
+      list = [...list].sort((a: Product, b: Product) => {
+        const aMin = Math.min(...(a.variants?.map(v => Number(v.price)) ?? [0]));
+        const bMin = Math.min(...(b.variants?.map(v => Number(v.price)) ?? [0]));
+        return aMin - bMin;
+      });
+    } else if (sortBy === 'price-desc') {
+      list = [...list].sort((a: Product, b: Product) => {
+        const aMin = Math.min(...(a.variants?.map(v => Number(v.price)) ?? [0]));
+        const bMin = Math.min(...(b.variants?.map(v => Number(v.price)) ?? [0]));
+        return bMin - aMin;
+      });
+    }
+
+    return list;
+  }, [products, searchQuery, selectedCategory, sortBy]);
+
+  const overallRating = stats
+    ? (stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating)
+    : 0;
 
   if (shopLoading || productsLoading) {
     return (
@@ -97,59 +153,182 @@ export default function StorefrontPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Phần ảnh bìa Hero Section */}
-      <section className="bg-[#111111] text-white px-4 py-20 text-center">
-        <div className="container mx-auto max-w-2xl space-y-4">
-          <h1 className="text-5xl font-extrabold tracking-tight">{shop.name}</h1>
-          <p className="text-white/60 text-lg max-w-xl mx-auto leading-relaxed">
-            {shop.description || 'Welcome to our store! Browse our collection of amazing products.'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-            <div className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {products?.length || 0} products available
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        {shop.bannerUrl ? (
+          <>
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url('${shop.bannerUrl}')` }}
+            />
+            <div className="absolute inset-0 bg-black/55" />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ backgroundColor: primaryColor }} />
+        )}
+        <div className="relative container mx-auto px-4 py-20 sm:py-28">
+          <div className="max-w-2xl">
+            <h1 className="text-white text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+              {shop.name}
+            </h1>
+            <p className="text-white/75 text-base leading-relaxed mb-8 max-w-lg">
+              {shop.description || 'Welcome to our store! Browse our collection of products.'}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {shop.address && (
+                <div className="flex items-center gap-1.5 text-white/85 text-sm">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor === '#111111' ? '#34d399' : 'rgba(255,255,255,0.9)' }} />
+                  {shop.address}
+                </div>
+              )}
+              {shop.contactPhone && (
+                <div className="flex items-center gap-1.5 text-white/85 text-sm">
+                  <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor === '#111111' ? '#34d399' : 'rgba(255,255,255,0.9)' }} />
+                  {shop.contactPhone}
+                </div>
+              )}
+              <button
+                onClick={() => setIsReviewOpen(true)}
+                className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/15 transition-colors"
+              >
+                <Star className="h-3 w-3 fill-current" />
+                Write a Review
+              </button>
             </div>
-            {stats?.totalCount > 0 && (
-              <div className="inline-flex items-center gap-1.5 bg-white/10 text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                <span>
-                  {stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating} Rating ({stats.totalCount} reviews)
-                </span>
-              </div>
-            )}
-            <button
-              onClick={() => setIsReviewOpen(true)}
-              className="inline-flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/10 transition-colors"
-            >
-              <Star className="h-3 w-3 fill-current" />
-              Write Shop Review
-            </button>
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-10 space-y-8">
-        {/* Phần tìm kiếm và bộ lọc sản phẩm */}
-        <section className="space-y-4">
-          <div className="relative max-w-md mx-auto">
+      {/* Stats bar */}
+      <section className="bg-card border-b border-border">
+        <div className="container mx-auto px-4 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <div>
+            <div className="font-semibold text-lg text-foreground">{products?.length ?? 0}</div>
+            <div className="text-muted-foreground text-xs">Products</div>
+          </div>
+          <div>
+            <div className="font-semibold text-lg text-foreground">
+              {overallRating > 0 ? `${overallRating}/5` : '–'}
+            </div>
+            <div className="text-muted-foreground text-xs">Avg. Rating</div>
+          </div>
+          <div>
+            <div className="font-semibold text-lg text-foreground">
+              {stats?.totalCount > 0 ? stats.totalCount : '–'}
+            </div>
+            <div className="text-muted-foreground text-xs">Reviews</div>
+          </div>
+          <div>
+            <div className="font-semibold text-lg text-foreground">Nationwide</div>
+            <div className="text-muted-foreground text-xs">Delivery</div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-10 space-y-14">
+        {/* Reviews section */}
+        {stats?.totalCount > 0 && (
+          <section>
+            <div className="flex items-end justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Customer Reviews</h2>
+                <p className="text-muted-foreground text-sm mt-0.5">{stats.totalCount} reviews</p>
+              </div>
+              {overallRating > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={`h-4 w-4 ${s <= Math.round(overallRating) ? 'fill-amber-400 text-amber-400' : 'text-muted fill-muted'}`}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-semibold text-foreground">{overallRating}</span>
+                </div>
+              )}
+            </div>
+
+            {reviews && reviews.length > 0 && (
+              <div className="grid sm:grid-cols-3 gap-4">
+                {reviews.map((review) => (
+                  <div key={review.id} className="bg-card rounded-2xl border border-border p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{review.buyerName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`h-3 w-3 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted fill-muted'}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <p className="text-sm text-foreground/80 leading-relaxed mb-3 line-clamp-3">
+                        {review.comment}
+                      </p>
+                    )}
+                    {review.product?.name && (
+                      <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded-full">
+                        {review.product.name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Products section */}
+        <section className="space-y-5">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Our Products</h2>
+              <p className="text-muted-foreground text-sm mt-0.5">{filteredProducts.length} products</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
-              className="pl-10 h-11 bg-white rounded-xl border-border/70 focus-visible:ring-1 focus-visible:ring-foreground"
+              className="pl-10 h-11 bg-white rounded-xl border-border/70"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
+          {/* Category chips */}
           {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border"
+                style={
                   selectedCategory === null
-                    ? 'bg-[#111111] text-white border-[#111111]'
-                    : 'bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
-                }`}
+                    ? { backgroundColor: primaryColor, color: '#fff', borderColor: primaryColor }
+                    : {}
+                }
               >
                 All
               </button>
@@ -157,21 +336,20 @@ export default function StorefrontPage() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                  className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                  style={
                     selectedCategory === cat.id
-                      ? 'bg-[#111111] text-white border-[#111111]'
-                      : 'bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
-                  }`}
+                      ? { backgroundColor: primaryColor, color: '#fff', borderColor: primaryColor }
+                      : {}
+                  }
                 >
                   {cat.name}
                 </button>
               ))}
             </div>
           )}
-        </section>
 
-        {/* Lưới hiển thị danh sách sản phẩm */}
-        <section>
+          {/* Product grid */}
           {filteredProducts.length === 0 ? (
             <div className="py-24 text-center">
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-muted mb-4">
@@ -192,21 +370,21 @@ export default function StorefrontPage() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredProducts.map((product: Product) => {
                 const hasVariants = Boolean(product.variants?.length);
-                const variantStock = product.variants?.reduce((total, variant) => total + Math.max(variant.stock, 0), 0) || 0;
+                const variantStock = product.variants?.reduce(
+                  (total, variant) => total + Math.max(variant.stock, 0), 0
+                ) || 0;
                 const availableStock = hasVariants ? variantStock : Number(product.stock || 0);
                 const isOutOfStock = availableStock <= 0;
-                
-                // Tính toán khoảng giá từ các biến thể (variants)
+
                 const prices = (product.variants || [])
                   .filter(v => v.price != null)
                   .map(v => Number(v.price));
                 const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                 const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-                
-                // Tính toán giá so sánh để hiển thị nhãn giảm giá (discount badge)
+
                 const comparePrices = (product.variants || [])
                   .filter(v => v.comparePrice != null && Number(v.comparePrice) > 0)
                   .map(v => Number(v.comparePrice));
@@ -215,15 +393,14 @@ export default function StorefrontPage() {
                 const discountPct = hasDiscount
                   ? Math.round((1 - minPrice / maxComparePrice) * 100)
                   : 0;
-                  
+
                 return (
                   <div
                     key={product.id}
-                    className="group bg-white rounded-2xl overflow-hidden flex flex-col border border-border/60 hover:border-foreground/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300"
+                    className="group bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   >
-                    {/* Hình ảnh sản phẩm */}
                     <Link href={`/shop/${slug}/products/${product.id}`} className="block relative">
-                      <div className="aspect-4/3 relative bg-[#f5f5f5] overflow-hidden">
+                      <div className="aspect-4/3 relative bg-secondary overflow-hidden">
                         {product.imageUrl ? (
                           <img
                             src={product.imageUrl}
@@ -232,13 +409,12 @@ export default function StorefrontPage() {
                           />
                         ) : (
                           <div className="flex items-center justify-center h-full">
-                            <ImageIcon className="h-10 w-10 text-muted-foreground/20" />
+                            <ImageIcon className="h-8 w-8 text-muted-foreground/20" />
                           </div>
                         )}
-                        {/* Nhãn giảm giá / hết hàng */}
                         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                           {product.category && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wide bg-black/60 text-white backdrop-blur-sm px-2.5 py-0.5 rounded-full">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide bg-black/55 text-white backdrop-blur-sm px-2.5 py-0.5 rounded-full">
                               {product.category.name}
                             </span>
                           )}
@@ -258,15 +434,13 @@ export default function StorefrontPage() {
                       </div>
                     </Link>
 
-                    {/* Thông tin sản phẩm */}
                     <div className="flex flex-col flex-1 p-4 gap-3">
                       <Link href={`/shop/${slug}/products/${product.id}`}>
-                        <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors">
+                        <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors leading-snug">
                           {product.name}
                         </h3>
                       </Link>
 
-                      {/* Giá bán hiển thị */}
                       <div className="flex items-baseline gap-1.5 mt-auto">
                         {minPrice === maxPrice ? (
                           <>
@@ -285,9 +459,12 @@ export default function StorefrontPage() {
                       </div>
 
                       <Link href={`/shop/${slug}/products/${product.id}`} className="mt-auto block">
-                        <button className="w-full h-9.5 rounded-xl bg-neutral-900 text-white text-xs font-semibold hover:bg-black transition-all flex items-center justify-center gap-2 group/btn shadow-sm hover:shadow">
+                        <button
+                          className="w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
+                          style={{ backgroundColor: primaryColor, color: '#fff' }}
+                        >
                           View details
-                          <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                          <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                         </button>
                       </Link>
                     </div>
