@@ -7,6 +7,7 @@ import { useCartStore } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { getContrastColor } from '@/lib/color-utils';
+import { useEffect } from 'react';
 
 export default function ShopLayout({
   children,
@@ -24,6 +25,15 @@ export default function ShopLayout({
       return data;
     },
   });
+
+  useEffect(() => {
+    if (shop?.name) {
+      document.title = `${shop.name} — MarketUp`;
+    }
+    return () => {
+      document.title = 'MarketUp';
+    };
+  }, [shop?.name]);
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const primaryColor = shop?.primaryColor ?? '#111111';

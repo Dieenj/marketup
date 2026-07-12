@@ -502,7 +502,7 @@ export default function ProductPage() {
       </div>
 
       {/* Phần đánh giá và nhận xét của khách hàng */}
-      <div className="mt-16 border-t border-border/60 pt-12 max-w-4xl">
+      <div className="mt-16 border-t border-border/60 pt-12">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-10">
           <div className="space-y-3">
             <h2 className="text-2xl font-bold tracking-tight">Customer Reviews</h2>
