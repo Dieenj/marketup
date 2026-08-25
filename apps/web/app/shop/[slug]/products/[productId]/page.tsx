@@ -237,6 +237,9 @@ export default function ProductPage() {
                 <img
                   src={allImages[currentImageIndex]}
                   alt={product.name}
+                  width={600}
+                  height={600}
+                  fetchPriority="high"
                   className="h-full w-full object-cover"
                 />
                 
@@ -295,6 +298,9 @@ export default function ProductPage() {
                   <img
                     src={image}
                     alt={`${product.name} - ${index + 1}`}
+                    width={80}
+                    height={80}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -354,9 +360,9 @@ export default function ProductPage() {
 
           {product.description && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
-              </h3>
+              </h2>
               <p className="text-base leading-relaxed text-gray-700">
                 {product.description}
               </p>
@@ -370,9 +376,9 @@ export default function ProductPage() {
             return (
               <div key={attribute.id} className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                     {attribute.name}
-                  </h3>
+                  </h2>
                   {selectedOptions[attribute.name] && (
                     <span className="text-sm font-medium text-foreground">
                       {selectedOptions[attribute.name]}
@@ -546,7 +552,7 @@ export default function ProductPage() {
           <div className="text-center py-12 bg-muted/20 border border-dashed rounded-2xl">
             <MessageSquare className="h-9 w-9 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm font-semibold text-muted-foreground">No reviews approved yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Be the first to share your thoughts on this product!
             </p>
           </div>

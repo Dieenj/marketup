@@ -48,6 +48,7 @@ export default function ProductToolbar({
           <select
             value={stockFilter}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStockFilter(e.target.value)}
+            aria-label="Filter by stock status"
             className="bg-transparent border-0 text-xs font-bold focus:ring-0 cursor-pointer pr-1 outline-none text-foreground"
           >
             <option value="all">All Status</option>
@@ -64,6 +65,7 @@ export default function ProductToolbar({
           <select
             value={sortBy}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
+            aria-label="Sort products"
             className="bg-transparent border-0 text-xs font-bold focus:ring-0 cursor-pointer pr-1 outline-none text-foreground"
           >
             <option value="name-asc">Name: A to Z</option>

@@ -41,11 +41,9 @@ export default function ShopLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      {shop && (
-        <style>{`
-          .shop-theme { --shop-primary: ${primaryColor}; --shop-primary-fg: ${primaryFg}; }
-        `}</style>
-      )}
+      <style>{`
+        .shop-theme { --shop-primary: ${primaryColor}; --shop-primary-fg: ${primaryFg}; }
+      `}</style>
 
       <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -60,8 +58,9 @@ export default function ShopLayout({
           </Link>
 
           <div className="flex items-center gap-3">
-            <Link href={`/shop/${slug}/checkout`}>
+            <Link href={`/shop/${slug}/checkout`} aria-label="View cart">
               <button
+                aria-label="View cart"
                 className="relative flex items-center justify-center h-10 w-10 rounded-xl transition-colors"
                 style={{ backgroundColor: primaryColor, color: primaryFg }}
               >
@@ -99,7 +98,7 @@ export default function ShopLayout({
 
             {(shop?.address || shop?.contactPhone || shop?.contactEmail) && (
               <div>
-                <h4 className="font-semibold text-sm mb-3">Contact</h4>
+                <h3 className="font-semibold text-sm mb-3">Contact</h3>
                 <div className="space-y-1.5 text-sm text-muted-foreground">
                   {shop?.address && <p>{shop.address}</p>}
                   {shop?.contactPhone && <p>{shop.contactPhone}</p>}
@@ -109,7 +108,7 @@ export default function ShopLayout({
             )}
 
             <div>
-              <h4 className="font-semibold text-sm mb-3">Policies</h4>
+              <h3 className="font-semibold text-sm mb-3">Policies</h3>
               <div className="space-y-1.5 text-sm text-muted-foreground">
                 {['Return Policy', 'Shipping Policy', 'Customer Support'].map((item) => (
                   <p key={item}>{item}</p>

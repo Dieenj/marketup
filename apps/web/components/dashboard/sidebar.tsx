@@ -130,6 +130,7 @@ export default function Sidebar({
         </Link>
         <button
           onClick={onClose}
+          aria-label="Close sidebar"
           className="p-1.5 rounded-lg text-white/50 hover:bg-white/8 hover:text-white md:hidden"
         >
           <X className="h-5 w-5" />
@@ -148,6 +149,7 @@ export default function Sidebar({
               key={item.href}
               href={item.href}
               onClick={onClose}
+              prefetch={isActive ? undefined : false}
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-150',
                 isActive

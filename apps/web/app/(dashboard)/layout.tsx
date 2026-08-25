@@ -64,6 +64,7 @@ export default function DashboardLayout({
         <header className="flex items-center h-14 px-4 border-b border-black/5 bg-white shrink-0 md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
             className="p-2 -ml-2 rounded-lg hover:bg-black/5"
           >
             <Menu className="h-5 w-5" />

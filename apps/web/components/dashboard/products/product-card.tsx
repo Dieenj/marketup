@@ -87,7 +87,7 @@ export default function ProductCard({
         {/* Menu thả xuống chứa các hành động */}
         <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/95 backdrop-blur-md shadow-sm text-foreground hover:bg-white hover:scale-105 border border-border/20 transition-all cursor-pointer outline-none">
+            <DropdownMenuTrigger aria-label="Product actions" className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/95 backdrop-blur-md shadow-sm text-foreground hover:bg-white hover:scale-105 border border-border/20 transition-all cursor-pointer outline-none">
               <MoreVertical className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-xl border-border/60">
@@ -121,7 +121,7 @@ export default function ProductCard({
       <div className="flex flex-col flex-1 p-5 gap-3.5">
         {/* Danh mục sản phẩm */}
         {product.category?.name && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500 font-semibold px-2 py-0.5 bg-zinc-100 rounded-md w-fit border border-zinc-200/40">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-600 font-semibold px-2 py-0.5 bg-zinc-100 rounded-md w-fit border border-zinc-200/40">
             <Tag className="h-3 w-3 text-zinc-400" /> {product.category.name}
           </span>
         )}

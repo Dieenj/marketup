@@ -256,7 +256,7 @@ export default function ProductsPage() {
           )}
         >
           All Products
-          <span className="ml-1.5 text-xs opacity-75 font-normal">({products?.length ?? 0})</span>
+          <span className="ml-1.5 text-xs font-normal">({products?.length ?? 0})</span>
         </button>
 
         {categories?.map((cat: Category) => {
@@ -275,7 +275,7 @@ export default function ProductsPage() {
             >
               <Tag className={cn('h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110', isActive ? 'text-amber-300' : 'text-muted-foreground/75')} />
               {cat.name}
-              <span className="text-xs opacity-75 font-normal">({count})</span>
+              <span className="text-xs font-normal">({count})</span>
               {isActive && (
                 <span
                   role="button"

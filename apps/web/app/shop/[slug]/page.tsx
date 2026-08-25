@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import WriteReviewDialog from '@/components/shop/write-review-dialog';
+import { getContrastColor } from '@/lib/color-utils';
 
 interface Category {
   id: string;
@@ -98,6 +99,7 @@ export default function StorefrontPage() {
   });
 
   const primaryColor: string = shop?.primaryColor ?? '#111111';
+  const primaryFg = getContrastColor(primaryColor);
 
   const categories: Category[] = shop?.categories || [];
 
@@ -136,8 +138,31 @@ export default function StorefrontPage() {
 
   if (shopLoading || productsLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="min-h-screen">
+        {/* Hero skeleton — reserves the same footprint as the loaded hero to avoid a large layout shift */}
+        <section className="relative overflow-hidden bg-secondary animate-pulse">
+          <div className="relative container mx-auto px-4 py-20 sm:py-28">
+            <div className="max-w-2xl space-y-4">
+              <div className="h-10 w-3/4 rounded-lg bg-muted-foreground/15" />
+              <div className="h-4 w-full rounded bg-muted-foreground/10" />
+              <div className="h-4 w-2/3 rounded bg-muted-foreground/10" />
+            </div>
+          </div>
+        </section>
+        <section className="bg-card border-b border-border">
+          <div className="container mx-auto px-4 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-10 rounded bg-muted animate-pulse" />
+            ))}
+          </div>
+        </section>
+        <div className="container mx-auto px-4 py-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} className="aspect-4/3 rounded-2xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -296,6 +321,7 @@ export default function StorefrontPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <select
+                aria-label="Sort products"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
@@ -326,7 +352,7 @@ export default function StorefrontPage() {
                 className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border"
                 style={
                   selectedCategory === null
-                    ? { backgroundColor: primaryColor, color: '#fff', borderColor: primaryColor }
+                    ? { backgroundColor: primaryColor, color: primaryFg, borderColor: primaryColor }
                     : {}
                 }
               >
@@ -339,7 +365,7 @@ export default function StorefrontPage() {
                   className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
                   style={
                     selectedCategory === cat.id
-                      ? { backgroundColor: primaryColor, color: '#fff', borderColor: primaryColor }
+                      ? { backgroundColor: primaryColor, color: primaryFg, borderColor: primaryColor }
                       : {}
                   }
                 >
@@ -405,6 +431,9 @@ export default function StorefrontPage() {
                           <img
                             src={product.imageUrl}
                             alt={product.name}
+                            width={400}
+                            height={300}
+                            loading="lazy"
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
@@ -461,7 +490,7 @@ export default function StorefrontPage() {
                       <Link href={`/shop/${slug}/products/${product.id}`} className="mt-auto block">
                         <button
                           className="w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
-                          style={{ backgroundColor: primaryColor, color: '#fff' }}
+                          style={{ backgroundColor: primaryColor, color: primaryFg }}
                         >
                           View details
                           <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />

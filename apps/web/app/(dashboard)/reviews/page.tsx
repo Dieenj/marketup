@@ -160,10 +160,10 @@ export default function DashboardReviewsPage() {
           <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Overall Rating</p>
-              <h3 className="text-2xl font-extrabold mt-1 flex items-baseline gap-1">
+              <p className="text-2xl font-extrabold mt-1 flex items-baseline gap-1">
                 {stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating || '0.0'}
                 <span className="text-xs font-normal text-muted-foreground">/ 5.0</span>
-              </h3>
+              </p>
             </div>
             <div className="h-10 w-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
               <Star className="h-5 w-5 fill-current" />
@@ -173,7 +173,7 @@ export default function DashboardReviewsPage() {
           <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Pending Reviews</p>
-              <h3 className="text-2xl font-extrabold mt-1 text-primary">{pendingCount}</h3>
+              <p className="text-2xl font-extrabold mt-1 text-primary">{pendingCount}</p>
             </div>
             <div className="h-10 w-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
               <Clock className="h-5 w-5" />
@@ -183,7 +183,7 @@ export default function DashboardReviewsPage() {
           <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Product Reviews</p>
-              <h3 className="text-2xl font-extrabold mt-1">{stats.productCount}</h3>
+              <p className="text-2xl font-extrabold mt-1">{stats.productCount}</p>
             </div>
             <div className="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
               <ShoppingBag className="h-5 w-5" />
@@ -193,7 +193,7 @@ export default function DashboardReviewsPage() {
           <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Reviews</p>
-              <h3 className="text-2xl font-extrabold mt-1">{stats.totalCount}</h3>
+              <p className="text-2xl font-extrabold mt-1">{stats.totalCount}</p>
             </div>
             <div className="h-10 w-10 bg-purple-500/10 text-purple-500 rounded-xl flex items-center justify-center">
               <MessageSquare className="h-5 w-5" />
@@ -285,17 +285,17 @@ export default function DashboardReviewsPage() {
                     <span className="text-xs text-muted-foreground">({rev.buyerEmail})</span>
                     
                     {rev.isVerified && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                         Verified Purchase
                       </span>
                     )}
 
                     {rev.status === 'PENDING' ? (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-blue-500/10 text-blue-600 border border-blue-500/20 px-2 py-0.5 rounded-full animate-pulse">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-blue-500/10 text-blue-700 border border-blue-500/20 px-2 py-0.5 rounded-full animate-pulse">
                         Pending Moderation
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                         Approved & Live
                       </span>
                     )}
@@ -335,7 +335,7 @@ export default function DashboardReviewsPage() {
                     <Button
                       size="sm"
                       onClick={() => approveMutation.mutate(rev.id)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-1.5 h-8 px-3"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl gap-1.5 h-8 px-3"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Approve
@@ -345,6 +345,7 @@ export default function DashboardReviewsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    aria-label="Delete review"
                     onClick={() => {
                       if (confirm('Are you sure you want to delete this review?')) {
                         deleteMutation.mutate(rev.id);
