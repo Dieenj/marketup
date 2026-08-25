@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Store } from 'lucide-react';
+import { ArrowLeft, Store } from 'lucide-react';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -92,7 +92,14 @@ export default function RegisterPage() {
       </div>
 
       {/* Panel form đăng ký bên phải */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-[#fafafa]">
+      <div className="flex-1 flex items-center justify-center p-6 bg-[#fafafa] relative">
+        <Link
+          href="/"
+          className="absolute top-6 left-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Link>
         <div className="w-full max-w-[400px]">
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="h-8 w-8 rounded-lg bg-[#111111] flex items-center justify-center">
