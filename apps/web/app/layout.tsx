@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "MarketUp",
   },
+  other: {
+    // Older iOS (<17.4) only recognizes the vendor-prefixed tag; Next.js's
+    // appleWebApp.capable only emits the newer unprefixed "mobile-web-app-capable".
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
