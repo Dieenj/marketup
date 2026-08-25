@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Store, ShoppingBag, BarChart3, Globe, ArrowRight, CheckCircle2 } from 'lucide-react';
+import DownloadAppButton from '@/components/download-app-button';
 
 export default function LandingPage() {
   return (
@@ -35,13 +36,14 @@ export default function LandingPage() {
                   No coding required. Just add products and start selling.
                 </p>
               </div>
-              <div className="space-x-4 pt-4">
+              <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <Link href="/register">
                   <Button size="lg" className="px-8 font-bold text-lg h-14 translate-y-0 hover:-translate-y-1 transition-transform">
                     Build Your Shop Now
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                <DownloadAppButton />
               </div>
             </div>
           </div>

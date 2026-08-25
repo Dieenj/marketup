@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MarketUp</string>
+    <string name="title_activity_main">MarketUp</string>
+    <string name="package_name">vn.marketup.app</string>
+    <string name="custom_url_scheme">vn.marketup.app</string>
+</resources>

@@ -11,6 +11,7 @@ import {
   LogOut,
   ExternalLink,
   MessageSquare,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/hooks/use-auth';
@@ -31,7 +32,13 @@ const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 256;
 const STORAGE_KEY = 'sidebar-width';
 
-export default function Sidebar() {
+export default function Sidebar({
+  isOpen = false,
+  onClose,
+}: {
+  isOpen?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const { logout, user } = useAuthStore();
   const [width, setWidth] = useState(DEFAULT_WIDTH);
@@ -98,18 +105,35 @@ export default function Sidebar() {
     : 'U';
 
   return (
-    <div
-      className="relative flex h-full flex-col bg-[#111111] text-white shrink-0"
-      style={{ width }}
-    >
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <div
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex h-full flex-col bg-[#111111] text-white shrink-0 transition-transform duration-200 ease-out',
+          'md:relative md:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+        style={{ width }}
+      >
       {/* Logo */}
-      <div className="flex h-16 items-center px-5 border-b border-white/8">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
+      <div className="flex h-16 items-center justify-between px-5 border-b border-white/8">
+        <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onClose}>
           <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
             <Store className="h-4.5 w-4.5 text-[#111111]" />
           </div>
           <span className="font-bold text-[17px] tracking-tight text-white truncate">MarketUp</span>
         </Link>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-white/50 hover:bg-white/8 hover:text-white md:hidden"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -123,6 +147,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-150',
                 isActive
@@ -186,7 +211,7 @@ export default function Sidebar() {
       {/* Drag handle */}
       <div
         className={cn(
-          'absolute right-0 top-0 h-full w-1 cursor-col-resize transition-colors group/handle',
+          'absolute right-0 top-0 h-full w-1 cursor-col-resize transition-colors group/handle hidden md:block',
           isResizing ? 'bg-white/30' : 'hover:bg-white/20',
         )}
         onMouseDown={startResize}
@@ -196,6 +221,7 @@ export default function Sidebar() {
           isResizing && 'bg-white/60',
         )} />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -39,3 +39,15 @@ coverage/
 
 # Prisma
 packages/database/prisma/migrations/
+
+# Capacitor / Android native
+apps/web/android/local.properties
+apps/web/android/.gradle/
+apps/web/android/app/build/
+apps/web/android/build/
+apps/web/android/captures/
+apps/web/android/*.iml
+apps/web/android/app/*.iml
+apps/web/ios/App/Pods/
+apps/web/ios/App/build/
+apps/web/ios/App/*.xcworkspace
