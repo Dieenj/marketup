@@ -69,7 +69,9 @@ export default function CategoryForm({
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);
-                    form.setValue('slug', slugify(e.target.value), { shouldValidate: form.formState.isSubmitted });
+                    form.setValue('slug', slugify(e.target.value), {
+                      shouldValidate: form.formState.isSubmitted,
+                    });
                   }}
                 />
               </FormControl>

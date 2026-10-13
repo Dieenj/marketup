@@ -72,8 +72,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catApparel.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600',
       attributes: {
         create: [
           { name: 'Size', options: ['XS', 'S', 'M', 'L', 'XL'] },
@@ -83,7 +82,13 @@ async function main() {
       variants: {
         create: [
           { label: 'S / Sand', options: { Size: 'S', Color: 'Sand' }, price: 59.0, stock: 12 },
-          { label: 'M / Sand', options: { Size: 'M', Color: 'Sand' }, price: 59.0, stock: 18, isDefault: true },
+          {
+            label: 'M / Sand',
+            options: { Size: 'M', Color: 'Sand' },
+            price: 59.0,
+            stock: 18,
+            isDefault: true,
+          },
           { label: 'L / Sand', options: { Size: 'L', Color: 'Sand' }, price: 59.0, stock: 10 },
           { label: 'S / Slate', options: { Size: 'S', Color: 'Slate' }, price: 59.0, stock: 8 },
           { label: 'M / Slate', options: { Size: 'M', Color: 'Slate' }, price: 59.0, stock: 14 },
@@ -107,8 +112,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catApparel.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600',
       attributes: {
         create: [
           { name: 'Size', options: ['XS', 'S', 'M', 'L'] },
@@ -118,7 +122,13 @@ async function main() {
       variants: {
         create: [
           { label: 'XS / Black', options: { Size: 'XS', Color: 'Black' }, price: 89.0, stock: 6 },
-          { label: 'S / Black', options: { Size: 'S', Color: 'Black' }, price: 89.0, stock: 14, isDefault: true },
+          {
+            label: 'S / Black',
+            options: { Size: 'S', Color: 'Black' },
+            price: 89.0,
+            stock: 14,
+            isDefault: true,
+          },
           { label: 'M / Black', options: { Size: 'M', Color: 'Black' }, price: 89.0, stock: 18 },
           { label: 'L / Black', options: { Size: 'L', Color: 'Black' }, price: 89.0, stock: 8 },
           { label: 'S / Cream', options: { Size: 'S', Color: 'Cream' }, price: 89.0, stock: 10 },
@@ -140,16 +150,34 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catAccessories.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=600',
       attributes: {
         create: [{ name: 'Print', options: ['Floral Black', 'Floral Ivory', 'Geometric Blue'] }],
       },
       variants: {
         create: [
-          { label: 'Floral Black', options: { Print: 'Floral Black' }, price: 45.0, comparePrice: 65.0, stock: 20, isDefault: true },
-          { label: 'Floral Ivory', options: { Print: 'Floral Ivory' }, price: 45.0, comparePrice: 65.0, stock: 15 },
-          { label: 'Geometric Blue', options: { Print: 'Geometric Blue' }, price: 45.0, comparePrice: 65.0, stock: 8 },
+          {
+            label: 'Floral Black',
+            options: { Print: 'Floral Black' },
+            price: 45.0,
+            comparePrice: 65.0,
+            stock: 20,
+            isDefault: true,
+          },
+          {
+            label: 'Floral Ivory',
+            options: { Print: 'Floral Ivory' },
+            price: 45.0,
+            comparePrice: 65.0,
+            stock: 15,
+          },
+          {
+            label: 'Geometric Blue',
+            options: { Print: 'Geometric Blue' },
+            price: 45.0,
+            comparePrice: 65.0,
+            stock: 8,
+          },
         ],
       },
     },
@@ -164,8 +192,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catAccessories.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600',
       attributes: {
         create: [
           { name: 'Color', options: ['Tan', 'Black'] },
@@ -174,7 +201,13 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'Tan / S', options: { Color: 'Tan', Length: 'S' }, price: 38.0, stock: 18, isDefault: true },
+          {
+            label: 'Tan / S',
+            options: { Color: 'Tan', Length: 'S' },
+            price: 38.0,
+            stock: 18,
+            isDefault: true,
+          },
           { label: 'Tan / M', options: { Color: 'Tan', Length: 'M' }, price: 38.0, stock: 22 },
           { label: 'Black / M', options: { Color: 'Black', Length: 'M' }, price: 38.0, stock: 16 },
           { label: 'Black / L', options: { Color: 'Black', Length: 'L' }, price: 38.0, stock: 12 },
@@ -192,14 +225,19 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catBags.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Natural', 'Black', 'Forest Green'] }],
       },
       variants: {
         create: [
-          { label: 'Natural', options: { Color: 'Natural' }, price: 78.0, stock: 25, isDefault: true },
+          {
+            label: 'Natural',
+            options: { Color: 'Natural' },
+            price: 78.0,
+            stock: 25,
+            isDefault: true,
+          },
           { label: 'Black', options: { Color: 'Black' }, price: 78.0, stock: 30 },
           { label: 'Forest Green', options: { Color: 'Forest Green' }, price: 78.0, stock: 12 },
         ],
@@ -217,8 +255,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catBags.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1512641407323-51c321a29aaa?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1512641407323-51c321a29aaa?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Cream', 'Black'] }],
       },
@@ -240,8 +277,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catOuterwear.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=600',
       attributes: {
         create: [
           { name: 'Size', options: ['XS', 'S', 'M', 'L', 'XL'] },
@@ -250,14 +286,55 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'S / Oatmeal', options: { Size: 'S', Color: 'Oatmeal' }, price: 120.0, stock: 10 },
-          { label: 'M / Oatmeal', options: { Size: 'M', Color: 'Oatmeal' }, price: 120.0, stock: 14, isDefault: true },
-          { label: 'L / Oatmeal', options: { Size: 'L', Color: 'Oatmeal' }, price: 120.0, stock: 8 },
-          { label: 'S / Charcoal', options: { Size: 'S', Color: 'Charcoal' }, price: 120.0, stock: 12 },
-          { label: 'M / Charcoal', options: { Size: 'M', Color: 'Charcoal' }, price: 120.0, stock: 16 },
-          { label: 'L / Charcoal', options: { Size: 'L', Color: 'Charcoal' }, price: 120.0, stock: 6 },
-          { label: 'S / Dusty Rose', options: { Size: 'S', Color: 'Dusty Rose' }, price: 120.0, stock: 7 },
-          { label: 'M / Dusty Rose', options: { Size: 'M', Color: 'Dusty Rose' }, price: 120.0, stock: 9 },
+          {
+            label: 'S / Oatmeal',
+            options: { Size: 'S', Color: 'Oatmeal' },
+            price: 120.0,
+            stock: 10,
+          },
+          {
+            label: 'M / Oatmeal',
+            options: { Size: 'M', Color: 'Oatmeal' },
+            price: 120.0,
+            stock: 14,
+            isDefault: true,
+          },
+          {
+            label: 'L / Oatmeal',
+            options: { Size: 'L', Color: 'Oatmeal' },
+            price: 120.0,
+            stock: 8,
+          },
+          {
+            label: 'S / Charcoal',
+            options: { Size: 'S', Color: 'Charcoal' },
+            price: 120.0,
+            stock: 12,
+          },
+          {
+            label: 'M / Charcoal',
+            options: { Size: 'M', Color: 'Charcoal' },
+            price: 120.0,
+            stock: 16,
+          },
+          {
+            label: 'L / Charcoal',
+            options: { Size: 'L', Color: 'Charcoal' },
+            price: 120.0,
+            stock: 6,
+          },
+          {
+            label: 'S / Dusty Rose',
+            options: { Size: 'S', Color: 'Dusty Rose' },
+            price: 120.0,
+            stock: 7,
+          },
+          {
+            label: 'M / Dusty Rose',
+            options: { Size: 'M', Color: 'Dusty Rose' },
+            price: 120.0,
+            stock: 9,
+          },
         ],
       },
     },
@@ -273,8 +350,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catOuterwear.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1520962915122-8bcbf628a0f0?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1520962915122-8bcbf628a0f0?w=600',
       attributes: {
         create: [
           { name: 'Size', options: ['S', 'M', 'L'] },
@@ -283,11 +359,42 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'S / Sand', options: { Size: 'S', Color: 'Sand' }, price: 145.0, comparePrice: 189.0, stock: 10 },
-          { label: 'M / Sand', options: { Size: 'M', Color: 'Sand' }, price: 145.0, comparePrice: 189.0, stock: 12, isDefault: true },
-          { label: 'L / Sand', options: { Size: 'L', Color: 'Sand' }, price: 145.0, comparePrice: 189.0, stock: 8 },
-          { label: 'S / Olive', options: { Size: 'S', Color: 'Olive' }, price: 145.0, comparePrice: 189.0, stock: 9 },
-          { label: 'M / Olive', options: { Size: 'M', Color: 'Olive' }, price: 145.0, comparePrice: 189.0, stock: 11 },
+          {
+            label: 'S / Sand',
+            options: { Size: 'S', Color: 'Sand' },
+            price: 145.0,
+            comparePrice: 189.0,
+            stock: 10,
+          },
+          {
+            label: 'M / Sand',
+            options: { Size: 'M', Color: 'Sand' },
+            price: 145.0,
+            comparePrice: 189.0,
+            stock: 12,
+            isDefault: true,
+          },
+          {
+            label: 'L / Sand',
+            options: { Size: 'L', Color: 'Sand' },
+            price: 145.0,
+            comparePrice: 189.0,
+            stock: 8,
+          },
+          {
+            label: 'S / Olive',
+            options: { Size: 'S', Color: 'Olive' },
+            price: 145.0,
+            comparePrice: 189.0,
+            stock: 9,
+          },
+          {
+            label: 'M / Olive',
+            options: { Size: 'M', Color: 'Olive' },
+            price: 145.0,
+            comparePrice: 189.0,
+            stock: 11,
+          },
         ],
       },
     },
@@ -347,14 +454,19 @@ async function main() {
       shopId: volt.id,
       categoryId: catDesk.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Space Grey', 'Silver'] }],
       },
       variants: {
         create: [
-          { label: 'Space Grey', options: { Color: 'Space Grey' }, price: 49.99, stock: 50, isDefault: true },
+          {
+            label: 'Space Grey',
+            options: { Color: 'Space Grey' },
+            price: 49.99,
+            stock: 50,
+            isDefault: true,
+          },
           { label: 'Silver', options: { Color: 'Silver' }, price: 49.99, stock: 35 },
         ],
       },
@@ -371,8 +483,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catDesk.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1587202372583-49330a15584d?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1587202372583-49330a15584d?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Black', 'Dark Brown', 'Tan'] }],
       },
@@ -396,8 +507,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catCables.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1583394293214-5de0b5c28ba5?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1583394293214-5de0b5c28ba5?w=600',
       attributes: {
         create: [
           { name: 'Length', options: ['1m', '2m'] },
@@ -406,11 +516,32 @@ async function main() {
       },
       variants: {
         create: [
-          { label: '1m / Black', options: { Length: '1m', Color: 'Black' }, price: 18.0, stock: 80, isDefault: true },
-          { label: '1m / White', options: { Length: '1m', Color: 'White' }, price: 18.0, stock: 65 },
+          {
+            label: '1m / Black',
+            options: { Length: '1m', Color: 'Black' },
+            price: 18.0,
+            stock: 80,
+            isDefault: true,
+          },
+          {
+            label: '1m / White',
+            options: { Length: '1m', Color: 'White' },
+            price: 18.0,
+            stock: 65,
+          },
           { label: '1m / Sage', options: { Length: '1m', Color: 'Sage' }, price: 18.0, stock: 40 },
-          { label: '2m / Black', options: { Length: '2m', Color: 'Black' }, price: 22.0, stock: 60 },
-          { label: '2m / White', options: { Length: '2m', Color: 'White' }, price: 22.0, stock: 50 },
+          {
+            label: '2m / Black',
+            options: { Length: '2m', Color: 'Black' },
+            price: 22.0,
+            stock: 60,
+          },
+          {
+            label: '2m / White',
+            options: { Length: '2m', Color: 'White' },
+            price: 22.0,
+            stock: 50,
+          },
           { label: '2m / Sage', options: { Length: '2m', Color: 'Sage' }, price: 22.0, stock: 28 },
         ],
       },
@@ -427,14 +558,19 @@ async function main() {
       shopId: volt.id,
       categoryId: catCables.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?w=600',
       attributes: {
         create: [{ name: 'Port', options: ['1×USB-C', '2×USB-C'] }],
       },
       variants: {
         create: [
-          { label: '1×USB-C', options: { Port: '1×USB-C' }, price: 39.0, stock: 55, isDefault: true },
+          {
+            label: '1×USB-C',
+            options: { Port: '1×USB-C' },
+            price: 39.0,
+            stock: 55,
+            isDefault: true,
+          },
           { label: '2×USB-C', options: { Port: '2×USB-C' }, price: 49.0, stock: 32 },
         ],
       },
@@ -451,16 +587,34 @@ async function main() {
       shopId: volt.id,
       categoryId: catAudio.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Obsidian', 'Pearl White', 'Slate Blue'] }],
       },
       variants: {
         create: [
-          { label: 'Obsidian', options: { Color: 'Obsidian' }, price: 129.0, comparePrice: 159.0, stock: 40, isDefault: true },
-          { label: 'Pearl White', options: { Color: 'Pearl White' }, price: 129.0, comparePrice: 159.0, stock: 35 },
-          { label: 'Slate Blue', options: { Color: 'Slate Blue' }, price: 129.0, comparePrice: 159.0, stock: 20 },
+          {
+            label: 'Obsidian',
+            options: { Color: 'Obsidian' },
+            price: 129.0,
+            comparePrice: 159.0,
+            stock: 40,
+            isDefault: true,
+          },
+          {
+            label: 'Pearl White',
+            options: { Color: 'Pearl White' },
+            price: 129.0,
+            comparePrice: 159.0,
+            stock: 35,
+          },
+          {
+            label: 'Slate Blue',
+            options: { Color: 'Slate Blue' },
+            price: 129.0,
+            comparePrice: 159.0,
+            stock: 20,
+          },
         ],
       },
     },
@@ -476,8 +630,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catAudio.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600',
       attributes: {
         create: [{ name: 'Finish', options: ['Black', 'Silver'] }],
       },
@@ -499,15 +652,25 @@ async function main() {
       shopId: volt.id,
       categoryId: catPhoneGear.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1609081219090-a6d81d3085bf?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1609081219090-a6d81d3085bf?w=600',
       attributes: {
         create: [{ name: 'Finish', options: ['Midnight Black', 'Brushed Silver'] }],
       },
       variants: {
         create: [
-          { label: 'Midnight Black', options: { Finish: 'Midnight Black' }, price: 85.0, stock: 30, isDefault: true },
-          { label: 'Brushed Silver', options: { Finish: 'Brushed Silver' }, price: 85.0, stock: 22 },
+          {
+            label: 'Midnight Black',
+            options: { Finish: 'Midnight Black' },
+            price: 85.0,
+            stock: 30,
+            isDefault: true,
+          },
+          {
+            label: 'Brushed Silver',
+            options: { Finish: 'Brushed Silver' },
+            price: 85.0,
+            stock: 22,
+          },
         ],
       },
     },
@@ -523,8 +686,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catPhoneGear.id,
       isVisible: true,
-      imageUrl:
-        'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600',
       attributes: {
         create: [
           { name: 'Model', options: ['iPhone 15 Pro', 'iPhone 15 Pro Max'] },
@@ -533,14 +695,55 @@ async function main() {
       },
       variants: {
         create: [
-          { label: '15 Pro / Clear', options: { Model: 'iPhone 15 Pro', Color: 'Clear' }, price: 29.0, stock: 45, isDefault: true },
-          { label: '15 Pro / Midnight', options: { Model: 'iPhone 15 Pro', Color: 'Midnight' }, price: 29.0, stock: 38 },
-          { label: '15 Pro / Starlight', options: { Model: 'iPhone 15 Pro', Color: 'Starlight' }, price: 29.0, stock: 30 },
-          { label: '15 Pro / Deep Purple', options: { Model: 'iPhone 15 Pro', Color: 'Deep Purple' }, price: 29.0, stock: 25 },
-          { label: '15 Pro Max / Clear', options: { Model: 'iPhone 15 Pro Max', Color: 'Clear' }, price: 32.0, stock: 40 },
-          { label: '15 Pro Max / Midnight', options: { Model: 'iPhone 15 Pro Max', Color: 'Midnight' }, price: 32.0, stock: 35 },
-          { label: '15 Pro Max / Starlight', options: { Model: 'iPhone 15 Pro Max', Color: 'Starlight' }, price: 32.0, stock: 28 },
-          { label: '15 Pro Max / Deep Purple', options: { Model: 'iPhone 15 Pro Max', Color: 'Deep Purple' }, price: 32.0, stock: 18 },
+          {
+            label: '15 Pro / Clear',
+            options: { Model: 'iPhone 15 Pro', Color: 'Clear' },
+            price: 29.0,
+            stock: 45,
+            isDefault: true,
+          },
+          {
+            label: '15 Pro / Midnight',
+            options: { Model: 'iPhone 15 Pro', Color: 'Midnight' },
+            price: 29.0,
+            stock: 38,
+          },
+          {
+            label: '15 Pro / Starlight',
+            options: { Model: 'iPhone 15 Pro', Color: 'Starlight' },
+            price: 29.0,
+            stock: 30,
+          },
+          {
+            label: '15 Pro / Deep Purple',
+            options: { Model: 'iPhone 15 Pro', Color: 'Deep Purple' },
+            price: 29.0,
+            stock: 25,
+          },
+          {
+            label: '15 Pro Max / Clear',
+            options: { Model: 'iPhone 15 Pro Max', Color: 'Clear' },
+            price: 32.0,
+            stock: 40,
+          },
+          {
+            label: '15 Pro Max / Midnight',
+            options: { Model: 'iPhone 15 Pro Max', Color: 'Midnight' },
+            price: 32.0,
+            stock: 35,
+          },
+          {
+            label: '15 Pro Max / Starlight',
+            options: { Model: 'iPhone 15 Pro Max', Color: 'Starlight' },
+            price: 32.0,
+            stock: 28,
+          },
+          {
+            label: '15 Pro Max / Deep Purple',
+            options: { Model: 'iPhone 15 Pro Max', Color: 'Deep Purple' },
+            price: 32.0,
+            stock: 18,
+          },
         ],
       },
     },
@@ -550,10 +753,10 @@ async function main() {
 
   // ─── ĐƠN HÀNG — Cửa hàng Lumière ──────────────────────────────────────────────────────
   const linenShirtV = linenShirt.variants.find((v) => v.label === 'M / Sand')!;
-  const trousersV   = trousers.variants.find((v) => v.label === 'S / Black')!;
-  const toteV       = canvasTote.variants.find((v) => v.label === 'Black')!;
-  const sweaterV    = merinoSweater.variants.find((v) => v.label === 'M / Oatmeal')!;
-  const trenchV     = trenchCoat.variants.find((v) => v.label === 'M / Sand')!;
+  const trousersV = trousers.variants.find((v) => v.label === 'S / Black')!;
+  const toteV = canvasTote.variants.find((v) => v.label === 'Black')!;
+  const sweaterV = merinoSweater.variants.find((v) => v.label === 'M / Oatmeal')!;
+  const trenchV = trenchCoat.variants.find((v) => v.label === 'M / Sand')!;
 
   // ORD-2025-001 — ĐÃ GIAO HÀNG (đã thanh toán qua Stripe)
   await prisma.order.create({
@@ -769,12 +972,12 @@ async function main() {
   console.log('✅ Created 6 orders for Lumière');
 
   // ─── ĐƠN HÀNG — Cửa hàng Volt Tech ────────────────────────────────────────────────────
-  const hubV     = usbHub.variants.find((v) => v.label === 'Space Grey')!;
-  const matV     = deskMat.variants.find((v) => v.label === 'Black')!;
-  const cableV   = braidedCable.variants.find((v) => v.label === '2m / Black')!;
+  const hubV = usbHub.variants.find((v) => v.label === 'Space Grey')!;
+  const matV = deskMat.variants.find((v) => v.label === 'Black')!;
+  const cableV = braidedCable.variants.find((v) => v.label === '2m / Black')!;
   const chargerV = ganCharger.variants.find((v) => v.label === '2×USB-C')!;
   const earbudsV = probuds.variants.find((v) => v.label === 'Obsidian')!;
-  const standV   = magStand.variants.find((v) => v.label === 'Midnight Black')!;
+  const standV = magStand.variants.find((v) => v.label === 'Midnight Black')!;
 
   // ORD-2025-007 — ĐÃ GIAO HÀNG (giỏ hàng lớn)
   await prisma.order.create({

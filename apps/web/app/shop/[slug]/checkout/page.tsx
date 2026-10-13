@@ -8,12 +8,7 @@ import * as z from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -45,7 +40,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotal, clearCart, removeItem, updateQuantity } = useCartStore();
   const rememberOrder = useRecentOrdersStore((s) => s.remember);
-  
+
   const total = getTotal();
 
   const form = useForm<z.infer<typeof checkoutSchema>>({
@@ -66,7 +61,7 @@ export default function CheckoutPage() {
       const shopId = shopRes.data.id;
 
       // 2. Định dạng danh sách các chi tiết đơn hàng (order items)
-      const orderItems = items.map(item => ({
+      const orderItems = items.map((item) => ({
         productId: item.id,
         quantity: item.quantity,
         ...(item.variantId ? { variantId: item.variantId } : {}),
@@ -116,7 +111,10 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Link href={`/shop/${slug}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors">
+      <Link
+        href={`/shop/${slug}`}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
+      >
         <ChevronLeft className="h-4 w-4" />
         Back to Products
       </Link>
@@ -126,7 +124,9 @@ export default function CheckoutPage() {
         <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Checkout</h1>
-            <p className="text-muted-foreground">Please fill in your shipping details to complete the order.</p>
+            <p className="text-muted-foreground">
+              Please fill in your shipping details to complete the order.
+            </p>
           </div>
 
           <Form {...form}>
@@ -215,11 +215,18 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm font-medium">Cash on Delivery (COD)</p>
-                  <p className="text-xs text-muted-foreground mt-1">Pay with cash upon receiving your order.</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pay with cash upon receiving your order.
+                  </p>
                 </CardContent>
               </Card>
 
-              <Button type="submit" className="w-full text-lg py-6 font-bold" size="lg" disabled={mutation.isPending}>
+              <Button
+                type="submit"
+                className="w-full text-lg py-6 font-bold"
+                size="lg"
+                disabled={mutation.isPending}
+              >
                 {mutation.isPending ? 'Processing...' : `Place Order • ${formatCurrency(total)}`}
               </Button>
             </form>
@@ -228,72 +235,89 @@ export default function CheckoutPage() {
 
         {/* Phía bên phải: Tóm tắt thông tin đơn hàng và tổng tiền */}
         <div className="space-y-8">
-           <Card className="sticky top-24 border-2 shadow-lg">
-             <CardHeader>
-               <CardTitle>Order Summary</CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
-                 {items.map((item) => (
-                   <div key={`${item.id}-${item.variantId ?? 'base'}`} className="flex gap-3 p-3 rounded-xl bg-[#fafafa] border border-border/40">
-                     <div className="h-14 w-14 bg-muted rounded-lg overflow-hidden shrink-0">
-                       {item.imageUrl ? <RemoteImage src={item.imageUrl} alt={item.name} width={56} height={56} className="h-full w-full object-cover" /> : <div className="h-full w-full" />}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="font-medium text-sm truncate">{item.name}</p>
-                       {item.variantLabel && <p className="text-xs text-muted-foreground">{item.variantLabel}</p>}
-                       <p className="text-sm font-semibold mt-0.5">{formatCurrency(item.price * item.quantity)}</p>
-                       <div className="flex items-center gap-2 mt-1.5">
-                         <button
-                           type="button"
-                           onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId)}
-                           aria-label={`Decrease quantity of ${item.name}`}
-                           className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
-                         >
-                           <Minus className="h-3 w-3" aria-hidden />
-                         </button>
-                         <span className="text-sm font-medium w-5 text-center">{item.quantity}</span>
-                         <button
-                           type="button"
-                           onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId)}
-                           aria-label={`Increase quantity of ${item.name}`}
-                           className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
-                         >
-                           <Plus className="h-3 w-3" aria-hidden />
-                         </button>
-                       </div>
-                     </div>
-                     <button
-                       type="button"
-                       onClick={() => removeItem(item.id, item.variantId)}
-                       aria-label={`Remove ${item.name} from cart`}
-                       className="text-muted-foreground hover:text-red-500 transition-colors self-start mt-0.5 p-1"
-                     >
-                       <Trash2 className="h-4 w-4" aria-hidden />
-                     </button>
-                   </div>
-                 ))}
-               </div>
-               
-               <Separator />
-               
-               <div className="space-y-1.5">
-                 <div className="flex justify-between text-sm">
-                   <span className="text-muted-foreground">Subtotal</span>
-                   <span>{formatCurrency(total)}</span>
-                 </div>
-                 <div className="flex justify-between text-sm">
-                   <span className="text-muted-foreground">Shipping</span>
-                   <span className="text-green-600 font-medium">Free</span>
-                 </div>
-                 <Separator className="my-2" />
-                 <div className="flex justify-between text-lg font-bold">
-                   <span>Total</span>
-                   <span className="text-primary">{formatCurrency(total)}</span>
-                 </div>
-               </div>
-             </CardContent>
-           </Card>
+          <Card className="sticky top-24 border-2 shadow-lg">
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
+                {items.map((item) => (
+                  <div
+                    key={`${item.id}-${item.variantId ?? 'base'}`}
+                    className="flex gap-3 p-3 rounded-xl bg-[#fafafa] border border-border/40"
+                  >
+                    <div className="h-14 w-14 bg-muted rounded-lg overflow-hidden shrink-0">
+                      {item.imageUrl ? (
+                        <RemoteImage
+                          src={item.imageUrl}
+                          alt={item.name}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{item.name}</p>
+                      {item.variantLabel && (
+                        <p className="text-xs text-muted-foreground">{item.variantLabel}</p>
+                      )}
+                      <p className="text-sm font-semibold mt-0.5">
+                        {formatCurrency(item.price * item.quantity)}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId)}
+                          aria-label={`Decrease quantity of ${item.name}`}
+                          className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <Minus className="h-3 w-3" aria-hidden />
+                        </button>
+                        <span className="text-sm font-medium w-5 text-center">{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId)}
+                          aria-label={`Increase quantity of ${item.name}`}
+                          className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
+                        >
+                          <Plus className="h-3 w-3" aria-hidden />
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id, item.variantId)}
+                      aria-label={`Remove ${item.name} from cart`}
+                      className="text-muted-foreground hover:text-red-500 transition-colors self-start mt-0.5 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="text-green-600 font-medium">Free</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">{formatCurrency(total)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

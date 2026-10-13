@@ -58,7 +58,9 @@ export default function LoginPage() {
       aside={
         <>
           <h2 className="text-4xl font-bold leading-snug text-white">
-            Welcome back to<br />your storefront.
+            Welcome back to
+            <br />
+            your storefront.
           </h2>
           <p className="mt-4 text-white/50 text-lg leading-relaxed max-w-sm">
             Manage your products, track orders, and grow your business — all in one place.
@@ -70,7 +72,10 @@ export default function LoginPage() {
       footer={
         <>
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-foreground font-semibold hover:underline underline-offset-4">
+          <Link
+            href="/register"
+            className="text-foreground font-semibold hover:underline underline-offset-4"
+          >
             Create one
           </Link>
         </>
@@ -85,11 +90,7 @@ export default function LoginPage() {
               <FormItem>
                 <FormLabel className="text-sm font-medium">Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="you@example.com"
-                    className="h-11 bg-card"
-                    {...field}
-                  />
+                  <Input placeholder="you@example.com" className="h-11 bg-card" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

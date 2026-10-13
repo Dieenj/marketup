@@ -8,16 +8,16 @@
 
 Backend được chia nhỏ thành các module rõ ràng theo chức năng:
 
-*   **`AuthModule`**: Quản lý đăng ký, đăng nhập và phân quyền của chủ shop (Seller) sử dụng JWT.
-*   **`ShopModule`**: Xử lý thông tin cửa hàng, slug định danh độc nhất, cấu hình và trạng thái của shop.
-*   **`ProductModule`**: CRUD sản phẩm, quản lý tồn kho và thông số các biến thể (Product Variants).
-*   **`CategoryModule`**: Quản lý các danh mục sản phẩm theo từng shop.
-*   **`OrderModule`**: Xử lý tạo đơn hàng, tính toán tổng tiền, cập nhật trạng thái đơn hàng (COD).
-*   **`ReviewModule`**: Quản lý hệ thống đánh giá sản phẩm & dịch vụ. Có tính năng kiểm tra tự động xem khách hàng đã mua sản phẩm đó hay chưa để gắn nhãn `Verified Purchase` (Đã mua hàng).
-*   **`MailModule`**: Hệ thống xử lý gửi email tự động được xây dựng trên **Nodemailer**, hỗ trợ gửi email HTML chuẩn SEO/Aesthetics cực đẹp.
-*   **`DashboardModule`**: Cung cấp số liệu thống kê tổng hợp (doanh thu, biểu đồ tăng trưởng, sản phẩm bán chạy) cho người bán.
-*   **`UploadModule`**: Tiếp nhận và đẩy ảnh trực tiếp lên **Cloudinary Cloud Storage**.
-*   **`PrismaModule`**: Cung cấp kết nối prisma client chia sẻ dùng chung trong toàn bộ hệ thống.
+- **`AuthModule`**: Quản lý đăng ký, đăng nhập và phân quyền của chủ shop (Seller) sử dụng JWT.
+- **`ShopModule`**: Xử lý thông tin cửa hàng, slug định danh độc nhất, cấu hình và trạng thái của shop.
+- **`ProductModule`**: CRUD sản phẩm, quản lý tồn kho và thông số các biến thể (Product Variants).
+- **`CategoryModule`**: Quản lý các danh mục sản phẩm theo từng shop.
+- **`OrderModule`**: Xử lý tạo đơn hàng, tính toán tổng tiền, cập nhật trạng thái đơn hàng (COD).
+- **`ReviewModule`**: Quản lý hệ thống đánh giá sản phẩm & dịch vụ. Có tính năng kiểm tra tự động xem khách hàng đã mua sản phẩm đó hay chưa để gắn nhãn `Verified Purchase` (Đã mua hàng).
+- **`MailModule`**: Hệ thống xử lý gửi email tự động được xây dựng trên **Nodemailer**, hỗ trợ gửi email HTML chuẩn SEO/Aesthetics cực đẹp.
+- **`DashboardModule`**: Cung cấp số liệu thống kê tổng hợp (doanh thu, biểu đồ tăng trưởng, sản phẩm bán chạy) cho người bán.
+- **`UploadModule`**: Tiếp nhận và đẩy ảnh trực tiếp lên **Cloudinary Cloud Storage**.
+- **`PrismaModule`**: Cung cấp kết nối prisma client chia sẻ dùng chung trong toàn bộ hệ thống.
 
 ---
 
@@ -54,16 +54,19 @@ FRONTEND_URL="http://localhost:3000"
 Di chuyển đến thư mục api hoặc chạy trực tiếp từ root monorepo:
 
 ### Khởi chạy chế độ Development (Watch mode)
+
 ```bash
 pnpm run start:dev
 ```
 
 ### Build sản phẩm Production
+
 ```bash
 pnpm run build
 ```
 
 ### Chạy Production Mode
+
 ```bash
 pnpm run start:prod
 ```

@@ -5,13 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  ImageIcon,
-  ShoppingBag,
-  Search,
-  ArrowRight,
-  Filter,
-} from 'lucide-react';
+import { ImageIcon, ShoppingBag, Search, ArrowRight, Filter } from 'lucide-react';
 import Link from 'next/link';
 import WriteReviewDialog from '@/components/shop/write-review-dialog';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
@@ -110,15 +104,18 @@ export default function StorefrontClient() {
         !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesCategory =
-        !selectedCategory || p.category?.id === selectedCategory;
+      const matchesCategory = !selectedCategory || p.category?.id === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
     if (sortBy === 'price-asc') {
-      list = [...list].sort((a: Product, b: Product) => getMinPrice(a.variants) - getMinPrice(b.variants));
+      list = [...list].sort(
+        (a: Product, b: Product) => getMinPrice(a.variants) - getMinPrice(b.variants),
+      );
     } else if (sortBy === 'price-desc') {
-      list = [...list].sort((a: Product, b: Product) => getMinPrice(b.variants) - getMinPrice(a.variants));
+      list = [...list].sort(
+        (a: Product, b: Product) => getMinPrice(b.variants) - getMinPrice(a.variants),
+      );
     }
 
     return list;
@@ -126,7 +123,9 @@ export default function StorefrontClient() {
 
   const reviewCount = stats?.totalCount ?? 0;
   const overallRating = stats
-    ? (stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating)
+    ? stats.averageShopRating > 0
+      ? stats.averageShopRating
+      : stats.averageProductRating
     : 0;
 
   if (shopLoading || productsLoading) return <StorefrontSkeleton shop={shop} />;
@@ -196,7 +195,11 @@ export default function StorefrontClient() {
                           {formatDate(review.createdAt)}
                         </p>
                       </div>
-                      <StarRating value={review.rating} className="shrink-0" starClassName="size-3" />
+                      <StarRating
+                        value={review.rating}
+                        className="shrink-0"
+                        starClassName="size-3"
+                      />
                     </div>
                     {review.comment && (
                       <p className="text-sm text-foreground/80 leading-relaxed mb-3 line-clamp-3">
@@ -220,7 +223,9 @@ export default function StorefrontClient() {
           <div className="flex items-end justify-between">
             <div>
               <h2 className="text-xl font-bold text-foreground">Our Products</h2>
-              <p className="text-muted-foreground text-sm mt-0.5">{filteredProducts.length} products</p>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {filteredProducts.length} products
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -231,7 +236,9 @@ export default function StorefrontClient() {
                 className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
               >
                 {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -239,7 +246,10 @@ export default function StorefrontClient() {
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              aria-hidden
+            />
             <Input
               aria-label="Search products"
               placeholder="Search products..."
@@ -270,7 +280,11 @@ export default function StorefrontClient() {
                   className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
                   style={
                     selectedCategory === cat.id
-                      ? { backgroundColor: primaryColor, color: primaryFg, borderColor: primaryColor }
+                      ? {
+                          backgroundColor: primaryColor,
+                          color: primaryFg,
+                          borderColor: primaryColor,
+                        }
                       : {}
                   }
                 >
@@ -288,13 +302,18 @@ export default function StorefrontClient() {
               </div>
               <p className="font-semibold text-foreground">No products found</p>
               <p className="text-muted-foreground text-sm mt-1">
-                {searchQuery || selectedCategory ? 'Try adjusting your filters.' : 'Check back soon!'}
+                {searchQuery || selectedCategory
+                  ? 'Try adjusting your filters.'
+                  : 'Check back soon!'}
               </p>
               {(searchQuery || selectedCategory) && (
                 <Button
                   variant="outline"
                   className="mt-4 rounded-xl"
-                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                  }}
                 >
                   Clear filters
                 </Button>
@@ -304,17 +323,22 @@ export default function StorefrontClient() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredProducts.map((product: Product) => {
                 const hasVariants = Boolean(product.variants?.length);
-                const variantStock = product.variants?.reduce(
-                  (total, variant) => total + Math.max(variant.stock, 0), 0
-                ) || 0;
+                const variantStock =
+                  product.variants?.reduce(
+                    (total, variant) => total + Math.max(variant.stock, 0),
+                    0,
+                  ) || 0;
                 const availableStock = hasVariants ? variantStock : Number(product.stock || 0);
                 const isOutOfStock = availableStock <= 0;
 
-                const { min: minPrice, max: maxPrice } = getPriceRange(product.variants) ?? { min: 0, max: 0 };
+                const { min: minPrice, max: maxPrice } = getPriceRange(product.variants) ?? {
+                  min: 0,
+                  max: 0,
+                };
 
                 const comparePrices = (product.variants || [])
-                  .filter(v => v.comparePrice != null && Number(v.comparePrice) > 0)
-                  .map(v => Number(v.comparePrice));
+                  .filter((v) => v.comparePrice != null && Number(v.comparePrice) > 0)
+                  .map((v) => Number(v.comparePrice));
                 const maxComparePrice = comparePrices.length > 0 ? Math.max(...comparePrices) : 0;
                 const hasDiscount = maxComparePrice > minPrice;
                 const discountPct = hasDiscount
@@ -409,11 +433,7 @@ export default function StorefrontClient() {
         </section>
       </div>
 
-      <WriteReviewDialog
-        open={isReviewOpen}
-        onOpenChange={setIsReviewOpen}
-        shopId={shop.id}
-      />
+      <WriteReviewDialog open={isReviewOpen} onOpenChange={setIsReviewOpen} shopId={shop.id} />
     </div>
   );
 }

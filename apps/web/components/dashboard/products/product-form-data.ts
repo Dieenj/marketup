@@ -34,7 +34,11 @@ function serializeVariants(variants: VariantDef[]) {
 // FormData (multipart, kèm ảnh) cho POST /products/:shopId và PATCH /products/:id
 export function buildProductFormData(
   values: ProductBasicValues & { isVisible?: boolean },
-  { attributes, variants, images }: { attributes: AttributeDef[]; variants: VariantDef[]; images: File[] },
+  {
+    attributes,
+    variants,
+    images,
+  }: { attributes: AttributeDef[]; variants: VariantDef[]; images: File[] },
 ) {
   const variantsPayload = serializeVariants(variants);
 

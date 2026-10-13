@@ -18,12 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -62,7 +57,6 @@ interface Order {
   items?: OrderItem[];
 }
 
-
 export default function OrdersPage() {
   const queryClient = useQueryClient();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -71,7 +65,12 @@ export default function OrdersPage() {
 
   const { data: shop } = useMyShop();
 
-  const { data: orders, isLoading, isError, refetch } = useQuery({
+  const {
+    data: orders,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['orders', shop?.id],
     queryFn: async () => {
       const { data } = await api.get(`/orders/shop/${shop!.id}`);
@@ -95,7 +94,10 @@ export default function OrdersPage() {
 
   // Đổi trạng thái đơn; huỷ đơn là thao tác không hoàn tác nên cần xác nhận
   const changeStatus = (order: Order, status: string, onSuccess?: () => void) => {
-    if (status === 'CANCELLED' && !confirm(`Cancel order #${order.orderNumber}? This cannot be undone.`)) {
+    if (
+      status === 'CANCELLED' &&
+      !confirm(`Cancel order #${order.orderNumber}? This cannot be undone.`)
+    ) {
       return;
     }
     updateStatusMutation.mutate({ orderId: order.id, status }, { onSuccess });
@@ -111,8 +113,9 @@ export default function OrdersPage() {
   const filteredOrders = allOrders.filter((order) => {
     if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
     if (!normalizedSearch) return true;
-    return [order.orderNumber, order.buyerName, order.buyerEmail]
-      .some((field) => field?.toLowerCase().includes(normalizedSearch));
+    return [order.orderNumber, order.buyerName, order.buyerEmail].some((field) =>
+      field?.toLowerCase().includes(normalizedSearch),
+    );
   });
   const isFiltered = statusFilter !== 'ALL' || !!normalizedSearch;
 
@@ -123,16 +126,24 @@ export default function OrdersPage() {
       <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
         {/* Bộ lọc trạng thái & tìm kiếm */}
         <div className="flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
-          <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(String(value))} className="min-w-0">
+          <Tabs
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(String(value))}
+            className="min-w-0"
+          >
             <TabsList className="max-w-full justify-start overflow-x-auto">
               <TabsTrigger value="ALL" className="flex-none px-2.5">
                 All
-                <span className="text-xs tabular-nums text-muted-foreground">{allOrders.length}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {allOrders.length}
+                </span>
               </TabsTrigger>
               {ORDER_STATUSES.map((status) => (
                 <TabsTrigger key={status} value={status} className="flex-none px-2.5">
                   {statusLabels[status]}
-                  <span className="text-xs tabular-nums text-muted-foreground">{statusCounts[status] ?? 0}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {statusCounts[status] ?? 0}
+                  </span>
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -158,18 +169,30 @@ export default function OrdersPage() {
               <TableHead className="pl-4 sm:pl-2">Customer</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell w-12 pr-4"><span className="sr-only">Actions</span></TableHead>
+              <TableHead className="hidden sm:table-cell w-12 pr-4">
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               [...Array(5)].map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell className="hidden sm:table-cell pl-4"><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell className="pl-4 sm:pl-2"><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="ml-auto h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                  <TableCell className="hidden sm:table-cell pl-4">
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell className="pl-4 sm:pl-2">
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="ml-auto h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </TableCell>
                   <TableCell className="hidden sm:table-cell pr-4" />
                 </TableRow>
               ))
@@ -214,23 +237,38 @@ export default function OrdersPage() {
               </TableRow>
             ) : (
               filteredOrders.map((order) => (
-                <TableRow key={order.id} className="cursor-pointer" onClick={() => setSelectedOrder(order)}>
-                  <TableCell className="hidden sm:table-cell pl-4 font-mono text-xs">#{order.orderNumber}</TableCell>
+                <TableRow
+                  key={order.id}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  <TableCell className="hidden sm:table-cell pl-4 font-mono text-xs">
+                    #{order.orderNumber}
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-muted-foreground">
                     {format(new Date(order.createdAt), 'MMM dd, h:mm a')}
                   </TableCell>
                   <TableCell className="pl-4 sm:pl-2">
                     <div className="flex flex-col min-w-0">
                       <span className="font-medium text-sm truncate">{order.buyerName}</span>
-                      <span className="sm:hidden font-mono text-xs text-muted-foreground">#{order.orderNumber}</span>
-                      <span className="hidden sm:block text-xs text-muted-foreground truncate">{order.buyerEmail}</span>
+                      <span className="sm:hidden font-mono text-xs text-muted-foreground">
+                        #{order.orderNumber}
+                      </span>
+                      <span className="hidden sm:block text-xs text-muted-foreground truncate">
+                        {order.buyerEmail}
+                      </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">{formatCurrency(order.totalAmount)}</TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatCurrency(order.totalAmount)}
+                  </TableCell>
                   <TableCell>
                     <OrderStatusBadge status={order.status} />
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell pr-4 text-right" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className="hidden sm:table-cell pr-4 text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         aria-label={`Actions for order ${order.orderNumber}`}
@@ -281,7 +319,9 @@ export default function OrdersPage() {
             <div className="space-y-5 pt-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">Customer</p>
+                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">
+                    Customer
+                  </p>
                   <p className="font-medium">{selectedOrder.buyerName}</p>
                   <p className="text-muted-foreground">{selectedOrder.buyerEmail}</p>
                   {selectedOrder.buyerPhone && (
@@ -289,16 +329,22 @@ export default function OrdersPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">Shipping Address</p>
+                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">
+                    Shipping Address
+                  </p>
                   <p className="font-medium">{selectedOrder.shippingAddress}</p>
                   <p className="text-muted-foreground">{selectedOrder.shippingCity}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">Date</p>
+                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">
+                    Date
+                  </p>
                   <p>{format(new Date(selectedOrder.createdAt), 'MMM dd, yyyy h:mm a')}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">Status</p>
+                  <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">
+                    Status
+                  </p>
                   <OrderStatusBadge status={selectedOrder.status} />
                 </div>
               </div>
@@ -310,15 +356,26 @@ export default function OrdersPage() {
                   <p className="text-sm font-semibold mb-3">Items Ordered</p>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+                      >
                         {item.productImage && (
-                          <RemoteImage src={item.productImage} alt={item.productName} width={40} height={40} className="h-10 w-10 object-cover rounded" />
+                          <RemoteImage
+                            src={item.productImage}
+                            alt={item.productName}
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 object-cover rounded"
+                          />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.productName}</p>
                           <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
-                        <p className="text-sm font-semibold">{formatCurrency(Number(item.priceAtPurchase) * item.quantity)}</p>
+                        <p className="text-sm font-semibold">
+                          {formatCurrency(Number(item.priceAtPurchase) * item.quantity)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -371,4 +428,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-

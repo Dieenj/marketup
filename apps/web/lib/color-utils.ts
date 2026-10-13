@@ -7,7 +7,11 @@ export function normalizeHexColor(value: string | null | undefined, fallback = D
   const hex = value?.trim().replace(/^#/, '') ?? '';
   if (/^[0-9a-f]{6}$/i.test(hex)) return `#${hex.toLowerCase()}`;
   if (/^[0-9a-f]{3}$/i.test(hex)) {
-    return `#${hex.split('').map((c) => c + c).join('').toLowerCase()}`;
+    return `#${hex
+      .split('')
+      .map((c) => c + c)
+      .join('')
+      .toLowerCase()}`;
   }
   return fallback;
 }

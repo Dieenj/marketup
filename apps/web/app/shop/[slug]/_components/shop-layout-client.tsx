@@ -10,11 +10,7 @@ import { storefrontQueries } from '@/lib/storefront-queries';
 
 const q = storefrontQueries();
 
-export default function ShopLayoutClient({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ShopLayoutClient({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const slug = params.slug as string;
   const { items } = useCartStore();
@@ -44,7 +40,9 @@ export default function ShopLayoutClient({
             >
               <Store className="h-4 w-4" style={{ color: primaryFg }} />
             </div>
-            <span className="font-bold text-[17px] tracking-tight">{shop?.name || slug.toUpperCase()}</span>
+            <span className="font-bold text-[17px] tracking-tight">
+              {shop?.name || slug.toUpperCase()}
+            </span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -118,7 +116,10 @@ export default function ShopLayoutClient({
 
           <div className="border-t mt-8 pt-6 text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} {shop?.name || slug.toUpperCase()}. Powered by{' '}
-            <Link href="/" className="font-semibold text-foreground hover:underline underline-offset-2">
+            <Link
+              href="/"
+              className="font-semibold text-foreground hover:underline underline-offset-2"
+            >
               MarketUp
             </Link>
             .

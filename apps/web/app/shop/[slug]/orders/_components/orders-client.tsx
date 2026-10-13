@@ -87,7 +87,9 @@ export default function OrdersClient({ slug }: { slug: string }) {
           </p>
           <FindOrderForm
             slug={slug}
-            onFound={(order) => router.push(`/shop/${slug}/orders/${encodeURIComponent(order.orderNumber)}`)}
+            onFound={(order) =>
+              router.push(`/shop/${slug}/orders/${encodeURIComponent(order.orderNumber)}`)
+            }
           />
         </aside>
       </div>

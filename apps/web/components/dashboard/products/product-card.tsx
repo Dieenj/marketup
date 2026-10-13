@@ -66,13 +66,13 @@ export default function ProductCard({
               'text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md border flex items-center gap-1.5 shadow-sm',
               product.isVisible
                 ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
-                : 'bg-zinc-800/80 text-zinc-200 border-zinc-700/50'
+                : 'bg-zinc-800/80 text-zinc-200 border-zinc-700/50',
             )}
           >
             <span
               className={cn(
                 'h-1.5 w-1.5 rounded-full',
-                product.isVisible ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'
+                product.isVisible ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400',
               )}
             />
             {product.isVisible ? 'Visible' : 'Hidden'}
@@ -82,7 +82,10 @@ export default function ProductCard({
         {/* Menu thả xuống chứa các hành động */}
         <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Product actions" className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/95 backdrop-blur-md shadow-sm text-foreground hover:bg-background border transition-all cursor-pointer outline-none">
+            <DropdownMenuTrigger
+              aria-label="Product actions"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/95 backdrop-blur-md shadow-sm text-foreground hover:bg-background border transition-all cursor-pointer outline-none"
+            >
               <MoreVertical className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-xl border-border/60">
@@ -122,14 +125,14 @@ export default function ProductCard({
         )}
 
         {/* Tên sản phẩm */}
-        <p className="font-medium text-sm leading-snug line-clamp-2 min-h-[40px]">
-          {product.name}
-        </p>
+        <p className="font-medium text-sm leading-snug line-clamp-2 min-h-[40px]">{product.name}</p>
 
         {/* Giá bán và tồn kho */}
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/40">
           <span className="text-[15px] font-semibold tabular-nums">
-            {priceDisplay || <span className="text-muted-foreground text-xs italic font-normal">No price</span>}
+            {priceDisplay || (
+              <span className="text-muted-foreground text-xs italic font-normal">No price</span>
+            )}
           </span>
           <span
             className={cn(
@@ -137,8 +140,8 @@ export default function ProductCard({
               product.totalStock === 0
                 ? 'bg-red-500/10 text-red-700 border-transparent dark:text-red-400'
                 : product.totalStock <= 10
-                ? 'bg-amber-500/10 text-amber-700 border-transparent dark:text-amber-400'
-                : 'bg-muted text-muted-foreground border-transparent'
+                  ? 'bg-amber-500/10 text-amber-700 border-transparent dark:text-amber-400'
+                  : 'bg-muted text-muted-foreground border-transparent',
             )}
           >
             <span
@@ -147,8 +150,8 @@ export default function ProductCard({
                 product.totalStock === 0
                   ? 'bg-red-500'
                   : product.totalStock <= 10
-                  ? 'bg-amber-500'
-                  : 'bg-zinc-400'
+                    ? 'bg-amber-500'
+                    : 'bg-zinc-400',
               )}
             />
             {product.totalStock === 0 ? 'Out of stock' : `${product.totalStock} in stock`}

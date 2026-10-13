@@ -7,7 +7,7 @@ import api from '@/lib/api-client';
 
 export type Fetcher = <T>(path: string) => Promise<T>;
 
-const clientFetcher: Fetcher = async <T,>(path: string) => (await api.get<T>(path)).data;
+const clientFetcher: Fetcher = async <T>(path: string) => (await api.get<T>(path)).data;
 
 export interface StorefrontCategory {
   id: string;

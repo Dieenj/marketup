@@ -12,11 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useMyShop } from '@/hooks/use-my-shop';
 import { getErrorStatus } from '@/lib/api-client';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
   // Chờ hydrate xong để đọc trạng thái đăng nhập đã lưu trong localStorage
@@ -29,7 +25,12 @@ export default function DashboardLayout({
     }
   }, [mounted, isAuthenticated, router]);
 
-  const { data: shop, error: shopError, refetch: refetchShop, isRefetching } = useMyShop({ enabled: mounted });
+  const {
+    data: shop,
+    error: shopError,
+    refetch: refetchShop,
+    isRefetching,
+  } = useMyShop({ enabled: mounted });
   const shopErrorStatus = getErrorStatus(shopError);
 
   useEffect(() => {

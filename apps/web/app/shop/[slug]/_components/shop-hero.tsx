@@ -19,7 +19,10 @@ export default function ShopHero({
   const iconColor = primaryColor === DEFAULT_SHOP_COLOR ? '#34d399' : undefined;
 
   return (
-    <section className="relative overflow-hidden" style={{ backgroundColor: primaryColor, color: fg }}>
+    <section
+      className="relative overflow-hidden"
+      style={{ backgroundColor: primaryColor, color: fg }}
+    >
       {shop.bannerUrl && (
         <>
           {/* Ảnh lớn nhất trang (LCP): tải sớm, qua CDN Cloudinary để được nén + resize */}
@@ -38,20 +41,30 @@ export default function ShopHero({
       )}
       <div className="relative container mx-auto px-4 py-20 sm:py-28">
         <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">{shop.name}</h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+            {shop.name}
+          </h1>
           <p className="opacity-75 text-base leading-relaxed mb-8 max-w-lg">
             {shop.description || 'Welcome to our store! Browse our collection of products.'}
           </p>
           <div className="flex flex-wrap gap-3">
             {shop.address && (
               <div className="flex items-center gap-1.5 text-sm opacity-85">
-                <MapPin className="h-3.5 w-3.5 shrink-0" style={iconColor ? { color: iconColor } : undefined} aria-hidden />
+                <MapPin
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={iconColor ? { color: iconColor } : undefined}
+                  aria-hidden
+                />
                 {shop.address}
               </div>
             )}
             {shop.contactPhone && (
               <div className="flex items-center gap-1.5 text-sm opacity-85">
-                <Phone className="h-3.5 w-3.5 shrink-0" style={iconColor ? { color: iconColor } : undefined} aria-hidden />
+                <Phone
+                  className="h-3.5 w-3.5 shrink-0"
+                  style={iconColor ? { color: iconColor } : undefined}
+                  aria-hidden
+                />
                 {shop.contactPhone}
               </div>
             )}

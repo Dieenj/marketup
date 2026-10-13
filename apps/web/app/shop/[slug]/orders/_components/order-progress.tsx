@@ -23,7 +23,9 @@ function statusMessage(order: BuyerOrder) {
     case 'SHIPPING':
       return 'Your order is on its way. Have the cash ready for the courier.';
     case 'DELIVERED':
-      return order.deliveredAt ? `Delivered on ${formatDate(order.deliveredAt)}.` : 'Your order has been delivered.';
+      return order.deliveredAt
+        ? `Delivered on ${formatDate(order.deliveredAt)}.`
+        : 'Your order has been delivered.';
     default:
       return '';
   }
@@ -84,7 +86,9 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
               </span>
               <span className={cn('text-sm', reached ? 'font-medium' : 'text-muted-foreground')}>
                 {step.label}
-                <span className="sr-only">{i < current ? ' (done)' : i === current ? ' (current)' : ''}</span>
+                <span className="sr-only">
+                  {i < current ? ' (done)' : i === current ? ' (current)' : ''}
+                </span>
               </span>
             </li>
           );

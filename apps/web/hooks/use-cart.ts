@@ -28,13 +28,13 @@ export const useCartStore = create<CartState>()(
       addItem: (item) => {
         const items = get().items;
         const existingItem = items.find((i) => i.id === item.id && i.variantId === item.variantId);
-        
+
         if (existingItem) {
           set({
             items: items.map((i) =>
               i.id === item.id && i.variantId === item.variantId
                 ? { ...i, quantity: i.quantity + item.quantity }
-                : i
+                : i,
             ),
           });
         } else {
@@ -46,7 +46,9 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (id, quantity, variantId) =>
         set({
           items: get().items.map((i) =>
-            i.id === id && i.variantId === variantId ? { ...i, quantity: Math.max(1, quantity) } : i
+            i.id === id && i.variantId === variantId
+              ? { ...i, quantity: Math.max(1, quantity) }
+              : i,
           ),
         }),
       clearCart: () => set({ items: [] }),
@@ -56,6 +58,6 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'cart-storage',
-    }
-  )
+    },
+  ),
 );

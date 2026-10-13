@@ -10,7 +10,11 @@ const noopSubscribe = () => () => {};
 
 export default function DownloadAppButton() {
   // Server render coi như native (ẩn nút) để tránh lệch hydration; client đọc giá trị thật
-  const isNative = useSyncExternalStore(noopSubscribe, () => Capacitor.isNativePlatform(), () => true);
+  const isNative = useSyncExternalStore(
+    noopSubscribe,
+    () => Capacitor.isNativePlatform(),
+    () => true,
+  );
 
   if (isNative) return null;
 

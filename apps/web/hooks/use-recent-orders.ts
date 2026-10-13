@@ -27,10 +27,10 @@ export const useRecentOrdersStore = create<RecentOrdersState>()(
       // Mới nhất lên đầu; đơn đã có thì đưa lên đầu và cập nhật email
       remember: (order) =>
         set((state) => ({
-          orders: [order, ...state.orders.filter((o) => !isSame(o, order.shopSlug, order.orderNumber))].slice(
-            0,
-            MAX_RECENT_ORDERS,
-          ),
+          orders: [
+            order,
+            ...state.orders.filter((o) => !isSame(o, order.shopSlug, order.orderNumber)),
+          ].slice(0, MAX_RECENT_ORDERS),
         })),
       forget: (shopSlug, orderNumber) =>
         set((state) => ({ orders: state.orders.filter((o) => !isSame(o, shopSlug, orderNumber)) })),

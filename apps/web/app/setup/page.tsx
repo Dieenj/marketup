@@ -34,7 +34,10 @@ const setupSchema = z.object({
     .min(3, 'URL must be at least 3 characters')
     .max(30, 'URL must be at most 30 characters')
     // Cùng quy tắc với API: chữ thường/số, nối bằng một dấu gạch ngang
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters and numbers, separated by single hyphens'),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      'Use lowercase letters and numbers, separated by single hyphens',
+    ),
   description: z.string().optional(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   primaryColor: z.string(),
@@ -98,7 +101,8 @@ export default function SetupPage() {
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Set up your shop</h1>
             <p className="text-muted-foreground">
-              Welcome, <span className="font-medium text-foreground">{user?.name}</span>! Let&apos;s get your storefront live.
+              Welcome, <span className="font-medium text-foreground">{user?.name}</span>! Let&apos;s
+              get your storefront live.
             </p>
           </div>
 
@@ -106,10 +110,7 @@ export default function SetupPage() {
             {/* Form */}
             <div className="bg-white rounded-2xl border border-border/60 p-8 shadow-sm">
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-                  className="space-y-5"
-                >
+                <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-5">
                   <FormField
                     control={form.control}
                     name="name"
@@ -158,7 +159,10 @@ export default function SetupPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Description <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                        <FormLabel className="text-sm font-medium">
+                          Description{' '}
+                          <span className="text-muted-foreground font-normal">(optional)</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Tell customers what you sell..."
@@ -194,7 +198,10 @@ export default function SetupPage() {
                     name="contactEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Contact Email <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                        <FormLabel className="text-sm font-medium">
+                          Contact Email{' '}
+                          <span className="text-muted-foreground font-normal">(optional)</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -262,7 +269,8 @@ export default function SetupPage() {
                   <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1.5">
                     <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
                     <span className="text-[11px] text-muted-foreground truncate">
-                      marketup.com/shop/<span className="font-medium text-foreground">{watchedSlug || '...'}</span>
+                      marketup.com/shop/
+                      <span className="font-medium text-foreground">{watchedSlug || '...'}</span>
                     </span>
                   </div>
 

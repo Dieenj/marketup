@@ -61,20 +61,24 @@ export default function RegisterPage() {
       aside={
         <>
           <h2 className="text-4xl font-bold leading-snug text-white">
-            Start selling<br />in minutes.
+            Start selling
+            <br />
+            in minutes.
           </h2>
           <p className="mt-4 text-white/50 text-lg leading-relaxed max-w-sm">
             Create your free account and launch your personalized online storefront today.
           </p>
           <ul className="mt-10 space-y-3">
-            {['No credit card required', 'Your own storefront URL', 'Unlimited products'].map((f) => (
-              <li key={f} className="flex items-center gap-3">
-                <span className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center">
-                  <Check className="h-3 w-3 text-white" aria-hidden />
-                </span>
-                <span className="text-white/60 text-sm">{f}</span>
-              </li>
-            ))}
+            {['No credit card required', 'Your own storefront URL', 'Unlimited products'].map(
+              (f) => (
+                <li key={f} className="flex items-center gap-3">
+                  <span className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center">
+                    <Check className="h-3 w-3 text-white" aria-hidden />
+                  </span>
+                  <span className="text-white/60 text-sm">{f}</span>
+                </li>
+              ),
+            )}
           </ul>
         </>
       }
@@ -83,7 +87,10 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{' '}
-          <Link href="/login" className="text-foreground font-semibold hover:underline underline-offset-4">
+          <Link
+            href="/login"
+            className="text-foreground font-semibold hover:underline underline-offset-4"
+          >
             Sign in
           </Link>
         </>
@@ -98,11 +105,7 @@ export default function RegisterPage() {
               <FormItem>
                 <FormLabel className="text-sm font-medium">Full Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="John Doe"
-                    className="h-11 bg-card"
-                    {...field}
-                  />
+                  <Input placeholder="John Doe" className="h-11 bg-card" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -115,11 +118,7 @@ export default function RegisterPage() {
               <FormItem>
                 <FormLabel className="text-sm font-medium">Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="you@example.com"
-                    className="h-11 bg-card"
-                    {...field}
-                  />
+                  <Input placeholder="you@example.com" className="h-11 bg-card" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

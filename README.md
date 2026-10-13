@@ -6,16 +6,16 @@
 
 ## Công nghệ sử dụng
 
-| Lớp | Công nghệ |
-|---|---|
-| Monorepo | Turborepo + pnpm |
-| Frontend | Next.js 15, Tailwind CSS 4, shadcn/ui |
+| Lớp              | Công nghệ                                             |
+| ---------------- | ----------------------------------------------------- |
+| Monorepo         | Turborepo + pnpm                                      |
+| Frontend         | Next.js 15, Tailwind CSS 4, shadcn/ui                 |
 | State Management | TanStack Query (server state), Zustand (client state) |
-| Backend | NestJS, Prisma ORM, Passport.js (JWT) |
-| Cơ sở dữ liệu | PostgreSQL |
-| Lưu trữ ảnh | Cloudinary |
-| Biểu đồ | Recharts |
-| SMTP Mail | Nodemailer |
+| Backend          | NestJS, Prisma ORM, Passport.js (JWT)                 |
+| Cơ sở dữ liệu    | PostgreSQL                                            |
+| Lưu trữ ảnh      | Cloudinary                                            |
+| Biểu đồ          | Recharts                                              |
+| SMTP Mail        | Nodemailer                                            |
 
 ---
 
@@ -44,19 +44,19 @@ marketup/
 
 ### Các trang Frontend chính
 
-| Đường dẫn | Mô tả |
-|---|---|
-| `/register`, `/login` | Xác thực người dùng |
-| `/setup` | Tạo shop lần đầu |
-| `/dashboard` | Tổng quan doanh thu, đơn hàng gần đây |
-| `/products` | Quản lý sản phẩm & biến thể |
-| `/categories` | Quản lý danh mục |
-| `/orders` | Quản lý & cập nhật trạng thái đơn hàng |
-| `/reviews` | Quản lý & duyệt đánh giá sản phẩm / dịch vụ shop |
-| `/settings` | Cài đặt tài khoản |
-| `/shop/[slug]` | Storefront công khai của shop (kèm Đánh giá chung dịch vụ) |
-| `/shop/[slug]/products/[id]` | Chi tiết sản phẩm & xem danh sách đánh giá từ khách hàng |
-| `/shop/[slug]/checkout` | Giỏ hàng và Thanh toán COD |
+| Đường dẫn                    | Mô tả                                                      |
+| ---------------------------- | ---------------------------------------------------------- |
+| `/register`, `/login`        | Xác thực người dùng                                        |
+| `/setup`                     | Tạo shop lần đầu                                           |
+| `/dashboard`                 | Tổng quan doanh thu, đơn hàng gần đây                      |
+| `/products`                  | Quản lý sản phẩm & biến thể                                |
+| `/categories`                | Quản lý danh mục                                           |
+| `/orders`                    | Quản lý & cập nhật trạng thái đơn hàng                     |
+| `/reviews`                   | Quản lý & duyệt đánh giá sản phẩm / dịch vụ shop           |
+| `/settings`                  | Cài đặt tài khoản                                          |
+| `/shop/[slug]`               | Storefront công khai của shop (kèm Đánh giá chung dịch vụ) |
+| `/shop/[slug]/products/[id]` | Chi tiết sản phẩm & xem danh sách đánh giá từ khách hàng   |
+| `/shop/[slug]/checkout`      | Giỏ hàng và Thanh toán COD                                 |
 
 ---
 
@@ -71,6 +71,7 @@ marketup/
 ### Cài đặt môi trường
 
 1. **Clone và cài dependencies:**
+
    ```bash
    git clone <repo-url>
    cd marketup
@@ -78,6 +79,7 @@ marketup/
    ```
 
 2. **Tạo file biến môi trường** tại thư mục gốc `.env`:
+
    ```env
    # ---- Database ----
    DATABASE_URL="postgresql://postgres:2203@localhost:5432/marketup"
@@ -103,20 +105,24 @@ marketup/
    ```
 
 3. **Khởi động PostgreSQL (Docker):**
+
    ```bash
    docker-compose up -d
    ```
 
 4. **Tạo Prisma client và chạy migration:**
+
    ```bash
    pnpm run db:generate
    pnpm run db:migrate
    ```
 
 5. **Chạy toàn bộ dự án ở chế độ development:**
+
    ```bash
    pnpm run dev
    ```
+
    - Storefront & Dashboard: `http://localhost:3000`
    - Backend API: `http://localhost:3001/api`
 
@@ -137,10 +143,10 @@ marketup/
 
 ## Các script chính hữu ích
 
-| Lệnh | Mô tả |
-|---|---|
-| `pnpm dev` | Chạy đồng thời cả Frontend và Backend (Hot-reload) |
-| `pnpm build` | Biên dịch toàn bộ các ứng dụng trong monorepo |
-| `pnpm run db:generate` | Tạo lại Prisma client từ schema chung |
-| `pnpm run db:migrate` | Chạy migration đẩy cấu trúc schema lên database |
-| `pnpm run db:studio` | Mở giao diện Prisma Studio để quản lý bản ghi database trực quan |
+| Lệnh                   | Mô tả                                                            |
+| ---------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`             | Chạy đồng thời cả Frontend và Backend (Hot-reload)               |
+| `pnpm build`           | Biên dịch toàn bộ các ứng dụng trong monorepo                    |
+| `pnpm run db:generate` | Tạo lại Prisma client từ schema chung                            |
+| `pnpm run db:migrate`  | Chạy migration đẩy cấu trúc schema lên database                  |
+| `pnpm run db:studio`   | Mở giao diện Prisma Studio để quản lý bản ghi database trực quan |

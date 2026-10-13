@@ -10,7 +10,6 @@ import api, { getErrorMessage } from '@/lib/api-client';
 import RemoteImage from '@/components/remote-image';
 import { ACCEPTED_IMAGE_TYPES, imageFileError } from '@/lib/image-upload';
 
-
 interface BannerImageInputProps {
   value: string;
   onChange: (url: string) => void;
@@ -80,18 +79,36 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
           )}
           {...dropHandlers}
         >
-          <RemoteImage src={value} alt="Banner preview" fill sizes="(min-width: 768px) 600px, 100vw" className="object-cover" />
+          <RemoteImage
+            src={value}
+            alt="Banner preview"
+            fill
+            sizes="(min-width: 768px) 600px, 100vw"
+            className="object-cover"
+          />
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/60">
               <Spinner className="size-5" />
             </div>
           )}
           <div className="absolute right-2 bottom-2 flex gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={openPicker} disabled={uploading}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={openPicker}
+              disabled={uploading}
+            >
               <ImageUp />
               Replace
             </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={() => onChange('')} disabled={uploading}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => onChange('')}
+              disabled={uploading}
+            >
               <X />
               Remove
             </Button>
@@ -104,7 +121,9 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
           disabled={uploading}
           className={cn(
             'flex h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
-            dragOver ? 'border-foreground bg-muted/60' : 'border-border hover:border-foreground/40 hover:bg-muted/30',
+            dragOver
+              ? 'border-foreground bg-muted/60'
+              : 'border-border hover:border-foreground/40 hover:bg-muted/30',
             uploading && 'opacity-60',
           )}
           {...dropHandlers}

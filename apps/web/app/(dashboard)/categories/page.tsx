@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Tag } from 'lucide-react';
@@ -43,11 +38,16 @@ export default function CategoriesPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" aria-busy="true">
-        <span className="sr-only" role="status">Loading categories…</span>
+        <span className="sr-only" role="status">
+          Loading categories…
+        </span>
         {header}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10"
+            >
               <Skeleton className="size-10 shrink-0 rounded-lg" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-28" />

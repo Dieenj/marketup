@@ -4,13 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  PackageOpen,
-  Tag,
-  Settings2,
-  X,
-} from 'lucide-react';
+import { Plus, PackageOpen, Tag, Settings2, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FilterChip, filterChipVariants } from '@/components/ui/filter-chip';
 import { cn } from '@/lib/utils';
@@ -25,7 +19,10 @@ import { getMinPrice } from '@/lib/price';
 // Subcomponents
 import ProductStats from '@/components/dashboard/products/product-stats';
 import ProductToolbar from '@/components/dashboard/products/product-toolbar';
-import ProductCard, { Product, ProductCardSkeleton } from '@/components/dashboard/products/product-card';
+import ProductCard, {
+  Product,
+  ProductCardSkeleton,
+} from '@/components/dashboard/products/product-card';
 import ManageCategoryDialog from '@/components/dashboard/products/manage-category-dialog';
 import { useMyShop } from '@/hooks/use-my-shop';
 import { useCategories, useDeleteCategory } from '@/hooks/use-categories';
@@ -80,7 +77,8 @@ export default function ProductsPage() {
   // Tính toán số liệu thống kê chung (Stat Cards)
   const totalProductsCount = products?.length ?? 0;
   const visibleProductsCount = products?.filter((p: Product) => p.isVisible).length ?? 0;
-  const lowStockCount = products?.filter((p: Product) => p.totalStock > 0 && p.totalStock <= 10).length ?? 0;
+  const lowStockCount =
+    products?.filter((p: Product) => p.totalStock > 0 && p.totalStock <= 10).length ?? 0;
   const outOfStockCount = products?.filter((p: Product) => p.totalStock === 0).length ?? 0;
   const stockAlertsCount = lowStockCount + outOfStockCount;
 
@@ -95,10 +93,7 @@ export default function ProductsPage() {
             return false;
           }
           // Lọc theo từ khóa tìm kiếm
-          if (
-            searchQuery &&
-            !product.name.toLowerCase().includes(searchQuery.toLowerCase())
-          ) {
+          if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
             return false;
           }
           // Lọc theo trạng thái kho hàng
@@ -164,7 +159,9 @@ export default function ProductsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" aria-busy="true">
-        <span className="sr-only" role="status">Loading products…</span>
+        <span className="sr-only" role="status">
+          Loading products…
+        </span>
         {header}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[0, 1, 2].map((i) => (
@@ -203,7 +200,10 @@ export default function ProductsPage() {
 
       {/* Các tab lọc theo danh mục sản phẩm */}
       <div className="flex items-center gap-2 flex-wrap pb-1">
-        <FilterChip active={selectedCategoryId === null} onClick={() => setSelectedCategoryId(null)}>
+        <FilterChip
+          active={selectedCategoryId === null}
+          onClick={() => setSelectedCategoryId(null)}
+        >
           All Products
           <span className="text-xs font-normal">({products?.length ?? 0})</span>
         </FilterChip>
@@ -296,7 +296,9 @@ export default function ProductsPage() {
               key={product.id}
               product={product}
               onEdit={setEditProduct}
-              onToggleVisibility={(id, isVisible) => toggleVisibilityMutation.mutate({ id, isVisible })}
+              onToggleVisibility={(id, isVisible) =>
+                toggleVisibilityMutation.mutate({ id, isVisible })
+              }
               isTogglePending={toggleVisibilityMutation.isPending}
             />
           ))}
@@ -327,6 +329,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-
-

@@ -4,7 +4,15 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, ImageIcon, ShoppingCart, Star, MessageSquare } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  ShoppingCart,
+  Star,
+  MessageSquare,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { storefrontQueries } from '@/lib/storefront-queries';
@@ -121,8 +129,7 @@ export default function ProductClient() {
     return (
       variants.find((variant) =>
         attributes.every(
-          (attribute) =>
-            variant.options[attribute.name] === selectedOptions[attribute.name],
+          (attribute) => variant.options[attribute.name] === selectedOptions[attribute.name],
         ),
       ) || null
     );
@@ -136,13 +143,13 @@ export default function ProductClient() {
   // Lấy khoảng giá từ các biến thể (variants)
   const priceRange = useMemo(() => getPriceRange(variants) ?? { min: 0, max: 0 }, [variants]);
 
-  const allOptionsSelected = !hasVariants || attributes.every((attribute) => Boolean(selectedOptions[attribute.name]));
+  const allOptionsSelected =
+    !hasVariants || attributes.every((attribute) => Boolean(selectedOptions[attribute.name]));
   const effectiveStock = hasVariants
-    ? selectedVariant?.stock ?? totalVariantStock
+    ? (selectedVariant?.stock ?? totalVariantStock)
     : (variants[0]?.stock ?? 0);
-  const effectivePrice = selectedVariant?.price != null
-    ? Number(selectedVariant.price)
-    : priceRange.min; // Sử dụng giá nhỏ nhất từ khoảng giá
+  const effectivePrice =
+    selectedVariant?.price != null ? Number(selectedVariant.price) : priceRange.min; // Sử dụng giá nhỏ nhất từ khoảng giá
   const isSelectedVariantOutOfStock = allOptionsSelected && effectiveStock <= 0;
   const hasAnyStock = totalVariantStock > 0;
   const nextAttribute = hasVariants
@@ -173,9 +180,8 @@ export default function ProductClient() {
           return true;
         }
 
-        const expectedValue = currentIndex === attributeIndex
-          ? option
-          : selectedOptions[attribute.name];
+        const expectedValue =
+          currentIndex === attributeIndex ? option : selectedOptions[attribute.name];
 
         return expectedValue ? variant.options[attribute.name] === expectedValue : true;
       });
@@ -204,7 +210,9 @@ export default function ProductClient() {
   if (!product) {
     // 404 dùng chung boundary not-found.tsx; lỗi khác (API chưa sẵn sàng) cho phép thử lại
     if (getErrorStatus(productError) === 404) notFound();
-    return <StorefrontUnavailable onRetry={() => refetchProduct()} isRetrying={isRefetchingProduct} />;
+    return (
+      <StorefrontUnavailable onRetry={() => refetchProduct()} isRetrying={isRefetchingProduct} />
+    );
   }
 
   return (
@@ -233,7 +241,7 @@ export default function ProductClient() {
                   sizes="(min-width: 768px) 50vw, 100vw"
                   className="object-cover"
                 />
-                
+
                 {/* Nút điều hướng - chỉ hiển thị nếu có nhiều hình ảnh */}
                 {allImages.length > 1 && (
                   <>
@@ -321,11 +329,12 @@ export default function ProductClient() {
                   <span className="text-3xl font-bold text-primary">
                     {formatCurrency(effectivePrice)}
                   </span>
-                  {actualVariant?.comparePrice && Number(actualVariant.comparePrice) > effectivePrice && (
-                    <span className="text-lg text-muted-foreground line-through">
-                      {formatCurrency(actualVariant.comparePrice)}
-                    </span>
-                  )}
+                  {actualVariant?.comparePrice &&
+                    Number(actualVariant.comparePrice) > effectivePrice && (
+                      <span className="text-lg text-muted-foreground line-through">
+                        {formatCurrency(actualVariant.comparePrice)}
+                      </span>
+                    )}
                 </>
               ) : (
                 <span className="text-3xl font-bold text-primary">
@@ -340,59 +349,65 @@ export default function ProductClient() {
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
               </h2>
-              <p className="text-base leading-relaxed text-gray-700">
-                {product.description}
-              </p>
+              <p className="text-base leading-relaxed text-gray-700">{product.description}</p>
             </div>
           )}
 
-          {hasVariants && attributes.map((attribute, attributeIndex) => {
-            const previousAttribute = attributeIndex > 0 ? attributes[attributeIndex - 1] : null;
-            const isLocked = previousAttribute ? !selectedOptions[previousAttribute.name] : false;
+          {hasVariants &&
+            attributes.map((attribute, attributeIndex) => {
+              const previousAttribute = attributeIndex > 0 ? attributes[attributeIndex - 1] : null;
+              const isLocked = previousAttribute ? !selectedOptions[previousAttribute.name] : false;
 
-            return (
-              <div key={attribute.id} className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 id={`attribute-${attribute.id}`} className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                    {attribute.name}
-                  </h2>
-                  {selectedOptions[attribute.name] && (
-                    <span className="text-sm font-medium text-foreground">
-                      {selectedOptions[attribute.name]}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2" role="group" aria-labelledby={`attribute-${attribute.id}`}>
-                  {attribute.options.map((option) => {
-                    const isSelected = selectedOptions[attribute.name] === option;
-                    const isAvailable = canSelectOption(attributeIndex, option);
-                    const isDisabled = isLocked || !isAvailable;
+              return (
+                <div key={attribute.id} className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2
+                      id={`attribute-${attribute.id}`}
+                      className="text-sm font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      {attribute.name}
+                    </h2>
+                    {selectedOptions[attribute.name] && (
+                      <span className="text-sm font-medium text-foreground">
+                        {selectedOptions[attribute.name]}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className="flex flex-wrap gap-2"
+                    role="group"
+                    aria-labelledby={`attribute-${attribute.id}`}
+                  >
+                    {attribute.options.map((option) => {
+                      const isSelected = selectedOptions[attribute.name] === option;
+                      const isAvailable = canSelectOption(attributeIndex, option);
+                      const isDisabled = isLocked || !isAvailable;
 
-                    return (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => handleOptionSelect(attributeIndex, option)}
-                        aria-pressed={isSelected}
-                        className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border hover:border-primary/50'
-                        } ${
-                          isDisabled
-                            ? 'cursor-not-allowed opacity-40 line-through'
-                            : 'cursor-pointer'
-                        }`}
-                        disabled={isDisabled}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => handleOptionSelect(attributeIndex, option)}
+                          aria-pressed={isSelected}
+                          className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-border hover:border-primary/50'
+                          } ${
+                            isDisabled
+                              ? 'cursor-not-allowed opacity-40 line-through'
+                              : 'cursor-pointer'
+                          }`}
+                          disabled={isDisabled}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
           {hasVariants && nextAttribute && (
             <p className="text-sm text-muted-foreground">
@@ -479,7 +494,10 @@ export default function ProductClient() {
 
           <Link
             href={`/shop/${slug}/checkout`}
-            className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-12 w-full font-semibold')}
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'lg' }),
+              'h-12 w-full font-semibold',
+            )}
           >
             View Cart & Checkout
           </Link>
@@ -535,9 +553,7 @@ export default function ProductClient() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-foreground">{rev.buyerName}</span>
-                      {rev.isVerified && (
-                        <Badge variant="success">Verified Purchase</Badge>
-                      )}
+                      {rev.isVerified && <Badge variant="success">Verified Purchase</Badge>}
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {formatDate(rev.createdAt)}

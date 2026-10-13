@@ -81,7 +81,7 @@ export default function WriteReviewDialog({
       setRating(5);
       onOpenChange(false);
       if (onSuccess) onSuccess();
-      
+
       // Làm mới các truy vấn (Invalidate queries)
       if (productId) {
         queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] });
@@ -99,13 +99,16 @@ export default function WriteReviewDialog({
   const handleSubmit = form.handleSubmit((values) => mutation.mutate(values));
 
   return (
-    <Dialog open={open} onOpenChange={(val) => {
-      if (!val) {
-        form.reset();
-        setRating(5);
-      }
-      onOpenChange(val);
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        if (!val) {
+          form.reset();
+          setRating(5);
+        }
+        onOpenChange(val);
+      }}
+    >
       <DialogContent className="sm:max-w-[480px] rounded-2xl">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-4">
@@ -202,9 +205,11 @@ export default function WriteReviewDialog({
                 )}
               />
             </div>
-            
+
             <p className="text-[11px] text-muted-foreground/80 leading-relaxed -mt-1 bg-primary/5 p-2.5 rounded-xl border border-primary/10">
-              💡 <strong>Purchase Verification:</strong> Enter the email address you used during checkout for this order. If it matches, your review will automatically receive a <strong>Verified Purchase</strong> badge!
+              💡 <strong>Purchase Verification:</strong> Enter the email address you used during
+              checkout for this order. If it matches, your review will automatically receive a{' '}
+              <strong>Verified Purchase</strong> badge!
             </p>
 
             <FormField

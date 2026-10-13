@@ -2,14 +2,8 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowRight,
-  DollarSign,
-  Package,
-  ShoppingBag,
-  Clock,
-} from "lucide-react";
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowRight, DollarSign, Package, ShoppingBag, Clock } from 'lucide-react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -58,7 +52,8 @@ export default function DashboardPage() {
         title="Overview"
         description={
           <>
-            Welcome back, <span className="font-medium text-foreground">{user?.name}</span>. Here&apos;s how your shop is performing.
+            Welcome back, <span className="font-medium text-foreground">{user?.name}</span>.
+            Here&apos;s how your shop is performing.
           </>
         }
       />
@@ -107,7 +102,10 @@ export default function DashboardPage() {
             <Skeleton className="h-[260px] w-full" />
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={stats?.revenueTrend || []} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <AreaChart
+                data={stats?.revenueTrend || []}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
@@ -115,8 +113,20 @@ export default function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} width={48} tickFormatter={(v) => `$${v}`} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={48}
+                  tickFormatter={(v) => `$${v}`}
+                />
                 <Tooltip
                   cursor={{ stroke: 'var(--border)' }}
                   contentStyle={{
@@ -155,7 +165,9 @@ export default function DashboardPage() {
           </div>
           {isLoading ? (
             <div className="space-y-3">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
             </div>
           ) : !stats?.recentOrders?.length ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -163,18 +175,25 @@ export default function DashboardPage() {
                 <ShoppingBag className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium">No orders yet</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Share your shop link to get your first order.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Share your shop link to get your first order.
+              </p>
             </div>
           ) : (
             <ul className="divide-y">
               {stats.recentOrders.map((order: RecentOrder) => (
-                <li key={order.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <li
+                  key={order.id}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{order.buyerName}</p>
                     <p className="text-xs text-muted-foreground font-mono">#{order.orderNumber}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-sm font-semibold tabular-nums">{formatCurrency(order.totalAmount)}</span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatCurrency(order.totalAmount)}
+                    </span>
                     <OrderStatusBadge status={order.status} className="h-5 px-2 text-[11px]" />
                   </div>
                 </li>

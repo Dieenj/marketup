@@ -8,7 +8,14 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { getErrorMessage, getErrorStatus } from '@/lib/api-client';
 import { lookupOrder, orderLookupQuery, type BuyerOrder } from '@/lib/order-lookup';
 import { useRecentOrdersStore } from '@/hooks/use-recent-orders';
@@ -42,7 +49,11 @@ export default function FindOrderForm({
 
   const mutation = useMutation({
     mutationFn: (values: FindOrderValues) =>
-      lookupOrder({ shopSlug: slug, orderNumber: values.orderNumber.toUpperCase(), email: values.email }),
+      lookupOrder({
+        shopSlug: slug,
+        orderNumber: values.orderNumber.toUpperCase(),
+        email: values.email,
+      }),
     onSuccess: (order, values) => {
       const input = { shopSlug: slug, orderNumber: order.orderNumber, email: values.email };
       queryClient.setQueryData(orderLookupQuery(input).queryKey, order);
@@ -61,7 +72,11 @@ export default function FindOrderForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4" noValidate>
+      <form
+        onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
+        className="space-y-4"
+        noValidate
+      >
         {!orderNumber && (
           <FormField
             control={form.control}
@@ -70,7 +85,12 @@ export default function FindOrderForm({
               <FormItem>
                 <FormLabel>Order number</FormLabel>
                 <FormControl>
-                  <Input placeholder="ORD-…" autoComplete="off" className="h-11 bg-card" {...field} />
+                  <Input
+                    placeholder="ORD-…"
+                    autoComplete="off"
+                    className="h-11 bg-card"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -84,7 +104,13 @@ export default function FindOrderForm({
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="you@example.com" autoComplete="email" className="h-11 bg-card" {...field} />
+                <Input
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  className="h-11 bg-card"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

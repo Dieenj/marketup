@@ -10,12 +10,15 @@ import type { Fetcher, StorefrontShop } from '@/lib/storefront-queries';
 const SERVER_FETCH_TIMEOUT_MS = 3000;
 
 export class ApiError extends Error {
-  constructor(public status: number, path: string) {
+  constructor(
+    public status: number,
+    path: string,
+  ) {
     super(`API responded ${status} for ${path}`);
   }
 }
 
-export const serverFetcher: Fetcher = async <T,>(path: string) => {
+export const serverFetcher: Fetcher = async <T>(path: string) => {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     signal: AbortSignal.timeout(SERVER_FETCH_TIMEOUT_MS),
     // Giá & tồn kho phải mới nhất → không dùng Data Cache

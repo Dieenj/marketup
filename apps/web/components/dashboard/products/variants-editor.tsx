@@ -23,7 +23,7 @@ export interface VariantDef {
 export function cartesian(arrays: string[][]): string[][] {
   return arrays.reduce<string[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
-    [[]]
+    [[]],
   );
 }
 
@@ -60,7 +60,7 @@ export default function VariantsEditor({
     const val = (optionInputs[attrIdx] || '').trim();
     if (!val) return;
     const updated = attributes.map((a, i) =>
-      i === attrIdx ? { ...a, options: [...a.options, val] } : a
+      i === attrIdx ? { ...a, options: [...a.options, val] } : a,
     );
     setOptionInputs((prev) => ({ ...prev, [attrIdx]: '' }));
     setAttributes(updated);
@@ -68,7 +68,7 @@ export default function VariantsEditor({
 
   const removeOption = (attrIdx: number, optIdx: number) => {
     const updated = attributes.map((a, i) =>
-      i === attrIdx ? { ...a, options: a.options.filter((_, j) => j !== optIdx) } : a
+      i === attrIdx ? { ...a, options: a.options.filter((_, j) => j !== optIdx) } : a,
     );
     setAttributes(updated);
   };
@@ -162,12 +162,14 @@ export default function VariantsEditor({
                       attr.name.toLowerCase().includes('color')
                         ? 'e.g. Red, Blue, Black'
                         : attr.name.toLowerCase().includes('size')
-                        ? 'e.g. S, M, L, XL'
-                        : 'Add option...'
+                          ? 'e.g. S, M, L, XL'
+                          : 'Add option...'
                     }
                     className="h-7 text-xs"
                     value={optionInputs[i] || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOptionInputs((p) => ({ ...p, [i]: e.target.value }))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setOptionInputs((p) => ({ ...p, [i]: e.target.value }))
+                    }
                     onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -253,7 +255,9 @@ export default function VariantsEditor({
                   placeholder="0.00"
                   className="h-7 text-xs text-center px-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   value={v.price}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateVariant(i, 'price', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateVariant(i, 'price', e.target.value)
+                  }
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === 'Enter') e.preventDefault();
                   }}
@@ -265,7 +269,9 @@ export default function VariantsEditor({
                   placeholder="0"
                   className="h-7 text-xs text-center px-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   value={v.stock}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateVariant(i, 'stock', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    updateVariant(i, 'stock', e.target.value)
+                  }
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                     if (e.key === 'Enter') e.preventDefault();
                   }}

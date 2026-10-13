@@ -57,7 +57,11 @@ export default function DashboardReviewsPage() {
   const { data: shop } = useMyShop();
 
   // 2. Lấy danh sách đánh giá để kiểm duyệt
-  const { data: reviews, isLoading, isPlaceholderData } = useQuery<Review[]>({
+  const {
+    data: reviews,
+    isLoading,
+    isPlaceholderData,
+  } = useQuery<Review[]>({
     queryKey: ['manage-reviews', shop?.id, ratingFilter, statusFilter],
     queryFn: async () => {
       const params: Record<string, string | number> = {};
@@ -135,7 +139,9 @@ export default function DashboardReviewsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" aria-busy="true">
-        <span className="sr-only" role="status">Loading reviews…</span>
+        <span className="sr-only" role="status">
+          Loading reviews…
+        </span>
         {header}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[0, 1, 2, 3].map((i) => (
@@ -178,7 +184,11 @@ export default function DashboardReviewsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Overall Rating"
-            value={stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating || '0.0'}
+            value={
+              stats.averageShopRating > 0
+                ? stats.averageShopRating
+                : stats.averageProductRating || '0.0'
+            }
             hint="out of 5.0"
             icon={Star}
           />
@@ -197,20 +207,28 @@ export default function DashboardReviewsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground mr-1" />
-          
+
           <FilterChip active={statusFilter === null} onClick={() => setStatusFilter(null)}>
             All Reviews
           </FilterChip>
-          <FilterChip active={statusFilter === 'PENDING'} onClick={() => setStatusFilter('PENDING')}>
+          <FilterChip
+            active={statusFilter === 'PENDING'}
+            onClick={() => setStatusFilter('PENDING')}
+          >
             Pending ({pendingCount})
           </FilterChip>
-          <FilterChip active={statusFilter === 'APPROVED'} onClick={() => setStatusFilter('APPROVED')}>
+          <FilterChip
+            active={statusFilter === 'APPROVED'}
+            onClick={() => setStatusFilter('APPROVED')}
+          >
             Approved
           </FilterChip>
         </div>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-1">Rating:</span>
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-1">
+            Rating:
+          </span>
           {[null, 5, 4, 3, 2, 1].map((stars) => (
             <FilterChip
               key={String(stars)}
@@ -253,10 +271,8 @@ export default function DashboardReviewsPage() {
                       {rev.buyerName}
                     </span>
                     <span className="text-xs text-muted-foreground">({rev.buyerEmail})</span>
-                    
-                    {rev.isVerified && (
-                      <Badge variant="success">Verified Purchase</Badge>
-                    )}
+
+                    {rev.isVerified && <Badge variant="success">Verified Purchase</Badge>}
 
                     {rev.status === 'PENDING' ? (
                       <Badge variant="info">Pending Moderation</Badge>
@@ -270,7 +286,7 @@ export default function DashboardReviewsPage() {
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDate(rev.createdAt)}
                     </span>
-                    
+
                     {rev.product ? (
                       <span className="flex items-center gap-1 text-primary font-medium">
                         <ShoppingBag className="h-3.5 w-3.5" />

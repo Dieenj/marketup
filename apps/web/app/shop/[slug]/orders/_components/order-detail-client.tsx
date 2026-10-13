@@ -20,7 +20,13 @@ import OrderProgress from './order-progress';
 
 const q = storefrontQueries();
 
-export default function OrderDetailClient({ slug, orderNumber }: { slug: string; orderNumber: string }) {
+export default function OrderDetailClient({
+  slug,
+  orderNumber,
+}: {
+  slug: string;
+  orderNumber: string;
+}) {
   const hydrated = useHydrated();
   const saved = useRecentOrdersStore((s) =>
     s.orders.find((o) => o.shopSlug === slug && o.orderNumber === orderNumber),
@@ -43,7 +49,8 @@ export default function OrderDetailClient({ slug, orderNumber }: { slug: string;
             {notFound
               ? "We couldn't find this order with the email saved on this device. "
               : 'To protect your details, '}
-            enter the email you used to place order <span className="font-mono font-medium text-foreground">{orderNumber}</span>.
+            enter the email you used to place order{' '}
+            <span className="font-mono font-medium text-foreground">{orderNumber}</span>.
           </p>
           <FindOrderForm slug={slug} orderNumber={orderNumber} onFound={() => {}} />
         </div>
@@ -89,8 +96,12 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-mono text-2xl font-bold tracking-tight sm:text-3xl">{order.orderNumber}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Placed on {formatDate(order.createdAt)}</p>
+          <h1 className="font-mono text-2xl font-bold tracking-tight sm:text-3xl">
+            {order.orderNumber}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Placed on {formatDate(order.createdAt)}
+          </p>
         </div>
         <OrderStatusBadge status={order.status} className="h-7 px-3 text-sm" />
       </div>
@@ -114,7 +125,9 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
                   >
                     {item.productName}
                   </Link>
-                  {item.variantLabel && <p className="text-sm text-muted-foreground">{item.variantLabel}</p>}
+                  {item.variantLabel && (
+                    <p className="text-sm text-muted-foreground">{item.variantLabel}</p>
+                  )}
                   <p className="mt-1 text-sm text-muted-foreground tabular-nums">
                     {item.quantity} × {formatCurrency(item.priceAtPurchase)}
                   </p>
@@ -139,7 +152,9 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Shipping</dt>
-                <dd className="tabular-nums">{shippingFee > 0 ? formatCurrency(shippingFee) : 'Free'}</dd>
+                <dd className="tabular-nums">
+                  {shippingFee > 0 ? formatCurrency(shippingFee) : 'Free'}
+                </dd>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between">
@@ -157,7 +172,10 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
             </p>
           </section>
 
-          <section aria-labelledby="order-delivery" className="rounded-2xl border bg-card p-5 text-sm">
+          <section
+            aria-labelledby="order-delivery"
+            className="rounded-2xl border bg-card p-5 text-sm"
+          >
             <h2 id="order-delivery" className="mb-3 font-semibold">
               Delivery
             </h2>
@@ -166,18 +184,26 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
             <p className="text-muted-foreground">
               {[order.shippingDistrict, order.shippingCity].filter(Boolean).join(', ')}
             </p>
-            {order.shippingNote && <p className="mt-2 italic text-muted-foreground">Note: {order.shippingNote}</p>}
+            {order.shippingNote && (
+              <p className="mt-2 italic text-muted-foreground">Note: {order.shippingNote}</p>
+            )}
           </section>
 
           {(shop?.contactEmail || shop?.contactPhone) && (
-            <section aria-labelledby="order-help" className="rounded-2xl border bg-card p-5 text-sm">
+            <section
+              aria-labelledby="order-help"
+              className="rounded-2xl border bg-card p-5 text-sm"
+            >
               <h2 id="order-help" className="mb-3 font-semibold">
                 Need help?
               </h2>
               <p className="mb-3 text-muted-foreground">Contact {shop.name} about this order.</p>
               <div className="space-y-2">
                 {shop.contactPhone && (
-                  <a href={`tel:${shop.contactPhone}`} className="flex items-center gap-2 hover:underline underline-offset-2">
+                  <a
+                    href={`tel:${shop.contactPhone}`}
+                    className="flex items-center gap-2 hover:underline underline-offset-2"
+                  >
                     <Phone className="size-4 text-muted-foreground" aria-hidden />
                     {shop.contactPhone}
                   </a>
@@ -195,7 +221,12 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
             </section>
           )}
 
-          <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={removeFromDevice}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground"
+            onClick={removeFromDevice}
+          >
             Remove from this device
           </Button>
         </div>

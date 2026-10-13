@@ -16,7 +16,10 @@ export interface CategoryInput {
 export const categoriesQueryKey = (shopId: string | undefined) => ['categories', shopId] as const;
 
 // Danh mục của shop — dùng chung cho trang Categories, trang Products và các dialog sản phẩm
-export function useCategories(shopId: string | undefined, { enabled = true }: { enabled?: boolean } = {}) {
+export function useCategories(
+  shopId: string | undefined,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: categoriesQueryKey(shopId),
     queryFn: async () => {
@@ -27,7 +30,10 @@ export function useCategories(shopId: string | undefined, { enabled = true }: { 
   });
 }
 
-export function useCreateCategory(shopId: string | undefined, { onSuccess }: { onSuccess?: () => void } = {}) {
+export function useCreateCategory(
+  shopId: string | undefined,
+  { onSuccess }: { onSuccess?: () => void } = {},
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: CategoryInput) => api.post(`/categories/${shopId}`, values),

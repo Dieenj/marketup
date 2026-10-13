@@ -33,14 +33,17 @@ export default function LandingPage() {
                   Start Your Online Store in <span className="text-primary italic">Minutes</span>
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  MarketUp is the simplest way for individuals and small businesses to create a premium storefront. 
-                  No coding required. Just add products and start selling.
+                  MarketUp is the simplest way for individuals and small businesses to create a
+                  premium storefront. No coding required. Just add products and start selling.
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <Link
                   href="/register"
-                  className={cn(buttonVariants({ size: 'lg' }), 'px-8 font-bold text-lg h-14 translate-y-0 hover:-translate-y-1 transition-transform')}
+                  className={cn(
+                    buttonVariants({ size: 'lg' }),
+                    'px-8 font-bold text-lg h-14 translate-y-0 hover:-translate-y-1 transition-transform',
+                  )}
                 >
                   Build Your Shop Now
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -61,7 +64,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold">Custom URL</h3>
                 <p className="text-sm text-gray-500">
-                  Get a dedicated link for your shop that you can share on social media. 
+                  Get a dedicated link for your shop that you can share on social media.
                   marketup.com/shop/your-brand
                 </p>
               </div>
@@ -71,8 +74,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold">Easy Inventory</h3>
                 <p className="text-sm text-gray-500">
-                  Manage products, categories, and stock with our intuitive interface. 
-                  Upload photos and set prices instantly.
+                  Manage products, categories, and stock with our intuitive interface. Upload photos
+                  and set prices instantly.
                 </p>
               </div>
               <div className="flex flex-col items-center space-y-4 text-center p-6 rounded-2xl border bg-gray-50/50">
@@ -81,8 +84,8 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold">Sales Insights</h3>
                 <p className="text-sm text-gray-500">
-                  Track your revenue and orders with built-in analytics. 
-                  Know exactly how your business is performing at a glance.
+                  Track your revenue and orders with built-in analytics. Know exactly how your
+                  business is performing at a glance.
                 </p>
               </div>
             </div>
@@ -96,12 +99,12 @@ export default function LandingPage() {
               <h2 className="text-3xl font-bold">Everything you need to sell online</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl">
                 {[
-                  "Mobile-responsive storefronts",
-                  "Secure customer checkout",
-                  "Order management dashboard",
-                  "Cloud image storage",
-                  "SEO optimized pages",
-                  "Zero setup fee"
+                  'Mobile-responsive storefronts',
+                  'Secure customer checkout',
+                  'Order management dashboard',
+                  'Cloud image storage',
+                  'SEO optimized pages',
+                  'Zero setup fee',
                 ].map((text) => (
                   <div key={text} className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />

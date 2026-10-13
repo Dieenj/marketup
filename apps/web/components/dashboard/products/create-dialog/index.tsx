@@ -6,12 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
 import { useCategories } from '@/hooks/use-categories';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -48,7 +43,11 @@ const STEPS = [
   { id: 3, label: 'Images', icon: ImagePlus },
 ];
 
-export default function CreateProductDialog({ open, onOpenChange, shopId }: CreateProductDialogProps) {
+export default function CreateProductDialog({
+  open,
+  onOpenChange,
+  shopId,
+}: CreateProductDialogProps) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
@@ -126,15 +125,20 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
               <Package className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold leading-tight">New Product</DialogTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Fill in the details to list a new product in your shop.</p>
+              <DialogTitle className="text-base font-semibold leading-tight">
+                New Product
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Fill in the details to list a new product in your shop.
+              </p>
             </div>
           </div>
 
           {/* Bộ chỉ số các bước thực hiện */}
           <div className="flex items-center gap-0">
             {STEPS.map((s, idx) => {
-              const done = (s.id === 1 && step1Done) || (s.id === 2 && step2Done) || (s.id === 3 && step3Done);
+              const done =
+                (s.id === 1 && step1Done) || (s.id === 2 && step2Done) || (s.id === 3 && step3Done);
               const active = step === s.id;
               const Icon = s.icon;
               return (
@@ -149,8 +153,8 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                       active
                         ? 'border-foreground text-foreground'
                         : done
-                        ? 'border-transparent text-muted-foreground hover:text-foreground cursor-pointer'
-                        : 'border-transparent text-muted-foreground/50 cursor-default'
+                          ? 'border-transparent text-muted-foreground hover:text-foreground cursor-pointer'
+                          : 'border-transparent text-muted-foreground/50 cursor-default',
                     )}
                   >
                     {done && !active ? (
@@ -173,14 +177,8 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
         <Form {...form}>
           <form onSubmit={handleSubmit}>
             <div className="px-6 py-5 min-h-[380px] max-h-[55vh] overflow-y-auto">
-
               {/* ── Bước 1: Thông tin cơ bản ── */}
-              {step === 1 && (
-                <BasicStep
-                  control={form.control}
-                  categories={categories}
-                />
-              )}
+              {step === 1 && <BasicStep control={form.control} categories={categories} />}
 
               {/* ── Bước 2: Các biến thể sản phẩm ── */}
               {step === 2 && (
@@ -214,7 +212,9 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                 {step === 1 ? (
                   'Cancel'
                 ) : (
-                  <><ChevronLeft className="h-4 w-4" /> Back</>
+                  <>
+                    <ChevronLeft className="h-4 w-4" /> Back
+                  </>
                 )}
               </Button>
 
@@ -226,7 +226,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                       key={s.id}
                       className={cn(
                         'rounded-full transition-all duration-300',
-                        step === s.id ? 'w-4 h-1.5 bg-foreground' : 'w-1.5 h-1.5 bg-border'
+                        step === s.id ? 'w-4 h-1.5 bg-foreground' : 'w-1.5 h-1.5 bg-border',
                       )}
                     />
                   ))}

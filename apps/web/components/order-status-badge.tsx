@@ -16,7 +16,9 @@ export default function OrderStatusBadge({
         className,
       )}
     >
-      <span className={cn('size-1.5 rounded-full', statusDotColors[status] ?? 'bg-muted-foreground')} />
+      <span
+        className={cn('size-1.5 rounded-full', statusDotColors[status] ?? 'bg-muted-foreground')}
+      />
       {statusLabels[status] ?? status}
     </span>
   );

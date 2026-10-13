@@ -18,10 +18,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth-storage') 
-        ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token 
+      const token = localStorage.getItem('auth-storage')
+        ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
         : null;
-      
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -35,7 +35,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Lỗi kiểm tra do client chủ động ném, message viết sẵn để hiển thị cho người dùng

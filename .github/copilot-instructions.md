@@ -12,7 +12,7 @@ You are working on MarketUp, a Personal Storefront SaaS platform.
 ## Coding Patterns
 
 - **API Calls:** Use the pre-configured `api` instance in `apps/web/lib/api-client.ts`. It handles JWT injection automatically from Zustand storage.
-- **State Management:** 
+- **State Management:**
   - Server state: TanStack Query.
   - Client state (Auth/Cart): Zustand with persistence.
 - **Forms:** Use `react-hook-form` + `zod` + `shadcn/ui` Form components.

@@ -55,13 +55,13 @@ export default function ImagesStep({
           'relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer py-10 gap-3',
           isDragging
             ? 'border-primary bg-primary/5 scale-[1.01]'
-            : 'border-border hover:border-primary/50 hover:bg-muted/50'
+            : 'border-border hover:border-primary/50 hover:bg-muted/50',
         )}
       >
         <div
           className={cn(
             'flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200',
-            isDragging ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            isDragging ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
           )}
         >
           <Upload className="h-5 w-5" />

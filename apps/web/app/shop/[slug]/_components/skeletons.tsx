@@ -57,7 +57,9 @@ export function ProductDetailSkeleton() {
 export function StorefrontSkeleton({ shop }: { shop?: StorefrontShop }) {
   return (
     <div className="min-h-screen" aria-busy="true">
-      <span className="sr-only" role="status">Loading shop…</span>
+      <span className="sr-only" role="status">
+        Loading shop…
+      </span>
       {shop ? (
         <ShopHero shop={shop} />
       ) : (

@@ -104,16 +104,10 @@ export default function EditProductDialog({
     if (activeProduct) {
       const product = activeProduct;
       setPreviewUrls(
-        product.images?.length
-          ? product.images
-          : product.imageUrl
-          ? [product.imageUrl]
-          : []
+        product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [],
       );
       setImages([]);
-      setAttributes(
-        product.attributes?.map((a) => ({ name: a.name, options: a.options })) || []
-      );
+      setAttributes(product.attributes?.map((a) => ({ name: a.name, options: a.options })) || []);
       setVariants(
         product.variants?.map((v) => ({
           id: v.id,
@@ -122,7 +116,7 @@ export default function EditProductDialog({
           price: v.price ? String(v.price) : '',
           stock: String(v.stock),
           sku: v.sku || '',
-        })) || []
+        })) || [],
       );
     }
   }
@@ -164,10 +158,7 @@ export default function EditProductDialog({
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-            className="space-y-4 py-2"
-          >
+          <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4 py-2">
             <FormField
               control={form.control}
               name="name"
@@ -306,4 +297,3 @@ export default function EditProductDialog({
     </Dialog>
   );
 }
-

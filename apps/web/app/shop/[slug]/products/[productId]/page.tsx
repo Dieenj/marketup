@@ -14,11 +14,18 @@ import { shareMetadata } from '@/lib/share-metadata';
 type Props = { params: Promise<{ slug: string; productId: string }> };
 
 async function loadProduct(slug: string, productId: string) {
-  const [shop, product] = await Promise.all([getStorefrontShop(slug), getStorefrontProduct(productId)]);
+  const [shop, product] = await Promise.all([
+    getStorefrontShop(slug),
+    getStorefrontProduct(productId),
+  ]);
   // Sản phẩm phải thuộc đúng shop trên URL
   const belongsToShop =
-    shop.status !== 'ok' || product.status !== 'ok' || !product.data.shopId || product.data.shopId === shop.data.id;
-  const isNotFound = shop.status === 'not-found' || product.status === 'not-found' || !belongsToShop;
+    shop.status !== 'ok' ||
+    product.status !== 'ok' ||
+    !product.data.shopId ||
+    product.data.shopId === shop.data.id;
+  const isNotFound =
+    shop.status === 'not-found' || product.status === 'not-found' || !belongsToShop;
   return { shop, product, isNotFound };
 }
 
@@ -29,7 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const shopName = shop.status === 'ok' ? shop.data.name : undefined;
   const title = shopName ? `${product.data.name} — ${shopName}` : product.data.name;
-  const description = product.data.description || (shopName ? `${product.data.name} at ${shopName}` : undefined);
+  const description =
+    product.data.description || (shopName ? `${product.data.name} at ${shopName}` : undefined);
   const image = product.data.images?.[0] || product.data.imageUrl || undefined;
   return shareMetadata({ title, description, url: `/shop/${slug}/products/${productId}`, image });
 }

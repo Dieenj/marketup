@@ -94,132 +94,133 @@ export default function SettingsPage() {
       />
 
       <div className="rounded-xl border bg-card p-6 shadow-xs sm:p-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Shop Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="E.g. My Cool Shop" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Shop Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g. My Cool Shop" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormItem>
+                <FormLabel>Shop URL (Slug)</FormLabel>
+                <FormControl>
+                  <Input value={shop?.slug} disabled className="bg-muted" />
+                </FormControl>
+                <FormDescription>Public URL: marketup.com/shop/{shop?.slug}</FormDescription>
+              </FormItem>
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Shop URL (Slug)</FormLabel>
+                  <FormLabel>Store Description</FormLabel>
                   <FormControl>
-                    <Input value={shop?.slug} disabled className="bg-muted" />
+                    <Textarea placeholder="Welcome to our store! We sell..." rows={4} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="primaryColor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand Color</FormLabel>
+                  <FormControl>
+                    <ColorPicker value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormDescription>
-                    Public URL: marketup.com/shop/{shop?.slug}
+                    Main color used on your storefront — hero, buttons, accents.
                   </FormDescription>
+                  <FormMessage />
                 </FormItem>
-              </div>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="bannerUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Banner Image{' '}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <BannerImageInput value={field.value ?? ''} onChange={field.onChange} />
+                  </FormControl>
+                  <FormDescription>
+                    Background image for your storefront hero section.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
               <FormField
                 control={form.control}
-                name="description"
+                name="contactEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Store Description</FormLabel>
+                    <FormLabel>Contact Email</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Welcome to our store! We sell..." rows={4} {...field} />
+                      <Input placeholder="contact@shop.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="primaryColor"
+                name="contactPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Brand Color</FormLabel>
+                    <FormLabel>Contact Phone</FormLabel>
                     <FormControl>
-                      <ColorPicker value={field.value} onChange={field.onChange} />
+                      <Input placeholder="+84 987 654 321" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Main color used on your storefront — hero, buttons, accents.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              <FormField
-                control={form.control}
-                name="bannerUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Banner Image <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
-                    <FormControl>
-                      <BannerImageInput value={field.value ?? ''} onChange={field.onChange} />
-                    </FormControl>
-                    <FormDescription>
-                      Background image for your storefront hero section.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Store Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St, City, Country" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                 <FormField
-                  control={form.control}
-                  name="contactEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="contact@shop.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="contactPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+84 987 654 321" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-               <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Store Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 Main St, City, Country" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-              <div className="flex justify-end pt-4">
-                <Button type="submit" size="xl" disabled={mutation.isPending}>
-                  {mutation.isPending && <Spinner />}
-                  {mutation.isPending ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            </form>
-          </Form>
+            <div className="flex justify-end pt-4">
+              <Button type="submit" size="xl" disabled={mutation.isPending}>
+                {mutation.isPending && <Spinner />}
+                {mutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );

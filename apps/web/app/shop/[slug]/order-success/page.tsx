@@ -20,27 +20,33 @@ export default function OrderSuccessPage() {
           <CheckCircle2 className="h-16 w-16 text-green-600" />
         </div>
       </div>
-      
+
       <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Order Received!</h1>
-      <p className="text-xl text-muted-foreground mb-2">
-        Thank you for shopping with us.
-      </p>
+      <p className="text-xl text-muted-foreground mb-2">Thank you for shopping with us.</p>
       <p className="text-sm text-muted-foreground mb-10">
         {orderNumber ? (
           <>
-            Your order number is <span className="font-mono font-medium text-foreground">{orderNumber}</span>.{' '}
+            Your order number is{' '}
+            <span className="font-mono font-medium text-foreground">{orderNumber}</span>.{' '}
           </>
         ) : null}
         We&apos;ve emailed you a confirmation.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
-        <Link href={`/shop/${slug}`} className={cn(buttonVariants({ variant: 'outline' }), 'w-full gap-2 py-6')}>
+        <Link
+          href={`/shop/${slug}`}
+          className={cn(buttonVariants({ variant: 'outline' }), 'w-full gap-2 py-6')}
+        >
           <ShoppingBag className="h-5 w-5" />
           Continue Shopping
         </Link>
         <Link
-          href={orderNumber ? `/shop/${slug}/orders/${encodeURIComponent(orderNumber)}` : `/shop/${slug}/orders`}
+          href={
+            orderNumber
+              ? `/shop/${slug}/orders/${encodeURIComponent(orderNumber)}`
+              : `/shop/${slug}/orders`
+          }
           className={cn(buttonVariants(), 'w-full gap-2 py-6')}
         >
           <Package className="h-5 w-5" />
