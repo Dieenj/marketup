@@ -1,11 +1,15 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
+  HttpCode,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { CancelOrderDto } from './dto/cancel-order.dto';
 import { OrderService } from './order.service';
 import {
   BuyerEmail,
@@ -34,5 +38,20 @@ export class BuyerOrderController {
     @Param('orderNumber') orderNumber: string,
   ) {
     return this.orderService.findOneForBuyer(orderNumber.toUpperCase(), access);
+  }
+
+  @Post(':orderNumber/cancel')
+  @HttpCode(200)
+  @UseGuards(OrderAccessGuard)
+  cancel(
+    @CurrentBuyer() access: BuyerAccess,
+    @Param('orderNumber') orderNumber: string,
+    @Body() dto: CancelOrderDto,
+  ) {
+    return this.orderService.cancelForBuyer(
+      orderNumber.toUpperCase(),
+      access,
+      dto,
+    );
   }
 }

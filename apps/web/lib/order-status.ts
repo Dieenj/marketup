@@ -36,11 +36,44 @@ export const statusDotColors: Record<string, string> = {
   CANCELLED: 'bg-red-500',
 };
 
+// Khớp SELLER_TRANSITIONS ở API (apps/api/src/order/order-status.ts)
 export const nextStatuses: Record<string, string[]> = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
   CONFIRMED: ['PROCESSING', 'CANCELLED'],
   PROCESSING: ['SHIPPING', 'CANCELLED'],
-  SHIPPING: ['DELIVERED'],
+  SHIPPING: ['DELIVERED', 'CANCELLED'], // huỷ lúc đang giao = giao không thành công
   DELIVERED: [],
   CANCELLED: [],
 };
+
+export type CancelReason =
+  | 'CHANGED_MIND'
+  | 'WRONG_DETAILS'
+  | 'FOUND_BETTER_PRICE'
+  | 'OUT_OF_STOCK'
+  | 'BUYER_UNREACHABLE'
+  | 'DELIVERY_FAILED'
+  | 'OTHER';
+
+export const cancelReasonLabels: Record<CancelReason, string> = {
+  CHANGED_MIND: 'Changed my mind',
+  WRONG_DETAILS: 'Need to change the address or items',
+  FOUND_BETTER_PRICE: 'Found a better price elsewhere',
+  OUT_OF_STOCK: 'Out of stock',
+  BUYER_UNREACHABLE: "Buyer couldn't be reached",
+  DELIVERY_FAILED: 'Delivery was unsuccessful',
+  OTHER: 'Other',
+};
+
+// Khớp BUYER_CANCEL_REASONS / sellerCancelReasons ở API
+export const BUYER_CANCEL_REASONS: CancelReason[] = [
+  'CHANGED_MIND',
+  'WRONG_DETAILS',
+  'FOUND_BETTER_PRICE',
+  'OTHER',
+];
+
+export function sellerCancelReasons(status: string): CancelReason[] {
+  if (status === 'SHIPPING') return ['DELIVERY_FAILED'];
+  return ['OUT_OF_STOCK', 'BUYER_UNREACHABLE', 'OTHER'];
+}

@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import api, { getErrorStatus } from '@/lib/api-client';
+import type { CancelReason } from '@/lib/order-status';
 
 // Đơn hàng phía người mua — đúng các trường API /buyer/orders trả về (không có email/sđt hay id nội bộ)
 export interface BuyerOrderItem {
@@ -18,6 +19,10 @@ export interface BuyerOrder {
   createdAt: string;
   updatedAt: string;
   deliveredAt?: string | null;
+  cancelledAt?: string | null;
+  cancelledBy?: 'BUYER' | 'SELLER' | null;
+  cancelReason?: CancelReason | null;
+  cancelNote?: string | null;
   buyerName: string;
   shippingAddress: string;
   shippingCity: string;
@@ -55,6 +60,20 @@ export async function verifyLoginCode(email: string, code: string) {
     email,
     code,
   });
+  return data;
+}
+
+// Người mua huỷ đơn khi shop chưa xác nhận; trả về đơn sau khi huỷ
+export async function cancelOrder(
+  orderNumber: string,
+  token: string,
+  input: { reason: CancelReason; note?: string },
+) {
+  const { data } = await api.post<BuyerOrder>(
+    `/buyer/orders/${encodeURIComponent(orderNumber)}/cancel`,
+    input,
+    withToken(token),
+  );
   return data;
 }
 

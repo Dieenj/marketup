@@ -29,6 +29,24 @@ enum OrderStatus {
   CANCELLED  // Đã hủy
 }
 
+// Ai huỷ đơn
+enum CancelActor {
+  BUYER
+  SELLER
+}
+
+// Lý do huỷ (giống Shopee): người mua chỉ huỷ khi shop chưa xác nhận;
+// đơn đang giao chỉ có thể "giao không thành công" (vd. người mua từ chối nhận hàng COD)
+enum CancelReason {
+  CHANGED_MIND       // Người mua: không muốn mua nữa
+  WRONG_DETAILS      // Người mua: muốn đổi địa chỉ / sản phẩm
+  FOUND_BETTER_PRICE // Người mua: tìm được chỗ rẻ hơn
+  OUT_OF_STOCK       // Shop: hết hàng
+  BUYER_UNREACHABLE  // Shop: không liên lạc được người mua
+  DELIVERY_FAILED    // Shop: giao không thành công
+  OTHER
+}
+
 
 // ============================================================
 // Các Model
@@ -144,6 +162,12 @@ model Order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   deliveredAt     DateTime?
+
+  // Huỷ đơn
+  cancelledAt     DateTime?
+  cancelledBy     CancelActor?
+  cancelReason    CancelReason?
+  cancelNote      String?
 
   // Các mối quan hệ
   shop            Shop          @relation(fields: [shopId], references: [id], onDelete: Restrict)

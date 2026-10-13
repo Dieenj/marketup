@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import {
   Table,
   TableBody,
@@ -27,12 +27,20 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MoreVertical, Eye, ShoppingCart, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { ORDER_STATUSES, nextStatuses, statusLabels } from '@/lib/order-status';
+import {
+  ORDER_STATUSES,
+  cancelReasonLabels,
+  nextStatuses,
+  sellerCancelReasons,
+  statusLabels,
+  type CancelReason,
+} from '@/lib/order-status';
 import { formatCurrency } from '@/lib/format';
 import PageHeader from '@/components/dashboard/page-header';
 import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
 import RemoteImage from '@/components/remote-image';
+import CancelOrderDialog, { type CancelOrderInput } from '@/components/cancel-order-dialog';
 
 interface OrderItem {
   id: string;
@@ -54,7 +62,16 @@ interface Order {
   totalAmount: number | string;
   subtotal: number | string;
   status: string;
+  cancelledBy?: 'BUYER' | 'SELLER' | null;
+  cancelReason?: CancelReason | null;
+  cancelNote?: string | null;
   items?: OrderItem[];
+}
+
+// Nhãn nút đổi trạng thái; huỷ lúc đang giao = giao không thành công
+function actionLabel(order: Order, status: string) {
+  if (status !== 'CANCELLED') return `Mark as ${statusLabels[status].toLowerCase()}`;
+  return order.status === 'SHIPPING' ? 'Delivery failed' : 'Cancel order';
 }
 
 export default function OrdersPage() {
@@ -62,6 +79,11 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  // Đơn đang chờ chọn lý do huỷ (+ callback cập nhật dialog chi tiết khi thành công)
+  const [cancelTarget, setCancelTarget] = useState<{
+    order: Order;
+    onSuccess?: (order: Order) => void;
+  } | null>(null);
 
   const { data: shop } = useMyShop();
 
@@ -80,24 +102,36 @@ export default function OrdersPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
-      await api.patch(`/orders/${orderId}/status`, { status });
-    },
+    mutationFn: async ({
+      orderId,
+      status,
+      cancel,
+    }: {
+      orderId: string;
+      status: string;
+      cancel?: CancelOrderInput;
+    }) =>
+      (
+        await api.patch<Order>(`/orders/${orderId}/status`, {
+          status,
+          ...(cancel && { cancelReason: cancel.reason, cancelNote: cancel.note }),
+        })
+      ).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders', shop?.id] });
       toast.success('Order status updated');
     },
-    onError: () => {
-      toast.error('Failed to update status');
+    onError: (error) => {
+      // vd. 409: người mua vừa huỷ đơn này
+      queryClient.invalidateQueries({ queryKey: ['orders', shop?.id] });
+      toast.error(getErrorMessage(error, 'Failed to update status'));
     },
   });
 
-  // Đổi trạng thái đơn; huỷ đơn là thao tác không hoàn tác nên cần xác nhận
-  const changeStatus = (order: Order, status: string, onSuccess?: () => void) => {
-    if (
-      status === 'CANCELLED' &&
-      !confirm(`Cancel order #${order.orderNumber}? This cannot be undone.`)
-    ) {
+  // Đổi trạng thái đơn; huỷ đơn (không hoàn tác) phải chọn lý do trước
+  const changeStatus = (order: Order, status: string, onSuccess?: (order: Order) => void) => {
+    if (status === 'CANCELLED') {
+      setCancelTarget({ order, onSuccess });
       return;
     }
     updateStatusMutation.mutate({ orderId: order.id, status }, { onSuccess });
@@ -294,7 +328,7 @@ export default function OrdersPage() {
                                 disabled={updateStatusMutation.isPending}
                                 onClick={() => changeStatus(order, status)}
                               >
-                                Mark as {statusLabels[status].toLowerCase()}
+                                {actionLabel(order, status)}
                               </DropdownMenuItem>
                             ))}
                           </>
@@ -348,6 +382,19 @@ export default function OrdersPage() {
                   <OrderStatusBadge status={selectedOrder.status} />
                 </div>
               </div>
+
+              {selectedOrder.status === 'CANCELLED' && selectedOrder.cancelReason && (
+                <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-sm">
+                  <p className="font-medium">
+                    Cancelled by {selectedOrder.cancelledBy === 'BUYER' ? 'the buyer' : 'you'}
+                    {' · '}
+                    {cancelReasonLabels[selectedOrder.cancelReason]}
+                  </p>
+                  {selectedOrder.cancelNote && (
+                    <p className="mt-0.5 text-muted-foreground">{selectedOrder.cancelNote}</p>
+                  )}
+                </div>
+              )}
 
               <Separator />
 
@@ -407,15 +454,15 @@ export default function OrdersPage() {
                         onClick={() => {
                           const orderId = selectedOrder.id;
                           // Chỉ cập nhật dialog khi API thành công, tránh hiển thị sai trạng thái nếu lỗi
-                          changeStatus(selectedOrder, status, () =>
+                          changeStatus(selectedOrder, status, (updated) =>
                             setSelectedOrder((current) =>
-                              current?.id === orderId ? { ...current, status } : current,
+                              current?.id === orderId ? { ...current, ...updated } : current,
                             ),
                           );
                         }}
                         disabled={updateStatusMutation.isPending}
                       >
-                        Mark as {statusLabels[status].toLowerCase()}
+                        {actionLabel(selectedOrder, status)}
                       </Button>
                     ))}
                   </div>
@@ -425,6 +472,32 @@ export default function OrdersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {cancelTarget && (
+        <CancelOrderDialog
+          open
+          onOpenChange={(open) => !open && setCancelTarget(null)}
+          orderNumber={cancelTarget.order.orderNumber}
+          reasons={sellerCancelReasons(cancelTarget.order.status)}
+          description={
+            cancelTarget.order.status === 'SHIPPING'
+              ? "The courier couldn't deliver this order. It will be cancelled and its items returned to stock."
+              : 'The buyer will be emailed with your reason, and the items go back into stock. This cannot be undone.'
+          }
+          isPending={updateStatusMutation.isPending}
+          onConfirm={(cancel) =>
+            updateStatusMutation.mutate(
+              { orderId: cancelTarget.order.id, status: 'CANCELLED', cancel },
+              {
+                onSuccess: (updated) => {
+                  cancelTarget.onSuccess?.(updated);
+                  setCancelTarget(null);
+                },
+              },
+            )
+          }
+        />
+      )}
     </div>
   );
 }

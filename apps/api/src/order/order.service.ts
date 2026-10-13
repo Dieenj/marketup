@@ -3,11 +3,26 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { CancelOrderDto } from './dto/cancel-order.dto';
+import {
+  BUYER_CANCEL_REASONS,
+  canBuyerCancel,
+  SELLER_TRANSITIONS,
+  sellerCancelReasons,
+} from './order-status';
+import {
+  CancelActor,
+  CancelReason,
+  OrderItem,
+  OrderStatus,
+  Prisma,
+} from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { generateOrderNumber } from './order-number';
 import { AccessTokenService } from '../auth/access-token.service';
@@ -20,6 +35,10 @@ const PUBLIC_ORDER_SELECT = {
   createdAt: true,
   updatedAt: true,
   deliveredAt: true,
+  cancelledAt: true,
+  cancelledBy: true,
+  cancelReason: true,
+  cancelNote: true,
   buyerName: true,
   shippingAddress: true,
   shippingCity: true,
@@ -42,6 +61,22 @@ const PUBLIC_ORDER_SELECT = {
   },
   shop: { select: { name: true, slug: true } },
 } satisfies Prisma.OrderSelect;
+
+// Đơn mà người mua được xem: phiên đăng nhập → đơn của email đó; link → đúng đơn trong link
+function buyerOrderWhere(
+  orderNumber: string,
+  access: BuyerAccess,
+): Prisma.OrderWhereInput {
+  return access.kind === 'buyer'
+    ? { orderNumber, buyerEmail: access.email }
+    : { orderNumber, id: access.orderId };
+}
+
+interface Cancellation {
+  by: CancelActor;
+  reason: CancelReason;
+  note?: string;
+}
 
 // Trang "My orders" chưa phân trang; đủ cho người mua lẻ của một shop
 const MAX_BUYER_ORDERS = 100;
@@ -144,13 +179,9 @@ export class OrderService {
       });
     });
 
-    // Gửi email xác nhận đặt hàng bất đồng bộ
-    this.mailService.sendOrderPlacedEmail(order).catch((err) => {
-      this.logger.error(
-        `Failed to send order confirmation email for ${order.orderNumber}:`,
-        err,
-      );
-    });
+    this.sendMail('order confirmation', order, (o) =>
+      this.mailService.sendOrderPlacedEmail(o),
+    );
 
     // Link xem đơn cho người vừa đặt (trang "đặt hàng thành công"), không cần đăng nhập
     return { ...order, accessToken: this.tokens.signOrder(order.id) };
@@ -172,7 +203,11 @@ export class OrderService {
     });
   }
 
-  async updateStatus(userId: string, orderId: string, status: OrderStatus) {
+  async updateStatus(
+    userId: string,
+    orderId: string,
+    { status, cancelReason, cancelNote }: UpdateOrderStatusDto,
+  ) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { shop: true, items: true },
@@ -186,35 +221,115 @@ export class OrderService {
       return order;
     }
 
-    // Kiểm tra máy trạng thái đơn hàng (State machine check)
-    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
-      PENDING: ['CONFIRMED', 'CANCELLED'],
-      CONFIRMED: ['PROCESSING', 'CANCELLED'],
-      PROCESSING: ['SHIPPING', 'CANCELLED'],
-      SHIPPING: ['DELIVERED', 'CANCELLED'],
-      DELIVERED: [], // trạng thái kết thúc (terminal state)
-      CANCELLED: [], // trạng thái kết thúc (terminal state)
-    };
-
-    const allowed = validTransitions[order.status];
-    if (!allowed || !allowed.includes(status)) {
+    if (!SELLER_TRANSITIONS[order.status].includes(status)) {
       throw new BadRequestException(
         `Cannot transition order status from ${order.status} to ${status}`,
       );
     }
 
-    // Chạy cập nhật trong transaction để xử lý hoàn trả kho hàng nếu đơn hàng bị hủy
-    const updatedOrder = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.order.update({
-        where: { id: orderId },
+    let cancellation: Cancellation | undefined;
+    if (status === 'CANCELLED') {
+      if (
+        !cancelReason ||
+        !sellerCancelReasons(order.status).includes(cancelReason)
+      ) {
+        throw new BadRequestException(
+          order.status === 'SHIPPING'
+            ? 'An order on its way can only be cancelled as "delivery failed"'
+            : 'Choose a reason for cancelling this order',
+        );
+      }
+      cancellation = { by: 'SELLER', reason: cancelReason, note: cancelNote };
+    } else if (cancelReason || cancelNote) {
+      throw new BadRequestException(
+        'A cancellation reason is only needed when cancelling an order',
+      );
+    }
+
+    const updatedOrder = await this.changeStatus(order, status, cancellation);
+
+    // Kích hoạt gửi email bất đồng bộ
+    if (status === 'SHIPPING') {
+      this.sendMail('order shipped', updatedOrder, (o) =>
+        this.mailService.sendOrderShippedEmail(o),
+      );
+    } else if (status === 'DELIVERED') {
+      this.sendMail('order delivered', updatedOrder, (o) =>
+        this.mailService.sendOrderDeliveredEmail(o),
+      );
+    } else if (status === 'CANCELLED') {
+      this.sendMail('order cancelled', updatedOrder, (o) =>
+        this.mailService.sendOrderCancelledEmail(o),
+      );
+    }
+
+    return updatedOrder;
+  }
+
+  // Người mua tự huỷ khi shop chưa xác nhận (bằng phiên đăng nhập hoặc link của đơn)
+  async cancelForBuyer(
+    orderNumber: string,
+    access: BuyerAccess,
+    { reason, note }: CancelOrderDto,
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: buyerOrderWhere(orderNumber, access),
+      select: { id: true, status: true, items: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (!canBuyerCancel(order.status)) {
+      throw new BadRequestException(
+        order.status === 'CANCELLED'
+          ? 'This order has already been cancelled'
+          : 'The shop has already confirmed this order. Contact the shop if you need to cancel it.',
+      );
+    }
+    if (!BUYER_CANCEL_REASONS.includes(reason)) {
+      throw new BadRequestException('Choose one of the reasons offered');
+    }
+
+    const cancelled = await this.changeStatus(order, 'CANCELLED', {
+      by: 'BUYER',
+      reason,
+      note,
+    });
+    this.sendMail('order cancelled', cancelled, (o) =>
+      this.mailService.sendOrderCancelledEmail(o),
+    );
+    return this.findOneForBuyer(orderNumber, access);
+  }
+
+  // Chỉ đổi khi đơn vẫn đúng trạng thái vừa đọc: người mua huỷ đúng lúc shop xác nhận
+  // thì chỉ một bên thành công, và kho không bị hoàn hai lần
+  private async changeStatus(
+    order: { id: string; status: OrderStatus; items: OrderItem[] },
+    status: OrderStatus,
+    cancellation?: Cancellation,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.order.updateMany({
+        where: { id: order.id, status: order.status },
         data: {
           status,
           ...(status === 'DELIVERED' ? { deliveredAt: new Date() } : {}),
+          ...(cancellation
+            ? {
+                cancelledAt: new Date(),
+                cancelledBy: cancellation.by,
+                cancelReason: cancellation.reason,
+                cancelNote: cancellation.note || null,
+              }
+            : {}),
         },
-        include: { items: true, shop: true },
       });
+      if (count === 0) {
+        throw new ConflictException(
+          'This order was just updated. Refresh to see its latest status.',
+        );
+      }
 
-      // Hoàn trả kho hàng nếu đơn hàng bị hủy
+      // Huỷ đơn → hoàn lại kho
       if (status === 'CANCELLED') {
         for (const item of order.items) {
           if (item.variantId) {
@@ -226,27 +341,25 @@ export class OrderService {
         }
       }
 
-      return updated;
+      return tx.order.findUniqueOrThrow({
+        where: { id: order.id },
+        include: { items: true, shop: { select: { name: true, slug: true } } },
+      });
     });
+  }
 
-    // Kích hoạt gửi email bất đồng bộ
-    if (status === 'SHIPPING') {
-      this.mailService.sendOrderShippedEmail(updatedOrder).catch((err) => {
-        this.logger.error(
-          `Failed to send order shipped email for ${updatedOrder.orderNumber}:`,
-          err,
-        );
-      });
-    } else if (status === 'DELIVERED') {
-      this.mailService.sendOrderDeliveredEmail(updatedOrder).catch((err) => {
-        this.logger.error(
-          `Failed to send order delivered email for ${updatedOrder.orderNumber}:`,
-          err,
-        );
-      });
-    }
-
-    return updatedOrder;
+  // Email gửi nền: lỗi SMTP không làm hỏng thao tác của người dùng
+  private sendMail<T extends { orderNumber: string }>(
+    label: string,
+    order: T,
+    send: (order: T) => Promise<unknown>,
+  ) {
+    send(order).catch((err) => {
+      this.logger.error(
+        `Failed to send ${label} email for ${order.orderNumber}:`,
+        err,
+      );
+    });
   }
 
   async findOne(userId: string, id: string) {
@@ -273,12 +386,7 @@ export class OrderService {
 
   async findOneForBuyer(orderNumber: string, access: BuyerAccess) {
     const order = await this.prisma.order.findFirst({
-      where: {
-        orderNumber,
-        ...(access.kind === 'buyer'
-          ? { buyerEmail: access.email }
-          : { id: access.orderId }),
-      },
+      where: buyerOrderWhere(orderNumber, access),
       select: PUBLIC_ORDER_SELECT,
     });
 

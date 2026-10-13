@@ -2,6 +2,7 @@ import { Check, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
 import type { BuyerOrder } from '@/lib/buyer-api';
+import { cancelReasonLabels } from '@/lib/order-status';
 
 // Các bước người mua thấy (lời lẽ cho người mua, khác nhãn trạng thái ở dashboard người bán)
 const STEPS = [
@@ -37,7 +38,21 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
       <div className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
         <XCircle className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden />
         <div>
-          <p className="font-semibold text-destructive">This order was cancelled</p>
+          <p className="font-semibold text-destructive">
+            {order.cancelledBy === 'BUYER'
+              ? 'You cancelled this order'
+              : order.cancelledBy === 'SELLER'
+                ? 'The shop cancelled this order'
+                : 'This order was cancelled'}
+          </p>
+          {order.cancelReason && (
+            <p className="mt-1 text-sm">
+              Reason: {cancelReasonLabels[order.cancelReason]}
+              {order.cancelNote && (
+                <span className="text-muted-foreground"> — {order.cancelNote}</span>
+              )}
+            </p>
+          )}
           <p className="mt-1 text-sm text-muted-foreground">
             You won&apos;t be charged. Contact the shop if you have any questions.
           </p>

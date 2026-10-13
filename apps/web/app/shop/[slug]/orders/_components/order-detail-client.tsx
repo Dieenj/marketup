@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { ChevronLeft, Mail, Phone } from 'lucide-react';
 import OrderStatusBadge from '@/components/order-status-badge';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import CancelOrderDialog from '@/components/cancel-order-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { getErrorStatus } from '@/lib/api-client';
-import { buyerOrderQuery, isAccessDenied, type BuyerOrder } from '@/lib/buyer-api';
+import { getErrorMessage, getErrorStatus } from '@/lib/api-client';
+import { BUYER_CANCEL_REASONS } from '@/lib/order-status';
+import { buyerOrderQuery, cancelOrder, isAccessDenied, type BuyerOrder } from '@/lib/buyer-api';
 import { storefrontQueries } from '@/lib/storefront-queries';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { useBuyerSession } from '@/hooks/use-buyer-session';
@@ -87,7 +90,7 @@ export default function OrderDetailClient({
     return <StorefrontUnavailable onRetry={() => query.refetch()} isRetrying={query.isFetching} />;
   }
 
-  return <OrderDetail slug={slug} order={query.data!} signedIn={!!sessionToken} />;
+  return <OrderDetail slug={slug} order={query.data!} token={token!} signedIn={!!sessionToken} />;
 }
 
 function BackLink({ slug }: { slug: string }) {
@@ -105,13 +108,36 @@ function BackLink({ slug }: { slug: string }) {
 function OrderDetail({
   slug,
   order,
+  token,
   signedIn,
 }: {
   slug: string;
   order: BuyerOrder;
+  /** Token đang dùng để xem đơn (link hoặc phiên) — dùng luôn để huỷ */
+  token: string;
   signedIn: boolean;
 }) {
+  const queryClient = useQueryClient();
   const { data: shop } = useQuery(q.shop(slug));
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const cancel = useMutation({
+    mutationFn: (input: Parameters<typeof cancelOrder>[2]) =>
+      cancelOrder(order.orderNumber, token, input),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(buyerOrderQuery(order.orderNumber, token).queryKey, updated);
+      queryClient.invalidateQueries({ queryKey: ['buyer-orders', slug] });
+      setCancelOpen(false);
+      toast.success('Your order has been cancelled');
+    },
+    onError: (error) => {
+      // vd. shop vừa xác nhận đơn → tải lại để thấy trạng thái mới
+      queryClient.invalidateQueries({
+        queryKey: buyerOrderQuery(order.orderNumber, token).queryKey,
+      });
+      setCancelOpen(false);
+      toast.error(getErrorMessage(error, "Couldn't cancel this order. Please try again."));
+    },
+  });
   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const shippingFee = Number(order.shippingFee);
   const discount = Number(order.discount);
@@ -247,6 +273,13 @@ function OrderDetail({
             </section>
           )}
 
+          {/* Giống Shopee: tự huỷ được khi shop chưa xác nhận; sau đó liên hệ shop */}
+          {order.status === 'PENDING' && (
+            <Button variant="outline" className="w-full" onClick={() => setCancelOpen(true)}>
+              Cancel order
+            </Button>
+          )}
+
           {/* Mở bằng link của một đơn → gợi ý đăng nhập để xem mọi đơn */}
           {!signedIn && (
             <Link
@@ -261,6 +294,16 @@ function OrderDetail({
           )}
         </div>
       </div>
+
+      <CancelOrderDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        orderNumber={order.orderNumber}
+        reasons={BUYER_CANCEL_REASONS}
+        description="The shop hasn't confirmed your order yet, so you can cancel it now. This cannot be undone."
+        onConfirm={(input) => cancel.mutate(input)}
+        isPending={cancel.isPending}
+      />
     </div>
   );
 }

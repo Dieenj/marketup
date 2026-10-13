@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { Prisma } from '@prisma/client';
+import { CancelActor, CancelReason, Prisma } from '@prisma/client';
 import { escapeHtml } from '../common/html';
 import { AccessTokenService } from '../auth/access-token.service';
 
@@ -34,6 +34,23 @@ export interface MailOrder {
 }
 
 type OrderLink = Pick<MailOrder, 'id' | 'orderNumber' | 'shop'>;
+
+interface MailCancelledOrder extends MailOrder {
+  cancelledBy: CancelActor | null;
+  cancelReason: CancelReason | null;
+  cancelNote: string | null;
+}
+
+// Nhãn lý do huỷ cho người mua (khớp CANCEL_REASON_LABELS ở web)
+const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
+  CHANGED_MIND: 'Changed my mind',
+  WRONG_DETAILS: 'Need to change the address or items',
+  FOUND_BETTER_PRICE: 'Found a better price elsewhere',
+  OUT_OF_STOCK: 'Out of stock',
+  BUYER_UNREACHABLE: "The shop couldn't reach you",
+  DELIVERY_FAILED: 'Delivery was unsuccessful',
+  OTHER: 'Other',
+};
 
 @Injectable()
 export class MailService {
@@ -86,8 +103,8 @@ export class MailService {
     return `${this.getBaseUrl()}${path}?t=${this.tokens.signOrder(order.id)}`;
   }
 
-  private orderButton(order: OrderLink): string {
-    return `<a href="${this.getOrderUrl(order)}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px;">Track your order</a>`;
+  private orderButton(order: OrderLink, label = 'Track your order'): string {
+    return `<a href="${this.getOrderUrl(order)}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px;">${label}</a>`;
   }
 
   private async sendMail(options: nodemailer.SendMailOptions) {
@@ -302,6 +319,60 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
       from: this.getFromHeader(),
       to: order.buyerEmail,
       subject: `Order Confirmation #${order.orderNumber}`,
+      html: htmlContent,
+    });
+  }
+
+  // Báo cho người mua khi đơn bị huỷ (do shop, hoặc xác nhận khi người mua tự huỷ)
+  async sendOrderCancelledEmail(order: MailCancelledOrder) {
+    const byBuyer = order.cancelledBy === 'BUYER';
+    const shopName = escapeHtml(order.shop?.name || 'the shop');
+    const reason = order.cancelReason
+      ? CANCEL_REASON_LABELS[order.cancelReason]
+      : null;
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Order cancelled</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #eef2f5;">
+          <tr>
+            <td style="padding: 40px; text-align: center;">
+              <h1 style="margin: 0 0 12px 0; font-size: 22px; font-weight: 800; color: #111111;">Order cancelled</h1>
+              <p style="margin: 0 0 20px 0; color: #555555; font-size: 15px; line-height: 1.6;">
+                Hi <strong>${escapeHtml(order.buyerName)}</strong>, ${
+                  byBuyer
+                    ? `you cancelled order <strong>${escapeHtml(order.orderNumber)}</strong> from <strong>${shopName}</strong>.`
+                    : `<strong>${shopName}</strong> cancelled your order <strong>${escapeHtml(order.orderNumber)}</strong>.`
+                } You won't be charged.
+              </p>
+              ${
+                reason
+                  ? `<p style="margin: 0 0 24px 0; padding: 14px 18px; background-color: #fafafa; border: 1px solid #eeeeee; border-radius: 12px; font-size: 14px; color: #555555; text-align: left;">
+                <strong style="color: #111111;">Reason:</strong> ${escapeHtml(reason)}${
+                  order.cancelNote
+                    ? `<br/><span style="color: #777777;">${escapeHtml(order.cancelNote)}</span>`
+                    : ''
+                }
+              </p>`
+                  : ''
+              }
+              ${this.orderButton(order, 'View order')}
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    await this.sendMail({
+      from: this.getFromHeader(),
+      to: order.buyerEmail,
+      subject: `Order cancelled: #${order.orderNumber}`,
       html: htmlContent,
     });
   }
