@@ -7,10 +7,10 @@ import ShopHero from './shop-hero';
 
 export function ProductDetailSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8" role="status" aria-busy="true">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8" role="status" aria-busy="true">
       <span className="sr-only">Loading product…</span>
       <Skeleton className="mb-8 h-5 w-40" />
-      <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[5fr_7fr] lg:gap-12">
         {/* Ảnh chính + thumbnail */}
         <div className="space-y-4">
           <Skeleton className="aspect-square rounded-2xl" />
@@ -46,7 +46,7 @@ export function ProductDetailSkeleton() {
             </div>
           ))}
           <Skeleton className="h-9 w-44" />
-          <Skeleton className="h-14 w-full rounded-lg" />
+          <Skeleton className="h-14 w-full rounded-lg md:max-w-md" />
         </div>
       </div>
     </div>

@@ -207,6 +207,18 @@ export default function ProductClient() {
     setQuantity(1);
   };
 
+  const addToCartDisabled =
+    !allOptionsSelected || isSelectedVariantOutOfStock || !hasAnyStock || allStockInCart;
+  const addToCartLabel = !allOptionsSelected
+    ? nextAttribute
+      ? `Select ${nextAttribute.name}`
+      : 'Select Options'
+    : isSelectedVariantOutOfStock || !hasAnyStock
+      ? 'Out of Stock'
+      : allStockInCart
+        ? 'All available stock is in your cart'
+        : 'Add to Cart';
+
   if (isLoading) return <ProductDetailSkeleton />;
 
   if (!product) {
@@ -217,8 +229,32 @@ export default function ProductClient() {
     );
   }
 
+  const addToCart = () => {
+    if (!actualVariant || !product.shopId || remainingStock <= 0) return;
+
+    const variantLabel = actualVariant.label === 'Default' ? undefined : actualVariant.label;
+    addItem(product.shopId, {
+      productId: product.id,
+      variantId: actualVariant.id,
+      quantity: normalizedQuantity,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      variantLabel,
+      price: effectivePrice,
+    });
+    setQuantity(1);
+    toast.success(
+      `Added ${normalizedQuantity}x "${product.name}"${variantLabel ? ` (${variantLabel})` : ''} to cart`,
+    );
+  };
+
+  const priceLabel = allOptionsSelected
+    ? formatCurrency(effectivePrice)
+    : formatPriceRange(priceRange);
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    // Giới hạn bề rộng: ảnh ~460px và cột thông tin vừa mắt, kể cả trên màn hình rất rộng
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <Link
         href={`/shop/${slug}`}
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -227,7 +263,7 @@ export default function ProductClient() {
         Back to all products
       </Link>
 
-      <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[5fr_7fr] lg:gap-12">
         {/* Trình chiếu hình ảnh (Image Carousel) */}
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted group">
@@ -240,7 +276,7 @@ export default function ProductClient() {
                   preload
                   loading="eager"
                   fetchPriority="high"
-                  sizes="(min-width: 768px) 50vw, 100vw"
+                  sizes="(min-width: 1152px) 460px, (min-width: 768px) 40vw, 100vw"
                   className="object-cover"
                 />
 
@@ -328,9 +364,7 @@ export default function ProductClient() {
             <div className="mt-3 flex items-baseline gap-3">
               {allOptionsSelected ? (
                 <>
-                  <span className="text-3xl font-bold text-primary">
-                    {formatCurrency(effectivePrice)}
-                  </span>
+                  <span className="text-3xl font-bold text-primary">{priceLabel}</span>
                   {actualVariant?.comparePrice &&
                     Number(actualVariant.comparePrice) > effectivePrice && (
                       <span className="text-lg text-muted-foreground line-through">
@@ -339,9 +373,7 @@ export default function ProductClient() {
                     )}
                 </>
               ) : (
-                <span className="text-3xl font-bold text-primary">
-                  {formatPriceRange(priceRange)}
-                </span>
+                <span className="text-3xl font-bold text-primary">{priceLabel}</span>
               )}
             </div>
           </div>
@@ -463,55 +495,28 @@ export default function ProductClient() {
               </div>
             )}
 
-          <Button
-            size="lg"
-            className="h-14 gap-2 text-base font-bold"
-            disabled={
-              !allOptionsSelected || isSelectedVariantOutOfStock || !hasAnyStock || allStockInCart
-            }
-            onClick={() => {
-              if (!actualVariant || !product.shopId || remainingStock <= 0) {
-                return;
-              }
+          <div className="flex flex-col gap-3 md:max-w-md">
+            {/* Điện thoại: nút thêm vào giỏ nằm ở thanh dính đáy màn hình (cuối trang) */}
+            <Button
+              size="lg"
+              className="hidden h-14 gap-2 text-base font-bold md:inline-flex"
+              disabled={addToCartDisabled}
+              onClick={addToCart}
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {addToCartLabel}
+            </Button>
 
-              const variantLabel =
-                actualVariant.label === 'Default' ? undefined : actualVariant.label;
-              addItem(product.shopId, {
-                productId: product.id,
-                variantId: actualVariant.id,
-                quantity: normalizedQuantity,
-                name: product.name,
-                imageUrl: product.imageUrl,
-                variantLabel,
-                price: effectivePrice,
-              });
-              setQuantity(1);
-              toast.success(
-                `Added ${normalizedQuantity}x "${product.name}"${variantLabel ? ` (${variantLabel})` : ''} to cart`,
-              );
-            }}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {!allOptionsSelected
-              ? nextAttribute
-                ? `Select ${nextAttribute.name}`
-                : 'Select Options'
-              : isSelectedVariantOutOfStock || !hasAnyStock
-                ? 'Out of Stock'
-                : allStockInCart
-                  ? 'All available stock is in your cart'
-                  : 'Add to Cart'}
-          </Button>
-
-          <Link
-            href={`/shop/${slug}/checkout`}
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'lg' }),
-              'h-12 w-full font-semibold',
-            )}
-          >
-            View Cart & Checkout
-          </Link>
+            <Link
+              href={`/shop/${slug}/checkout`}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'lg' }),
+                'h-12 w-full font-semibold',
+              )}
+            >
+              View Cart & Checkout
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -586,6 +591,21 @@ export default function ProductClient() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Điện thoại: giá + nút thêm vào giỏ luôn trong tầm tay (giống Shopee).
+          sticky trong trang → tới cuối trang thì dừng lại, không che footer */}
+      <div className="sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+        <span className="min-w-0 shrink text-lg font-bold">{priceLabel}</span>
+        <Button
+          size="lg"
+          className="h-12 flex-1 gap-2 whitespace-normal text-sm font-bold"
+          disabled={addToCartDisabled}
+          onClick={addToCart}
+        >
+          <ShoppingCart className="h-4 w-4" />
+          {addToCartLabel}
+        </Button>
       </div>
     </div>
   );
