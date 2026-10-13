@@ -7,6 +7,12 @@ CREATE TYPE "Role" AS ENUM ('SELLER', 'ADMIN');
 -- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED', 'CANCELLED');
 
+-- CreateEnum
+CREATE TYPE "CancelActor" AS ENUM ('BUYER', 'SELLER');
+
+-- CreateEnum
+CREATE TYPE "CancelReason" AS ENUM ('CHANGED_MIND', 'WRONG_DETAILS', 'FOUND_BETTER_PRICE', 'OUT_OF_STOCK', 'BUYER_UNREACHABLE', 'DELIVERY_FAILED', 'OTHER');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -89,6 +95,10 @@ CREATE TABLE "orders" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deliveredAt" TIMESTAMP(3),
+    "cancelledAt" TIMESTAMP(3),
+    "cancelledBy" "CancelActor",
+    "cancelReason" "CancelReason",
+    "cancelNote" TEXT,
     "shopId" TEXT NOT NULL,
 
     CONSTRAINT "orders_pkey" PRIMARY KEY ("id")
@@ -143,16 +153,29 @@ CREATE TABLE "reviews" (
     "rating" INTEGER NOT NULL,
     "comment" TEXT,
     "buyerName" TEXT NOT NULL,
-    "buyerEmail" TEXT NOT NULL,
-    "isVerified" BOOLEAN NOT NULL DEFAULT false,
-    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "editedAt" TIMESTAMP(3),
     "sellerReply" TEXT,
+    "sellerRepliedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "shopId" TEXT NOT NULL,
-    "productId" TEXT,
+    "productId" TEXT NOT NULL,
+    "orderItemId" TEXT NOT NULL,
 
     CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "buyer_login_codes" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "codeHash" TEXT NOT NULL,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "consumedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "buyer_login_codes_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -169,6 +192,21 @@ CREATE UNIQUE INDEX "categories_shopId_slug_key" ON "categories"("shopId", "slug
 
 -- CreateIndex
 CREATE UNIQUE INDEX "orders_orderNumber_key" ON "orders"("orderNumber");
+
+-- CreateIndex
+CREATE INDEX "orders_buyerEmail_shopId_idx" ON "orders"("buyerEmail", "shopId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "reviews_orderItemId_key" ON "reviews"("orderItemId");
+
+-- CreateIndex
+CREATE INDEX "reviews_productId_createdAt_idx" ON "reviews"("productId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "reviews_shopId_createdAt_idx" ON "reviews"("shopId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "buyer_login_codes_email_createdAt_idx" ON "buyer_login_codes"("email", "createdAt");
 
 -- AddForeignKey
 ALTER TABLE "shops" ADD CONSTRAINT "shops_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -205,4 +243,7 @@ ALTER TABLE "reviews" ADD CONSTRAINT "reviews_shopId_fkey" FOREIGN KEY ("shopId"
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "reviews" ADD CONSTRAINT "reviews_orderItemId_fkey" FOREIGN KEY ("orderItemId") REFERENCES "order_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
