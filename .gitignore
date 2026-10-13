@@ -37,9 +37,6 @@ Thumbs.db
 # Test coverage
 coverage/
 
-# Prisma
-packages/database/prisma/migrations/
-
 # Capacitor / Android native
 apps/web/android/local.properties
 apps/web/android/.gradle/
