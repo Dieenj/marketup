@@ -1,11 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { CancelActor, CancelReason, Prisma } from '@prisma/client';
 import { escapeHtml } from '../common/html';
 import { AccessTokenService } from '../auth/access-token.service';
 import { REVIEW_WINDOW_DAYS } from '../review/review-rules';
+import {
+  BrevoTransport,
+  SmtpTransport,
+  type MailTransport,
+  type OutgoingMail,
+} from './mail-transport';
 
 type Money = Prisma.Decimal | number | string;
 
@@ -54,35 +58,51 @@ const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
 };
 
 @Injectable()
-export class MailService {
-  private transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo>;
+export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name);
-  private readonly isMailConfigured: boolean;
+  // null = chưa cấu hình cách gửi → chỉ in email ra log (máy dev)
+  private readonly transport: MailTransport | null;
 
   constructor(
     private configService: ConfigService,
     private tokens: AccessTokenService,
   ) {
+    this.transport = this.createTransport();
+  }
+
+  // BREVO_API_KEY (HTTPS, dùng trên Render) được ưu tiên; không có thì dùng SMTP nếu đủ biến
+  private createTransport(): MailTransport | null {
+    const brevoKey = this.configService.get<string>('BREVO_API_KEY');
+    if (brevoKey) return new BrevoTransport(brevoKey);
+
     const host = this.configService.get<string>('SMTP_HOST');
-    const port = this.configService.get<number>('SMTP_PORT');
+    const port = this.configService.get<string>('SMTP_PORT');
     const user = this.configService.get<string>('SMTP_USER');
     const pass = this.configService.get<string>('SMTP_PASS');
-
     if (host && port && user && pass) {
-      this.transporter = nodemailer.createTransport({
-        host,
-        port: Number(port),
-        secure: Number(port) === 465, // Kết nối bảo mật SSL
-        auth: { user, pass },
-      });
-      this.isMailConfigured = true;
-      this.logger.log('SMTP Mail Transporter successfully configured.');
-    } else {
-      this.isMailConfigured = false;
-      this.logger.warn(
-        'SMTP environment variables are missing. Mail Service is running in Mock/Log mode.',
-      );
+      return new SmtpTransport({ host, port: Number(port), user, pass });
     }
+    return null;
+  }
+
+  // Kiểm tra cấu hình ngay lúc khởi động để log cho biết email có gửi được không
+  // (key sai, sender chưa xác minh, cổng SMTP bị chặn…). Không chặn API khởi động.
+  onModuleInit() {
+    if (!this.transport) {
+      this.logger.warn(
+        'No email transport configured (BREVO_API_KEY or SMTP_*). Emails are only logged.',
+      );
+      return;
+    }
+    const { name } = this.transport;
+    this.transport
+      .verify()
+      .then(() => this.logger.log(`Email transport ready: ${name}`))
+      .catch((error: unknown) =>
+        this.logger.error(
+          `Email transport ${name} is not working: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
   }
 
   private getFromHeader(): string {
@@ -108,21 +128,25 @@ export class MailService {
     return `<a href="${this.getOrderUrl(order)}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px;">${label}</a>`;
   }
 
-  private async sendMail(options: nodemailer.SendMailOptions) {
-    if (this.isMailConfigured) {
-      try {
-        const info = await this.transporter.sendMail(options);
-        this.logger.log(`Email sent successfully: ${info.messageId}`);
-        return info;
-      } catch (error) {
-        this.logger.error('Failed to dispatch email via SMTP:', error);
-      }
-    } else {
+  private async sendMail(mail: OutgoingMail) {
+    if (!this.transport) {
       this.logger.log(`[MOCK EMAIL DISPATCH]
-To: ${JSON.stringify(options.to)}
-Subject: ${options.subject ?? ''}
-Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0} characters)
+To: ${mail.to}
+Subject: ${mail.subject}
+Body: (HTML length: ${mail.html.length} characters)
       `);
+      return;
+    }
+    try {
+      const messageId = await this.transport.send(mail);
+      this.logger.log(
+        `Email sent via ${this.transport.name}: ${messageId ?? 'ok'}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send email via ${this.transport.name}:`,
+        error,
+      );
     }
   }
 
@@ -135,9 +159,9 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
     code: string;
     shopName?: string;
   }) {
-    // Chưa cấu hình SMTP ở máy dev → in mã ra log để đăng nhập/test được; không bao giờ in trên server
+    // Chưa cấu hình cách gửi ở máy dev → in mã ra log để đăng nhập/test được; không bao giờ in trên server
     if (
-      !this.isMailConfigured &&
+      !this.transport &&
       this.configService.get('NODE_ENV') !== 'production'
     ) {
       this.logger.log(`[DEV] Login code for ${to}: ${code}`);

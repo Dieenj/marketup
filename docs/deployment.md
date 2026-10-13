@@ -8,24 +8,25 @@
 | API        | Render     | https://marketup-u6cm.onrender.com/api | Tự deploy khi push lên `main`; có thể cold start sau lúc không có truy cập |
 | Database   | Supabase   | PostgreSQL                             | API dùng kết nối pooler; migrate dùng kết nối trực tiếp                    |
 | Ảnh        | Cloudinary | `res.cloudinary.com/<cloud>`           | Tài khoản production khác tài khoản dùng ở local                           |
-| Email      | SMTP Gmail | App Password                           |                                                                            |
+| Email      | Brevo      | API HTTPS, gói Free (~300 email/ngày)  | Render gói miễn phí chặn cổng SMTP 25/465/587 nên không dùng SMTP được     |
 | App mobile | Capacitor  | WebView trỏ tới bản web production     | Không cần phát hành lại khi web thay đổi                                   |
 
 ## 2. Biến môi trường production
 
 ### Render (API)
 
-| Biến                                                                                        | Giá trị                                                                          |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                                                              | Chuỗi kết nối pooler của Supabase                                                |
-| `DIRECT_URL`                                                                                | Chuỗi kết nối trực tiếp của Supabase                                             |
-| `JWT_SECRET`                                                                                | Chuỗi ngẫu nhiên ≥ 32 ký tự, chỉ dùng cho production                             |
-| `JWT_EXPIRES_IN`                                                                            | Tuỳ chọn, mặc định `7d`                                                          |
-| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_FOLDER` | Tài khoản Cloudinary production                                                  |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`                             | Thiếu thì email không được gửi (chỉ ghi log)                                     |
-| `FRONTEND_URL`                                                                              | `https://marketup-dien.vercel.app`, không có `/` ở cuối (CORS so khớp chính xác) |
-| `TRUST_PROXY_HOPS`                                                                          | `3` (xem bên dưới)                                                               |
-| `NODE_ENV`                                                                                  | `production`                                                                     |
+| Biến                                                                                        | Giá trị                                                                               |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                                              | Chuỗi kết nối pooler của Supabase                                                     |
+| `DIRECT_URL`                                                                                | Chuỗi kết nối trực tiếp của Supabase                                                  |
+| `JWT_SECRET`                                                                                | Chuỗi ngẫu nhiên ≥ 32 ký tự, chỉ dùng cho production                                  |
+| `JWT_EXPIRES_IN`                                                                            | Tuỳ chọn, mặc định `7d`                                                               |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_FOLDER` | Tài khoản Cloudinary production                                                       |
+| `BREVO_API_KEY`                                                                             | API key của Brevo (không phải SMTP key). Thiếu thì email không được gửi (chỉ ghi log) |
+| `SMTP_FROM`                                                                                 | `MarketUp <địa-chỉ-sender-đã-xác-minh-trên-Brevo>`                                    |
+| `FRONTEND_URL`                                                                              | `https://marketup-dien.vercel.app`, không có `/` ở cuối (CORS so khớp chính xác)      |
+| `TRUST_PROXY_HOPS`                                                                          | `3` (xem bên dưới)                                                                    |
+| `NODE_ENV`                                                                                  | `production`                                                                          |
 
 Không bao giờ đặt `RATE_LIMIT_DISABLED` trên server.
 

@@ -37,7 +37,9 @@ Mọi biến nằm trong một file `.env` ở thư mục gốc. API và các sc
 | `JWT_EXPIRES_IN`                                                       |               | Hạn token người bán, mặc định `7d`                                                                                                          |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Để upload ảnh | Tài khoản Cloudinary. `CLOUDINARY_CLOUD_NAME` cũng quyết định URL logo/banner nào hợp lệ                                                    |
 | `CLOUDINARY_FOLDER`                                                    |               | Thư mục lưu ảnh, mặc định `marketup`; nên đặt khác cho dev, ví dụ `marketup-dev`                                                            |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`        | Để gửi mail   | Thiếu thì API chạy chế độ mock (in email ra log)                                                                                            |
+| `BREVO_API_KEY`                                                        | Để gửi mail   | Gửi qua API HTTPS của Brevo (dùng trên production). Được ưu tiên hơn SMTP                                                                   |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`                     | Để gửi mail   | Gửi qua SMTP khi không có `BREVO_API_KEY`. Không có cả hai thì API chạy chế độ mock (in email ra log)                                       |
+| `SMTP_FROM`                                                            |               | Người gửi, dùng cho cả Brevo và SMTP                                                                                                        |
 | `FRONTEND_URL`                                                         |               | Origin của web: dùng cho link trong email và CORS. Mặc định `http://localhost:3000`                                                         |
 | `NEXT_PUBLIC_APP_URL`                                                  |               | Origin thứ hai được phép CORS (web cũng dùng làm URL gốc cho metadata)                                                                      |
 | `API_PORT` / `PORT`                                                    |               | Cổng API, mặc định 3001 (`PORT` do Render cấp, được ưu tiên)                                                                                |
@@ -70,7 +72,7 @@ Cùng với danh mục, sản phẩm có biến thể (ảnh từ Unsplash), đ�
 
 ## 5. Thử luồng người mua ở local
 
-- Chưa cấu hình SMTP thì email được in ra log của API.
+- Chưa cấu hình cách gửi (`BREVO_API_KEY` hoặc SMTP) thì email được in ra log của API. Khi có cấu hình, lúc khởi động API ghi `Email transport ready: …` hoặc lỗi cụ thể (key sai, cổng SMTP bị chặn…).
 - Mã đăng nhập người mua được in thành dòng `[DEV] Login code for <email>: 123456`, chỉ khi `NODE_ENV` khác `production`.
 - Link xem đơn (`?t=…`) có trong nội dung email được in ra log, hoặc lấy từ trang "đặt hàng thành công" ngay sau khi đặt.
 

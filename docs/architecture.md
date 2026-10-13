@@ -9,7 +9,7 @@ flowchart LR
     Web -->|SSR storefront| API
     API -->|Prisma| DB[("PostgreSQL<br/>(Supabase)")]
     API -->|upload ảnh| Cloudinary
-    API -->|Nodemailer| SMTP
+    API -->|HTTPS| Brevo["Brevo (email)"]
     Browser -->|ảnh qua CDN| Cloudinary
 ```
 
@@ -85,19 +85,19 @@ Next.js 16 (App Router, `output: 'standalone'`), React 19, Tailwind CSS 4, shadc
 
 ### 4.1 Module
 
-| Module            | Trách nhiệm                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `AuthModule`      | Đăng ký/đăng nhập người bán, `AccessTokenService` ký và kiểm tra mọi loại token, các guard |
-| `BuyerAuthModule` | Gửi và kiểm tra mã đăng nhập 6 số cho người mua                                            |
-| `ShopModule`      | Tạo/sửa shop, storefront công khai theo slug                                               |
-| `ProductModule`   | CRUD sản phẩm, thuộc tính, biến thể, upload ảnh                                            |
-| `CategoryModule`  | Danh mục theo shop                                                                         |
-| `OrderModule`     | Đặt hàng, đổi trạng thái, huỷ đơn; API người mua `/buyer/orders`                           |
-| `ReviewModule`    | Đánh giá công khai, người mua viết/sửa, người bán xem/trả lời                              |
-| `DashboardModule` | Thống kê cho người bán                                                                     |
-| `UploadModule`    | Upload ảnh lẻ lên Cloudinary (banner, logo)                                                |
-| `MailModule`      | Gửi email qua Nodemailer; chế độ mock khi thiếu SMTP                                       |
-| `PrismaModule`    | Prisma client dùng chung                                                                   |
+| Module            | Trách nhiệm                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `AuthModule`      | Đăng ký/đăng nhập người bán, `AccessTokenService` ký và kiểm tra mọi loại token, các guard             |
+| `BuyerAuthModule` | Gửi và kiểm tra mã đăng nhập 6 số cho người mua                                                        |
+| `ShopModule`      | Tạo/sửa shop, storefront công khai theo slug                                                           |
+| `ProductModule`   | CRUD sản phẩm, thuộc tính, biến thể, upload ảnh                                                        |
+| `CategoryModule`  | Danh mục theo shop                                                                                     |
+| `OrderModule`     | Đặt hàng, đổi trạng thái, huỷ đơn; API người mua `/buyer/orders`                                       |
+| `ReviewModule`    | Đánh giá công khai, người mua viết/sửa, người bán xem/trả lời                                          |
+| `DashboardModule` | Thống kê cho người bán                                                                                 |
+| `UploadModule`    | Upload ảnh lẻ lên Cloudinary (banner, logo)                                                            |
+| `MailModule`      | Gửi email qua Brevo (API HTTPS) hoặc SMTP (`mail/mail-transport.ts`); không cấu hình thì chỉ in ra log |
+| `PrismaModule`    | Prisma client dùng chung                                                                               |
 
 Code thuần (không phụ thuộc Nest) được tách thành file riêng kèm unit test: `order/order-status.ts`, `order/order-number.ts`, `review/review-rules.ts`, `dashboard/revenue-trend.ts`, `buyer-auth/login-code.ts`, `common/cloudinary-url.ts`, `common/slug.ts`, `common/html.ts`, `product/product-payload.ts`, `config/env.validation.ts`.
 

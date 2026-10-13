@@ -160,7 +160,7 @@ Luật (`apps/api/src/review/review-rules.ts`, `review.service.ts`):
 
 ## 4. Email
 
-Email gửi nền: lỗi SMTP được ghi log và không làm hỏng thao tác của người dùng. Nội dung email bằng tiếng Anh, dữ liệu người dùng được escape HTML.
+Email gửi nền: lỗi gửi được ghi log và không làm hỏng thao tác của người dùng. Nội dung email bằng tiếng Anh, dữ liệu người dùng được escape HTML.
 
 | Sự kiện                      | Người nhận | Nội dung chính                             |
 | ---------------------------- | ---------- | ------------------------------------------ |
@@ -170,7 +170,7 @@ Email gửi nền: lỗi SMTP được ghi log và không làm hỏng thao tác 
 | Đơn bị huỷ (bởi bất kỳ ai)   | Người mua  | Ai huỷ, lý do, link xem đơn                |
 | Yêu cầu mã đăng nhập         | Người mua  | Mã 6 số, tên shop đang xem                 |
 
-Nếu chưa cấu hình SMTP, API chạy ở chế độ mock: email được in ra log thay vì gửi. Riêng mã đăng nhập chỉ được in ra log khi `NODE_ENV` khác `production`.
+Production gửi qua Brevo (API HTTPS); máy local có thể dùng SMTP. Nếu chưa cấu hình cách gửi nào, API chạy ở chế độ mock: email được in ra log thay vì gửi. Riêng mã đăng nhập chỉ được in ra log khi `NODE_ENV` khác `production`.
 
 ## 5. Hạn chế đã biết và ngoài phạm vi
 
