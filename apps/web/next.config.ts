@@ -9,11 +9,15 @@ const apiOrigin = (() => {
   }
 })();
 
+// React cần eval() ở chế độ development để dựng lại call stack khi debug; production giữ CSP chặt
+const isDev = process.env.NODE_ENV === "development";
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
+  // blob: cho ảnh preview khi chọn file (URL.createObjectURL) ở dialog sản phẩm
+  "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin}`,
   "frame-ancestors 'none'",

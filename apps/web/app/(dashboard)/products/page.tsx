@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
   Plus,
@@ -16,13 +16,15 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import CreateProductDialog from '@/components/dashboard/products/create-dialog';
 import EditProductDialog from '@/components/dashboard/products/edit-product-dialog';
-import { useAuthStore } from '@/hooks/use-auth';
+import PageHeader from '@/components/dashboard/page-header';
+import { getMinPrice } from '@/lib/price';
 
 // Subcomponents
 import ProductStats from '@/components/dashboard/products/product-stats';
 import ProductToolbar from '@/components/dashboard/products/product-toolbar';
 import ProductCard, { Product } from '@/components/dashboard/products/product-card';
 import ManageCategoryDialog, { Category } from '@/components/dashboard/products/manage-category-dialog';
+import { useMyShop } from '@/hooks/use-my-shop';
 
 export default function ProductsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -35,22 +37,14 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('name-asc');
   const [stockFilter, setStockFilter] = useState('all');
 
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const { data: shop } = useQuery({
-    queryKey: ['my-shop'],
-    queryFn: async () => {
-      const { data } = await api.get('/shops/my-shop');
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: shop } = useMyShop();
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', shop?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/products/shop/${shop.id}/manage`);
+      const { data } = await api.get(`/products/shop/${shop!.id}/manage`);
       return data as Product[];
     },
     enabled: !!shop?.id,
@@ -59,7 +53,7 @@ export default function ProductsPage() {
   const { data: categories } = useQuery({
     queryKey: ['categories', shop?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shop.id}`);
+      const { data } = await api.get(`/categories/shop/${shop!.id}`);
       return data as Category[];
     },
     enabled: !!shop?.id,
@@ -83,15 +77,15 @@ export default function ProductsPage() {
 
   const createCategoryMutation = useMutation({
     mutationFn: async (values: { name: string; slug: string }) => {
-      return api.post(`/categories/${shop.id}`, values);
+      return api.post(`/categories/${shop!.id}`, values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
       toast.success('Category created');
       setIsCategoryDialogOpen(false);
     },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to create category');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to create category'));
     },
   });
 
@@ -155,18 +149,11 @@ export default function ProductsPage() {
             return b.name.localeCompare(a.name);
           }
 
-          const getMinPrice = (p: Product) => {
-            const prices = (p.variants || [])
-              .filter((v) => v.price != null)
-              .map((v) => Number(v.price));
-            return prices.length > 0 ? Math.min(...prices) : 0;
-          };
-
           if (sortBy === 'price-asc') {
-            return getMinPrice(a) - getMinPrice(b);
+            return getMinPrice(a.variants) - getMinPrice(b.variants);
           }
           if (sortBy === 'price-desc') {
-            return getMinPrice(b) - getMinPrice(a);
+            return getMinPrice(b.variants) - getMinPrice(a.variants);
           }
           if (sortBy === 'stock-asc') {
             return a.totalStock - b.totalStock;
@@ -210,21 +197,16 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       {/* Tiêu đề trang */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Manage your store inventory, details, and visibility status.
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsCreateOpen(true)}
-          className="gap-2 bg-[#111111] text-white hover:bg-[#222222] rounded-xl h-10 shadow-sm cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
-      </div>
+      <PageHeader
+        title="Products"
+        description="Manage your store inventory, details, and visibility status."
+        actions={
+          <Button size="lg" onClick={() => setIsCreateOpen(true)}>
+            <Plus />
+            Add product
+          </Button>
+        }
+      />
 
       {/* Thống kê nhanh dạng thẻ cao cấp */}
       <ProductStats
@@ -248,11 +230,12 @@ export default function ProductsPage() {
       <div className="flex items-center gap-2 flex-wrap pb-1">
         <button
           onClick={() => setSelectedCategoryId(null)}
+          aria-pressed={selectedCategoryId === null}
           className={cn(
-            'px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border cursor-pointer',
+            'h-8 px-3 rounded-full text-sm font-medium transition-colors border cursor-pointer',
             selectedCategoryId === null
-              ? 'bg-[#111111] text-white border-[#111111] shadow-sm shadow-zinc-950/10'
-              : 'bg-white text-muted-foreground border-border/60 hover:border-foreground/30 hover:text-foreground hover:bg-muted/10',
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted',
           )}
         >
           All Products
@@ -263,41 +246,52 @@ export default function ProductsPage() {
           const count = products?.filter((p: Product) => p.categoryId === cat.id).length ?? 0;
           const isActive = selectedCategoryId === cat.id;
           return (
-            <button
+            // Hai nút anh em (chọn / xoá) trong cùng một pill — không lồng button trong button
+            <div
               key={cat.id}
-              onClick={() => setSelectedCategoryId(cat.id)}
               className={cn(
-                'group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border cursor-pointer',
+                'flex items-center h-8 rounded-full text-sm font-medium transition-colors border',
                 isActive
-                  ? 'bg-[#111111] text-white border-[#111111] shadow-sm shadow-zinc-950/10'
-                  : 'bg-white text-muted-foreground border-border/60 hover:border-foreground/30 hover:text-foreground hover:bg-muted/10',
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
-              <Tag className={cn('h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110', isActive ? 'text-amber-300' : 'text-muted-foreground/75')} />
-              {cat.name}
-              <span className="text-xs font-normal">({count})</span>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryId(cat.id)}
+                aria-pressed={isActive}
+                className={cn(
+                  'flex h-full items-center gap-1.5 rounded-full pl-3 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                  isActive ? 'pr-1' : 'pr-3',
+                )}
+              >
+                <Tag className="h-3.5 w-3.5 opacity-70" />
+                {cat.name}
+                <span className="text-xs font-normal">({count})</span>
+              </button>
               {isActive && (
-                <span
-                  role="button"
-                  className="ml-1 bg-white/20 hover:bg-white/35 rounded-full p-0.5 transition-colors flex items-center justify-center"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                <button
+                  type="button"
+                  aria-label={`Delete category ${cat.name}`}
+                  disabled={deleteCategoryMutation.isPending}
+                  className="mr-1.5 flex items-center justify-center rounded-full bg-primary-foreground/20 p-0.5 transition-colors hover:bg-primary-foreground/35 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                  onClick={() => {
                     if (confirm(`Delete category "${cat.name}"?`)) {
                       deleteCategoryMutation.mutate(cat.id);
                     }
                   }}
                 >
-                  <X className="h-3 w-3 text-white" />
-                </span>
+                  <X className="h-3 w-3" />
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
 
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 gap-1.5 text-muted-foreground px-3 hover:text-foreground hover:bg-muted/20 rounded-xl cursor-pointer"
+          className="gap-1.5 text-muted-foreground"
           onClick={() => setIsCategoryDialogOpen(true)}
         >
           <Settings2 className="h-3.5 w-3.5" />
@@ -307,12 +301,12 @@ export default function ProductsPage() {
 
       {/* Lưới hiển thị danh sách sản phẩm hoặc trạng thái trống */}
       {filteredProducts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-white py-24 text-center px-4 shadow-sm">
-          <div className="p-4 bg-muted/40 rounded-2xl border border-border/20 mb-4">
-            <PackageOpen className="h-12 w-12 text-muted-foreground/35" />
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-card py-20 text-center px-4">
+          <div className="p-3 bg-muted rounded-xl mb-4">
+            <PackageOpen className="h-8 w-8 text-muted-foreground" />
           </div>
-          <p className="font-bold text-lg text-foreground">No products found</p>
-          <p className="text-sm text-muted-foreground/80 mt-1.5 max-w-sm">
+          <p className="font-semibold text-foreground">No products found</p>
+          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
             {searchQuery || stockFilter !== 'all' || selectedCategoryId
               ? 'Try modifying your search query, clearing filters, or choosing a different category.'
               : 'Start by adding your first product to display it in your inventory.'}
@@ -320,7 +314,7 @@ export default function ProductsPage() {
           {(searchQuery || stockFilter !== 'all' || selectedCategoryId) ? (
             <Button
               variant="outline"
-              className="mt-6 gap-2 rounded-xl cursor-pointer"
+              className="mt-5"
               onClick={() => {
                 setSearchQuery('');
                 setStockFilter('all');
@@ -330,11 +324,8 @@ export default function ProductsPage() {
               Reset Filters
             </Button>
           ) : (
-            <Button
-              className="mt-6 gap-2 bg-[#111111] hover:bg-[#222222] text-white rounded-xl cursor-pointer"
-              onClick={() => setIsCreateOpen(true)}
-            >
-              <Plus className="h-4 w-4" /> Add Product
+            <Button className="mt-5" size="lg" onClick={() => setIsCreateOpen(true)}>
+              <Plus /> Add product
             </Button>
           )}
         </div>

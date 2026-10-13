@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -49,7 +49,7 @@ export default function RegisterPage() {
       toast.success('Registration successful! Set up your shop now.');
       router.push('/setup');
     } catch (error) {
-      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Registration failed.');
+      toast.error(getErrorMessage(error, 'Registration failed.'));
     } finally {
       setLoading(false);
     }

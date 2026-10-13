@@ -74,7 +74,7 @@ export default function ManageCategoryDialog({
     try {
       await onCreateCategory(values);
       form.reset();
-    } catch (error) {
+    } catch {
       // Error handled by parent or toast
     }
   };
@@ -124,7 +124,7 @@ export default function ManageCategoryDialog({
               <FormField
                 control={form.control}
                 name="name"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-semibold text-zinc-500">Name</FormLabel>
                     <FormControl>
@@ -142,7 +142,7 @@ export default function ManageCategoryDialog({
               <FormField
                 control={form.control}
                 name="slug"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-semibold text-zinc-500">Slug</FormLabel>
                     <FormControl>

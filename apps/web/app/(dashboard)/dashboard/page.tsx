@@ -1,10 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  TrendingUp,
+  ArrowRight,
+  DollarSign,
   Package,
   ShoppingBag,
   Clock,
@@ -20,106 +21,87 @@ import {
 } from 'recharts';
 import api from '@/lib/api-client';
 import { useAuthStore } from '@/hooks/use-auth';
-import { statusColors } from '@/lib/order-status';
+import { formatCurrency } from '@/lib/format';
+import PageHeader from '@/components/dashboard/page-header';
+import StatCard from '@/components/dashboard/stat-card';
+import OrderStatusBadge from '@/components/dashboard/order-status-badge';
+import { useMyShop } from '@/hooks/use-my-shop';
 
+interface RecentOrder {
+  id: string;
+  orderNumber: string;
+  buyerName: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
 
-  const { data: shop } = useQuery({
-    queryKey: ['my-shop'],
-    queryFn: async () => {
-      const { data } = await api.get('/shops/my-shop');
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: shop } = useMyShop();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats', shop?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/dashboard/stats/${shop.id}`);
+      const { data } = await api.get(`/dashboard/stats/${shop!.id}`);
       return data;
     },
     enabled: !!shop?.id,
   });
 
-  const statCards = [
-    {
-      title: "Total Revenue",
-      value: `$${Number(stats?.totalRevenue || 0).toFixed(2)}`,
-      description: "From delivered orders",
-      icon: TrendingUp,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
-    },
-    {
-      title: "Total Orders",
-      value: stats?.totalOrders ?? 0,
-      description: `${stats?.pendingOrders ?? 0} pending`,
-      icon: ShoppingBag,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-    },
-    {
-      title: "Products",
-      value: stats?.totalProducts ?? 0,
-      description: "Active in your shop",
-      icon: Package,
-      color: "text-orange-600",
-      bg: "bg-orange-50",
-    },
-    {
-      title: "Pending Orders",
-      value: stats?.pendingOrders ?? 0,
-      description: "Awaiting confirmation",
-      icon: Clock,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-    },
-  ];
+  const pendingOrders = stats?.pendingOrders ?? 0;
 
   return (
-    <div className="space-y-8">
-      {/* Tiêu đề đầu trang */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
+    <div className="space-y-6">
+      <PageHeader
+        title="Overview"
+        description={
+          <>
             Welcome back, <span className="font-medium text-foreground">{user?.name}</span>. Here&apos;s how your shop is performing.
-          </p>
-        </div>
-        <div className="text-xs text-muted-foreground bg-white border border-border/60 px-3 py-1.5 rounded-lg">
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Thẻ thống kê */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <div key={stat.title} className="bg-white rounded-2xl border border-border/60 p-5 hover:shadow-sm transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{stat.title}</p>
-              <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${stat.bg}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-          </div>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Total revenue"
+          value={formatCurrency(stats?.totalRevenue)}
+          hint="From delivered orders"
+          icon={DollarSign}
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Total orders"
+          value={stats?.totalOrders ?? 0}
+          hint="All time"
+          icon={ShoppingBag}
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Products"
+          value={stats?.totalProducts ?? 0}
+          hint="Active in your shop"
+          icon={Package}
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Pending orders"
+          value={pendingOrders}
+          hint={pendingOrders > 0 ? 'Need your confirmation' : 'All caught up'}
+          icon={Clock}
+          tone={pendingOrders > 0 ? 'warning' : 'default'}
+          isLoading={isLoading}
+        />
       </div>
 
-      {/* Biểu đồ xu hướng */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4 bg-white rounded-2xl border border-border/60 p-6 hover:shadow-sm transition-shadow">
+      {/* Biểu đồ xu hướng & đơn hàng gần đây */}
+      <div className="grid gap-4 lg:grid-cols-7">
+        <section className="rounded-xl border bg-card p-5 shadow-xs lg:col-span-4">
           <div className="mb-5">
-            <h2 className="text-sm font-semibold">Revenue (Last 7 Days)</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Daily revenue trend</p>
+            <h2 className="text-sm font-semibold">Revenue</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Last 7 days</p>
           </div>
           {isLoading ? (
             <Skeleton className="h-[260px] w-full" />
@@ -128,67 +110,79 @@ export default function DashboardPage() {
               <AreaChart data={stats?.revenueTrend || []} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#111111" stopOpacity={0.12} />
-                    <stop offset="95%" stopColor="#111111" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#888' }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#888' }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} tickLine={false} axisLine={false} width={48} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
-                  contentStyle={{ borderRadius: '10px', border: '1px solid #e5e7eb', fontSize: '12px' }}
-                  formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
+                  cursor={{ stroke: 'var(--border)' }}
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--popover)',
+                    color: 'var(--popover-foreground)',
+                    fontSize: '12px',
+                  }}
+                  formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
                 />
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#111111"
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   fill="url(#revenueGradient)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </section>
 
-        <div className="col-span-3 bg-white rounded-2xl border border-border/60 p-6 hover:shadow-sm transition-shadow">
-          <div className="mb-5">
-            <h2 className="text-sm font-semibold">Recent Orders</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Latest customer purchases</p>
+        <section className="rounded-xl border bg-card p-5 shadow-xs lg:col-span-3">
+          <div className="mb-4 flex items-start justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold">Recent orders</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Latest customer purchases</p>
+            </div>
+            <Link
+              href="/orders"
+              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              View all <ArrowRight className="size-3" />
+            </Link>
           </div>
           {isLoading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
-          ) : stats?.recentOrders?.length === 0 ? (
+          ) : !stats?.recentOrders?.length ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
                 <ShoppingBag className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium">No orders yet</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Orders will appear here</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Share your shop link to get your first order.</p>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {stats?.recentOrders?.map((order: { id: string; orderNumber: string; buyerName: string; totalAmount: number; status: string; createdAt: string }) => (
-                <div key={order.id} className="flex items-center justify-between p-3 rounded-xl bg-[#fafafa] border border-border/40 hover:border-border/80 transition-colors">
+            <ul className="divide-y">
+              {stats.recentOrders.map((order: RecentOrder) => (
+                <li key={order.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{order.buyerName}</p>
-                    <p className="text-[11px] text-muted-foreground">#{order.orderNumber}</p>
+                    <p className="text-sm font-medium truncate">{order.buyerName}</p>
+                    <p className="text-xs text-muted-foreground font-mono">#{order.orderNumber}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                    <span className="text-sm font-bold">${Number(order.totalAmount).toFixed(2)}</span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusColors[order.status]}`}>
-                      {order.status}
-                    </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-sm font-semibold tabular-nums">{formatCurrency(order.totalAmount)}</span>
+                    <OrderStatusBadge status={order.status} className="h-5 px-2 text-[11px]" />
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
 }
-

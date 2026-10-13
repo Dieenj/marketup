@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
-export default function DownloadAppButton() {
-  const [isNative, setIsNative] = useState(true);
+const noopSubscribe = () => () => {};
 
-  useEffect(() => {
-    setIsNative(Capacitor.isNativePlatform());
-  }, []);
+export default function DownloadAppButton() {
+  // Server render coi như native (ẩn nút) để tránh lệch hydration; client đọc giá trị thật
+  const isNative = useSyncExternalStore(noopSubscribe, () => Capacitor.isNativePlatform(), () => true);
 
   if (isNative) return null;
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -47,7 +47,7 @@ export default function LoginPage() {
       toast.success('Login successful!');
       router.push('/dashboard');
     } catch (error) {
-      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Login failed. Please check your credentials.');
+      toast.error(getErrorMessage(error, 'Login failed. Please check your credentials.'));
     } finally {
       setLoading(false);
     }

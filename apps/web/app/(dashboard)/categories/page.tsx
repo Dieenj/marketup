@@ -5,8 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import api from '@/lib/api-client';
-import { useAuthStore } from '@/hooks/use-auth';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,6 +27,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Tag, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useMyShop } from '@/hooks/use-my-shop';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -44,23 +44,15 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: shop } = useQuery({
-    queryKey: ['my-shop'],
-    queryFn: async () => {
-      const { data } = await api.get('/shops/my-shop');
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: shop } = useMyShop();
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories', shop?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shop.id}`);
+      const { data } = await api.get(`/categories/shop/${shop!.id}`);
       return data;
     },
     enabled: !!shop?.id,
@@ -73,7 +65,7 @@ export default function CategoriesPage() {
 
   const createMutation = useMutation({
     mutationFn: async (values: z.infer<typeof categorySchema>) => {
-      return api.post(`/categories/${shop.id}`, values);
+      return api.post(`/categories/${shop!.id}`, values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
@@ -81,8 +73,8 @@ export default function CategoriesPage() {
       setIsDialogOpen(false);
       form.reset();
     },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to create category');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to create category'));
     },
   });
 

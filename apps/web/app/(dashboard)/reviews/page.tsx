@@ -2,12 +2,10 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/hooks/use-auth';
 import api from '@/lib/api-client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import {
   Star,
   CheckCircle2,
@@ -19,10 +17,10 @@ import {
   User,
   ShoppingBag,
   Award,
-  AlertCircle,
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useMyShop } from '@/hooks/use-my-shop';
 
 interface Review {
   id: string;
@@ -43,30 +41,22 @@ interface Review {
 
 export default function DashboardReviewsPage() {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
   // 1. Lấy thông tin cửa hàng của người bán
-  const { data: shop } = useQuery({
-    queryKey: ['my-shop'],
-    queryFn: async () => {
-      const { data } = await api.get('/shops/my-shop');
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: shop } = useMyShop();
 
   // 2. Lấy danh sách đánh giá để kiểm duyệt
   const { data: reviews, isLoading } = useQuery<Review[]>({
     queryKey: ['manage-reviews', shop?.id, ratingFilter, statusFilter],
     queryFn: async () => {
-      const params: Record<string, any> = {};
+      const params: Record<string, string | number> = {};
       if (ratingFilter) params.rating = ratingFilter;
       if (statusFilter) params.status = statusFilter;
-      const { data } = await api.get(`/reviews/manage/${shop.id}`, { params });
+      const { data } = await api.get(`/reviews/manage/${shop!.id}`, { params });
       return data;
     },
     enabled: !!shop?.id,
@@ -76,7 +66,7 @@ export default function DashboardReviewsPage() {
   const { data: stats } = useQuery({
     queryKey: ['shop-stats', shop?.id],
     queryFn: async () => {
-      const { data } = await api.get(`/reviews/shop/${shop.id}/stats`);
+      const { data } = await api.get(`/reviews/shop/${shop!.id}/stats`);
       return data;
     },
     enabled: !!shop?.id,

@@ -22,14 +22,14 @@ export default function ProductToolbar({
   setSortBy,
 }: ProductToolbarProps) {
   return (
-    <div className="bg-white border border-border/50 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="bg-card border rounded-xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
         <Input
           placeholder="Search products by name..."
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-12 h-10 border-border/60 bg-muted/20 hover:bg-muted/10 focus:bg-white rounded-xl transition-all duration-200 placeholder:text-muted-foreground/60 w-full focus-visible:ring-1 focus-visible:ring-zinc-400"
+          className="pl-10 pr-12 h-9 w-full"
         />
         {searchQuery && (
           <button

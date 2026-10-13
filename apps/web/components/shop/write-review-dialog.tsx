@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { Star, Loader2, MessageSquarePlus } from 'lucide-react';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 
 import {
   Dialog,
@@ -62,15 +62,15 @@ export default function WriteReviewDialog({
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof reviewSchema>) => {
-      return api.post('/reviews', {
+      return api.post<{ isVerified?: boolean }>('/reviews', {
         shopId,
         productId: productId || null,
         rating,
         ...values,
       });
     },
-    onSuccess: (data: any) => {
-      const isVerified = data.data?.isVerified;
+    onSuccess: (res) => {
+      const isVerified = res.data?.isVerified;
       toast.success(
         isVerified
           ? 'Review submitted successfully with a Verified Purchase badge!'
@@ -90,10 +90,8 @@ export default function WriteReviewDialog({
         queryClient.invalidateQueries({ queryKey: ['shop-stats', shopId] });
       }
     },
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Failed to submit review. Please try again.',
-      );
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to submit review. Please try again.'));
     },
   });
 

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,8 @@ import { toast } from 'sonner';
 
 // Shared Subcomponent & Types
 import VariantsEditor, { AttributeDef, VariantDef } from './variants-editor';
+import FilePreviewImage from '@/components/file-preview-image';
+import RemoteImage from '@/components/remote-image';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -100,14 +102,13 @@ export default function EditProductDialog({
     defaultValues: { name: '', description: '', categoryId: '', isVisible: true },
   });
 
-  useEffect(() => {
-    if (product && open) {
-      form.reset({
-        name: product.name,
-        description: product.description || '',
-        categoryId: product.categoryId || product.category?.id || '',
-        isVisible: product.isVisible,
-      });
+  // Nạp lại state cục bộ mỗi khi dialog mở cho một sản phẩm (điều chỉnh state theo prop ngay khi render)
+  const activeProduct = open ? product : null;
+  const [loadedProduct, setLoadedProduct] = useState<Product | null>(null);
+  if (activeProduct !== loadedProduct) {
+    setLoadedProduct(activeProduct);
+    if (activeProduct) {
+      const product = activeProduct;
       setPreviewUrls(
         product.images?.length
           ? product.images
@@ -129,6 +130,18 @@ export default function EditProductDialog({
           sku: v.sku || '',
         })) || []
       );
+    }
+  }
+
+  // form.reset gọi vào store của react-hook-form (hệ thống ngoài), nên vẫn đặt trong effect
+  useEffect(() => {
+    if (product && open) {
+      form.reset({
+        name: product.name,
+        description: product.description || '',
+        categoryId: product.categoryId || product.category?.id || '',
+        isVisible: product.isVisible,
+      });
     }
   }, [product, open, form]);
 
@@ -173,8 +186,8 @@ export default function EditProductDialog({
       toast.success('Product updated successfully');
       onOpenChange(false);
     },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to update product');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to update product'));
     },
   });
 
@@ -192,7 +205,7 @@ export default function EditProductDialog({
             <FormField
               control={form.control}
               name="name"
-              render={({ field }: { field: any }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product Name</FormLabel>
                   <FormControl>
@@ -205,7 +218,7 @@ export default function EditProductDialog({
             <FormField
               control={form.control}
               name="description"
-              render={({ field }: { field: any }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
@@ -222,7 +235,7 @@ export default function EditProductDialog({
             <FormField
               control={form.control}
               name="categoryId"
-              render={({ field }: { field: any }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
                   <Select
@@ -254,7 +267,7 @@ export default function EditProductDialog({
             <FormField
               control={form.control}
               name="isVisible"
-              render={({ field }: { field: any }) => (
+              render={({ field }) => (
                 <FormItem className="flex items-center gap-2 space-y-0">
                   <FormControl>
                     <Checkbox
@@ -288,10 +301,12 @@ export default function EditProductDialog({
                       key={idx}
                       className="relative aspect-square rounded-lg overflow-hidden border"
                     >
-                      <img
+                      <RemoteImage
                         src={url}
                         alt={`Product ${idx + 1}`}
-                        className="object-cover w-full h-full"
+                        fill
+                        sizes="120px"
+                        className="object-cover"
                       />
                     </div>
                   ))}
@@ -306,8 +321,8 @@ export default function EditProductDialog({
                         key={idx}
                         className="relative aspect-square rounded border overflow-hidden"
                       >
-                        <img
-                          src={URL.createObjectURL(img)}
+                        <FilePreviewImage
+                          file={img}
                           alt={`New ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />

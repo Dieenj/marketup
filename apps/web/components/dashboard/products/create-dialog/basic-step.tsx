@@ -44,7 +44,7 @@ export default function BasicStep({
       <FormField
         control={control}
         name="name"
-        render={({ field }: { field: any }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">
               Product Name <span className="text-destructive">*</span>
@@ -65,7 +65,7 @@ export default function BasicStep({
       <FormField
         control={control}
         name="categoryId"
-        render={({ field }: { field: any }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">Category</FormLabel>
             <Select onValueChange={field.onChange} value={field.value || undefined}>
@@ -93,7 +93,7 @@ export default function BasicStep({
       <FormField
         control={control}
         name="description"
-        render={({ field }: { field: any }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">Description</FormLabel>
             <FormControl>

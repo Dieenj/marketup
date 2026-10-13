@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import {
   Dialog,
   DialogContent,
@@ -114,8 +114,8 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
       resetAll();
       onOpenChange(false);
     },
-    onError: (error: { message?: string; response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || error.message || 'Failed to create product');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, error.message || 'Failed to create product'));
     },
   });
 
@@ -137,7 +137,8 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   const handleSubmit = form.handleSubmit((values) => mutation.mutate(values));
 
   // ─── Logic kiểm tra trạng thái hoàn thành mỗi bước ───────────────────────────────────────────────────
-  const step1Done = !!form.watch('name') && form.watch('name').length >= 2;
+  const watchedName = useWatch({ control: form.control, name: 'name' });
+  const step1Done = (watchedName?.length ?? 0) >= 2;
   const step2Done = variants.length > 0;
   const step3Done = images.length > 0;
 

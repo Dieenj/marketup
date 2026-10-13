@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -27,6 +27,8 @@ import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, ChevronLeft, CreditCard, Trash2, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format';
+import RemoteImage from '@/components/remote-image';
 
 const checkoutSchema = z.object({
   buyerName: z.string().min(2, 'Name is required'),
@@ -81,8 +83,8 @@ export default function CheckoutPage() {
       clearCart();
       router.push(`/shop/${slug}/order-success?id=${res.data.id}`);
     },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to place order');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to place order'));
     },
   });
 
@@ -213,7 +215,7 @@ export default function CheckoutPage() {
               </Card>
 
               <Button type="submit" className="w-full text-lg py-6 font-bold" size="lg" disabled={mutation.isPending}>
-                {mutation.isPending ? 'Processing...' : `Place Order • $${total.toFixed(2)}`}
+                {mutation.isPending ? 'Processing...' : `Place Order • ${formatCurrency(total)}`}
               </Button>
             </form>
           </Form>
@@ -230,12 +232,12 @@ export default function CheckoutPage() {
                  {items.map((item) => (
                    <div key={`${item.id}-${item.variantId ?? 'base'}`} className="flex gap-3 p-3 rounded-xl bg-[#fafafa] border border-border/40">
                      <div className="h-14 w-14 bg-muted rounded-lg overflow-hidden shrink-0">
-                       {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" /> : <div className="h-full w-full" />}
+                       {item.imageUrl ? <RemoteImage src={item.imageUrl} alt={item.name} width={56} height={56} className="h-full w-full object-cover" /> : <div className="h-full w-full" />}
                      </div>
                      <div className="flex-1 min-w-0">
                        <p className="font-medium text-sm truncate">{item.name}</p>
                        {item.variantLabel && <p className="text-xs text-muted-foreground">{item.variantLabel}</p>}
-                       <p className="text-sm font-semibold mt-0.5">${(item.price * item.quantity).toFixed(2)}</p>
+                       <p className="text-sm font-semibold mt-0.5">{formatCurrency(item.price * item.quantity)}</p>
                        <div className="flex items-center gap-2 mt-1.5">
                          <button
                            type="button"
@@ -270,7 +272,7 @@ export default function CheckoutPage() {
                <div className="space-y-1.5">
                  <div className="flex justify-between text-sm">
                    <span className="text-muted-foreground">Subtotal</span>
-                   <span>${total.toFixed(2)}</span>
+                   <span>{formatCurrency(total)}</span>
                  </div>
                  <div className="flex justify-between text-sm">
                    <span className="text-muted-foreground">Shipping</span>
@@ -279,7 +281,7 @@ export default function CheckoutPage() {
                  <Separator className="my-2" />
                  <div className="flex justify-between text-lg font-bold">
                    <span>Total</span>
-                   <span className="text-primary">${total.toFixed(2)}</span>
+                   <span className="text-primary">{formatCurrency(total)}</span>
                  </div>
                </div>
              </CardContent>

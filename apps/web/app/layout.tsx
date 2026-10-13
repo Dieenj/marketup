@@ -7,6 +7,12 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Gốc để Next tạo URL tuyệt đối cho Open Graph (link chia sẻ storefront)
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ||
+      "http://localhost:3000",
+  ),
   title: "MarketUp | Your Personal Storefront SaaS",
   description: "Create and manage your online shop in minutes with MarketUp.",
 };

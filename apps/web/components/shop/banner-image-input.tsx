@@ -5,6 +5,7 @@ import { ImageIcon, Link2, Upload, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api-client';
+import RemoteImage from '@/components/remote-image';
 
 interface BannerImageInputProps {
   value: string;
@@ -112,7 +113,7 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
           {/* Preview */}
           {value && (
             <div className="relative group rounded-xl overflow-hidden border border-border h-32">
-              <img src={value} alt="Banner preview" className="w-full h-full object-cover" />
+              <RemoteImage src={value} alt="Banner preview" fill sizes="(min-width: 768px) 600px, 100vw" className="object-cover" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                 <button
                   type="button"
@@ -146,11 +147,12 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
           </div>
           {value && (
             <div className="relative rounded-xl overflow-hidden border border-border h-32">
-              <img
+              <RemoteImage
                 src={value}
                 alt="Banner preview"
-                className="w-full h-full object-cover"
-                onError={(e) => (e.currentTarget.style.display = 'none')}
+                fill
+                sizes="(min-width: 768px) 600px, 100vw"
+                className="object-cover"
               />
             </div>
           )}

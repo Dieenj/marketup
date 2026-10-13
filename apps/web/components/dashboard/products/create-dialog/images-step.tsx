@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import FilePreviewImage from '@/components/file-preview-image';
 
 interface CreateProductStep3Props {
   images: File[];
@@ -102,8 +103,8 @@ export default function ImagesStep({
                 key={idx}
                 className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-muted"
               >
-                <img
-                  src={URL.createObjectURL(img)}
+                <FilePreviewImage
+                  file={img}
                   alt={`Preview ${idx + 1}`}
                   className="h-full w-full object-cover"
                 />

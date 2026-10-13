@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,10 +18,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { useAuthStore } from '@/hooks/use-auth';
 import { useEffect } from 'react';
 import { ColorPicker } from '@/components/shop/color-picker';
 import { BannerImageInput } from '@/components/shop/banner-image-input';
+import { useMyShop, MY_SHOP_QUERY_KEY } from '@/hooks/use-my-shop';
 
 const shopSchema = z.object({
   name: z.string().min(2, 'Shop name is required'),
@@ -34,17 +34,9 @@ const shopSchema = z.object({
 });
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const { data: shop, isLoading } = useQuery({
-    queryKey: ['my-shop'],
-    queryFn: async () => {
-      const { data } = await api.get('/shops/my-shop');
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: shop, isLoading } = useMyShop();
 
   const form = useForm<z.infer<typeof shopSchema>>({
     resolver: zodResolver(shopSchema),
@@ -75,10 +67,10 @@ export default function SettingsPage() {
 
   const mutation = useMutation({
     mutationFn: async (values: z.infer<typeof shopSchema>) => {
-      return api.patch(`/shops/${shop.id}`, values);
+      return api.patch(`/shops/${shop!.id}`, values);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-shop'] });
+      queryClient.invalidateQueries({ queryKey: MY_SHOP_QUERY_KEY });
       toast.success('Shop settings updated successfully');
     },
     onError: () => {

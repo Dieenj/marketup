@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { formatPriceRange, getPriceRange } from '@/lib/price';
+import RemoteImage from '@/components/remote-image';
 
 export interface Product {
   id: string;
@@ -33,31 +35,23 @@ export default function ProductCard({
   onToggleVisibility,
   isTogglePending,
 }: ProductCardProps) {
-  const prices = (product.variants || [])
-    .filter((v) => v.price != null)
-    .map((v) => Number(v.price));
-  const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-  const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
-  const priceDisplay =
-    minPrice === null || maxPrice === null
-      ? null
-      : minPrice === maxPrice
-      ? `$${minPrice.toFixed(2)}`
-      : `$${minPrice.toFixed(2)} – $${maxPrice.toFixed(2)}`;
+  const priceDisplay = formatPriceRange(getPriceRange(product.variants));
 
   return (
-    <div className="group relative bg-white border border-border/40 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-border/80 transition-all duration-300 flex flex-col hover:-translate-y-1">
+    <div className="group relative bg-card border rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-200 flex flex-col">
       {/* Hình ảnh sản phẩm */}
       <div className="relative aspect-4/3 bg-muted overflow-hidden">
         {product.imageUrl ? (
-          <img
+          <RemoteImage
             src={product.imageUrl}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full flex flex-col items-center justify-center gap-2 bg-linear-to-br from-zinc-50 to-zinc-100/70 text-muted-foreground/35">
-            <div className="p-3 bg-white rounded-2xl shadow-sm border border-border/20">
+          <div className="h-full w-full flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground/60">
+            <div className="p-3 bg-card rounded-xl shadow-xs border">
               <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
             </div>
             <span className="text-xs font-semibold tracking-wide uppercase">No image uploaded</span>
@@ -87,18 +81,18 @@ export default function ProductCard({
         {/* Menu thả xuống chứa các hành động */}
         <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Product actions" className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/95 backdrop-blur-md shadow-sm text-foreground hover:bg-white hover:scale-105 border border-border/20 transition-all cursor-pointer outline-none">
+            <DropdownMenuTrigger aria-label="Product actions" className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/95 backdrop-blur-md shadow-sm text-foreground hover:bg-background border transition-all cursor-pointer outline-none">
               <MoreVertical className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="rounded-xl border-border/60">
               <DropdownMenuItem
-                className="gap-2 cursor-pointer focus:bg-zinc-50 py-2 rounded-lg"
+                className="gap-2 cursor-pointer py-2"
                 onClick={() => onEdit(product)}
               >
                 <Pencil className="h-4 w-4" /> Edit Product
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="gap-2 cursor-pointer focus:bg-zinc-50 py-2 rounded-lg"
+                className="gap-2 cursor-pointer py-2"
                 onClick={() => onToggleVisibility(product.id, !product.isVisible)}
                 disabled={isTogglePending}
               >
@@ -121,29 +115,29 @@ export default function ProductCard({
       <div className="flex flex-col flex-1 p-5 gap-3.5">
         {/* Danh mục sản phẩm */}
         {product.category?.name && (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-600 font-semibold px-2 py-0.5 bg-zinc-100 rounded-md w-fit border border-zinc-200/40">
-            <Tag className="h-3 w-3 text-zinc-400" /> {product.category.name}
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium px-2 py-0.5 bg-muted rounded-md w-fit">
+            <Tag className="h-3 w-3" /> {product.category.name}
           </span>
         )}
 
         {/* Tên sản phẩm */}
-        <p className="font-bold text-sm leading-snug line-clamp-2 text-zinc-800 group-hover:text-black transition-colors min-h-[40px]">
+        <p className="font-medium text-sm leading-snug line-clamp-2 min-h-[40px]">
           {product.name}
         </p>
 
         {/* Giá bán và tồn kho */}
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/40">
-          <span className="text-[15px] font-extrabold text-zinc-900">
+          <span className="text-[15px] font-semibold tabular-nums">
             {priceDisplay || <span className="text-muted-foreground text-xs italic font-normal">No price</span>}
           </span>
           <span
             className={cn(
               'text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border',
               product.totalStock === 0
-                ? 'bg-red-50 text-red-600 border-red-100'
+                ? 'bg-red-500/10 text-red-700 border-transparent dark:text-red-400'
                 : product.totalStock <= 10
-                ? 'bg-amber-50 text-amber-700 border-amber-100'
-                : 'bg-zinc-50 text-zinc-600 border-zinc-100'
+                ? 'bg-amber-500/10 text-amber-700 border-transparent dark:text-amber-400'
+                : 'bg-muted text-muted-foreground border-transparent'
             )}
           >
             <span

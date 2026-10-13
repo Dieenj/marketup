@@ -1,10 +1,10 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import {
   Form,
@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { ColorPicker } from '@/components/shop/color-picker';
-import { getContrastColor } from '@/lib/color-utils';
+import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 
 const setupSchema = z.object({
   name: z.string().min(2, 'Shop name must be at least 2 characters'),
@@ -61,8 +61,8 @@ export default function SetupPage() {
       toast.success('Your shop is ready!');
       router.push('/dashboard');
     },
-    onError: (error: { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to create shop');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to create shop'));
     },
   });
 
@@ -76,10 +76,12 @@ export default function SetupPage() {
     form.setValue('slug', slug);
   };
 
-  const watchedName = form.watch('name');
-  const watchedSlug = form.watch('slug');
-  const watchedDescription = form.watch('description');
-  const watchedColor = form.watch('primaryColor') || '#111111';
+  const [watchedName, watchedSlug, watchedDescription, watchedPrimaryColor] = useWatch({
+    control: form.control,
+    name: ['name', 'slug', 'description', 'primaryColor'],
+  });
+  // Chuẩn hoá về #rrggbb để nối thêm alpha ('22') vẫn là màu hợp lệ
+  const watchedColor = normalizeHexColor(watchedPrimaryColor);
   const fg = getContrastColor(watchedColor);
 
   return (

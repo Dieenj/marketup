@@ -282,7 +282,7 @@ export default function VariantsEditor({
           <Layers className="h-8 w-8 text-muted-foreground/40 mb-3" />
           <p className="text-sm font-medium text-muted-foreground">No attributes yet</p>
           <p className="text-xs text-muted-foreground/70 mt-1">
-            Add an attribute like "Color" or "Size" to generate variants.
+            Add an attribute like &ldquo;Color&rdquo; or &ldquo;Size&rdquo; to generate variants.
           </p>
         </div>
       )}

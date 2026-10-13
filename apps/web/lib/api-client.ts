@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = (() => {
+export const API_BASE_URL = (() => {
   const envUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '');
   const fallback = 'http://localhost:3001/api';
   if (!envUrl) return fallback;
@@ -8,7 +8,7 @@ const baseURL = (() => {
 })();
 
 const api = axios.create({
-  baseURL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,5 +37,15 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+// Lấy thông báo lỗi từ response của API (NestJS có thể trả `message` dạng chuỗi hoặc mảng)
+export function getErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<{ message?: string | string[] }>(error)) {
+    const message = error.response?.data?.message;
+    if (Array.isArray(message) && message.length > 0) return message.join(', ');
+    if (typeof message === 'string' && message) return message;
+  }
+  return fallback;
+}
 
 export default api;
