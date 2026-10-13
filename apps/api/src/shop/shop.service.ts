@@ -1,5 +1,6 @@
 import {
   Injectable,
+  BadRequestException,
   ConflictException,
   NotFoundException,
   ForbiddenException,
@@ -8,6 +9,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
 import { Prisma } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { isOwnCloudinaryImage } from '../common/cloudinary-url';
 
 // Thông tin shop công khai trên storefront (không có ownerId, trạng thái nội bộ)
 const PUBLIC_SHOP_SELECT = {
@@ -26,9 +29,14 @@ const PUBLIC_SHOP_SELECT = {
 
 @Injectable()
 export class ShopService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private config: ConfigService,
+  ) {}
 
   async create(userId: string, dto: CreateShopDto) {
+    this.assertOwnImages(dto);
+
     const existingShop = await this.prisma.shop.findFirst({
       where: {
         OR: [{ ownerId: userId }, { slug: dto.slug }],
@@ -88,9 +96,24 @@ export class ShopService {
       throw new ForbiddenException('Only the owner can update the shop');
     }
 
+    this.assertOwnImages(dto);
+
     return this.prisma.shop.update({
       where: { id: shopId },
       data: dto,
     });
+  }
+
+  // Chuỗi rỗng = xoá ảnh; còn lại phải là ảnh đã upload qua POST /upload/image
+  private assertOwnImages(dto: UpdateShopDto) {
+    const cloudName = this.config.get<string>('CLOUDINARY_CLOUD_NAME');
+    for (const field of ['bannerUrl', 'logoUrl'] as const) {
+      const url = dto[field];
+      if (url && !isOwnCloudinaryImage(url, cloudName)) {
+        throw new BadRequestException(
+          `${field} must be an image uploaded to MarketUp`,
+        );
+      }
+    }
   }
 }
