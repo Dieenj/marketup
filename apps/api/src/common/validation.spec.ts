@@ -5,7 +5,8 @@ import { validateSync } from 'class-validator';
 import { CreateOrderDto } from '../order/dto/create-order.dto';
 import { CreateShopDto } from '../shop/dto/create-shop.dto';
 import { UpdateShopDto } from '../shop/dto/update-shop.dto';
-import { CreateReviewDto } from '../review/dto/create-review.dto';
+import { WriteReviewDto } from '../review/dto/write-review.dto';
+import { ReplyReviewDto } from '../review/dto/reply-review.dto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { VerifyLoginCodeDto } from '../buyer-auth/dto/verify-login-code.dto';
 
@@ -91,30 +92,37 @@ describe('CreateShopDto / UpdateShopDto', () => {
   });
 });
 
-describe('CreateReviewDto', () => {
-  const review = {
-    shopId: 's1',
-    rating: 5,
-    buyerName: 'An',
-    buyerEmail: 'an@example.com',
-  };
-
-  it('accepts a shop review with productId null (as the storefront sends it)', () => {
-    expect(
-      check(CreateReviewDto, { ...review, productId: null }).fields,
-    ).toEqual([]);
+describe('WriteReviewDto', () => {
+  it('accepts a rating with an optional trimmed comment', () => {
+    const { dto, fields } = check(WriteReviewDto, {
+      rating: 4,
+      comment: '  Great  ',
+    });
+    expect(fields).toEqual([]);
+    expect(dto.comment).toBe('Great');
   });
 
   it.each([
     ['rating 4.5', { rating: 4.5 }],
     ['rating 6', { rating: 6 }],
-    ['bad email', { buyerEmail: 'nope' }],
+    ['rating 0', { rating: 0 }],
     ['very long comment', { comment: 'x'.repeat(2001) }],
-    ['self-verified flag', { isVerified: true }],
+    // Tên, sản phẩm, shop lấy từ đơn hàng — client không được tự gửi
+    ['buyer name', { buyerName: 'Someone else' }],
+    ['product id', { productId: 'p1' }],
   ])('rejects %s', (_label, patch) => {
     expect(
-      check(CreateReviewDto, { ...review, ...patch }).fields.length,
+      check(WriteReviewDto, { rating: 5, ...patch }).fields.length,
     ).toBeGreaterThan(0);
+  });
+});
+
+describe('ReplyReviewDto', () => {
+  it.each([
+    ['blank reply', '   '],
+    ['very long reply', 'x'.repeat(1001)],
+  ])('rejects %s', (_label, replyText) => {
+    expect(check(ReplyReviewDto, { replyText }).fields).toEqual(['replyText']);
   });
 });
 

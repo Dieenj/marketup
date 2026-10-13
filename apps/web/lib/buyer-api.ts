@@ -3,6 +3,21 @@ import api, { getErrorStatus } from '@/lib/api-client';
 import type { CancelReason } from '@/lib/order-status';
 
 // Đơn hàng phía người mua — đúng các trường API /buyer/orders trả về (không có email/sđt hay id nội bộ)
+// Đánh giá của chính người mua cho một sản phẩm trong đơn
+export interface BuyerReview {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  editedAt?: string | null;
+  sellerReply?: string | null;
+  createdAt: string;
+}
+
+export interface WriteReviewInput {
+  rating: number;
+  comment?: string;
+}
+
 export interface BuyerOrderItem {
   id: string;
   productId: string;
@@ -11,6 +26,7 @@ export interface BuyerOrderItem {
   variantLabel?: string | null;
   quantity: number;
   priceAtPurchase: string;
+  review: BuyerReview | null;
 }
 
 export interface BuyerOrder {
@@ -34,6 +50,8 @@ export interface BuyerOrder {
   totalAmount: string;
   items: BuyerOrderItem[];
   shop: { name: string; slug: string };
+  /** Hạn viết/sửa đánh giá (API tính: giao hàng + 30 ngày); null khi chưa giao */
+  reviewableUntil: string | null;
 }
 
 // Mỗi request tự gửi token của người mua: phiên đăng nhập, hoặc link của một đơn (?t=)
@@ -74,6 +92,21 @@ export async function cancelOrder(
     input,
     withToken(token),
   );
+  return data;
+}
+
+// Viết (POST) hoặc sửa một lần (PATCH) đánh giá cho một sản phẩm trong đơn đã giao
+export async function saveReview(
+  orderNumber: string,
+  itemId: string,
+  token: string,
+  input: WriteReviewInput,
+  isEdit: boolean,
+) {
+  const url = `/buyer/orders/${encodeURIComponent(orderNumber)}/items/${encodeURIComponent(itemId)}/review`;
+  const { data } = isEdit
+    ? await api.patch<BuyerReview>(url, input, withToken(token))
+    : await api.post<BuyerReview>(url, input, withToken(token));
   return data;
 }
 

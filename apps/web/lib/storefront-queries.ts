@@ -48,7 +48,7 @@ export function storefrontQueries(fetcher: Fetcher = clientFetcher) {
     shopReviews: <T = unknown>(shopId: string) =>
       queryOptions({
         queryKey: ['shop-reviews', shopId],
-        queryFn: () => fetcher<T[]>(`/reviews/shop/${shopId}?limit=3&status=APPROVED`),
+        queryFn: () => fetcher<T[]>(`/reviews/shop/${shopId}?limit=3`),
       }),
     product: <T = unknown>(productId: string) =>
       queryOptions({

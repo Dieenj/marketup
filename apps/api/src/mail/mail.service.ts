@@ -5,6 +5,7 @@ import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { CancelActor, CancelReason, Prisma } from '@prisma/client';
 import { escapeHtml } from '../common/html';
 import { AccessTokenService } from '../auth/access-token.service';
+import { REVIEW_WINDOW_DAYS } from '../review/review-rules';
 
 type Money = Prisma.Decimal | number | string;
 
@@ -442,15 +443,6 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
   }
 
   async sendOrderDeliveredEmail(order: MailOrder) {
-    const baseUrl = this.getBaseUrl();
-    const shopSlug = order.shop?.slug || '';
-
-    // Tạo liên kết đánh giá cho các sản phẩm trong đơn hàng
-    const firstItem = order.items?.[0];
-    const reviewUrl = firstItem
-      ? `${baseUrl}/shop/${shopSlug}/products/${firstItem.productId}`
-      : `${baseUrl}/shop/${shopSlug}`;
-
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -487,13 +479,9 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
                 <p style="margin: 0 0 20px 0; font-size: 13px; color: #666666; line-height: 1.5;">
                   Hãy dành ra 1 phút để đánh giá chất lượng sản phẩm & dịch vụ của shop nhé. Ý kiến của bạn sẽ rất hữu ích cho những khách hàng sau!
                 </p>
-                <a href="${reviewUrl}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.2s;">
-                  ⭐ Write a Product Review
-                </a>
+                ${this.orderButton(order, '⭐ Rate your items')}
                 <p style="margin: 12px 0 0 0; font-size: 11px; color: #888888;">
-                  Note: Write the review using email <strong>${escapeHtml(
-                    order.buyerEmail,
-                  )}</strong> to receive your <strong>Verified Purchase</strong> badge!
+                  You can review each item for ${REVIEW_WINDOW_DAYS} days after delivery.
                 </p>
               </div>
             </td>

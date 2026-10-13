@@ -12,7 +12,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getErrorMessage, getErrorStatus } from '@/lib/api-client';
 import { BUYER_CANCEL_REASONS } from '@/lib/order-status';
-import { buyerOrderQuery, cancelOrder, isAccessDenied, type BuyerOrder } from '@/lib/buyer-api';
+import {
+  buyerOrderQuery,
+  cancelOrder,
+  isAccessDenied,
+  saveReview,
+  type BuyerOrder,
+  type BuyerOrderItem,
+  type WriteReviewInput,
+} from '@/lib/buyer-api';
+import StarRating from '@/components/star-rating';
+import ReviewItemDialog from './review-item-dialog';
 import { storefrontQueries } from '@/lib/storefront-queries';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { useBuyerSession } from '@/hooks/use-buyer-session';
@@ -120,6 +130,40 @@ function OrderDetail({
   const queryClient = useQueryClient();
   const { data: shop } = useQuery(q.shop(slug));
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [reviewing, setReviewing] = useState<BuyerOrderItem | null>(null);
+  // Hạn đánh giá do API tính; so với thời điểm mở trang
+  const [openedAt] = useState(() => Date.now());
+  const canReview =
+    order.status === 'DELIVERED' &&
+    !!order.reviewableUntil &&
+    openedAt < Date.parse(order.reviewableUntil);
+  const orderKey = buyerOrderQuery(order.orderNumber, token).queryKey;
+
+  const review = useMutation({
+    mutationFn: ({ item, input }: { item: BuyerOrderItem; input: WriteReviewInput }) =>
+      saveReview(order.orderNumber, item.id, token, input, !!item.review),
+    onSuccess: (saved, { item }) => {
+      queryClient.setQueryData(
+        orderKey,
+        (current) =>
+          current && {
+            ...current,
+            items: current.items.map((i) => (i.id === item.id ? { ...i, review: saved } : i)),
+          },
+      );
+      queryClient.invalidateQueries({ queryKey: ['product-reviews', item.productId] });
+      queryClient.invalidateQueries({ queryKey: ['product-rating', item.productId] });
+      queryClient.invalidateQueries({ queryKey: ['shop-reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['shop-stats'] });
+      setReviewing(null);
+      toast.success(item.review ? 'Your review has been updated' : 'Thanks for your review!');
+    },
+    onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: orderKey });
+      setReviewing(null);
+      toast.error(getErrorMessage(error, "Couldn't save your review. Please try again."));
+    },
+  });
   const cancel = useMutation({
     mutationFn: (input: Parameters<typeof cancelOrder>[2]) =>
       cancelOrder(order.orderNumber, token, input),
@@ -162,9 +206,16 @@ function OrderDetail({
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
         <section aria-labelledby="order-items" className="rounded-2xl border bg-card lg:col-span-2">
-          <h2 id="order-items" className="border-b px-5 py-4 font-semibold">
-            Items <span className="font-normal text-muted-foreground">({itemCount})</span>
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b px-5 py-4">
+            <h2 id="order-items" className="font-semibold">
+              Items <span className="font-normal text-muted-foreground">({itemCount})</span>
+            </h2>
+            {canReview && order.items.some((item) => !item.review) && (
+              <p className="text-sm text-muted-foreground">
+                Rate your items by {formatDate(order.reviewableUntil!)}
+              </p>
+            )}
+          </div>
           <ul className="divide-y">
             {order.items.map((item) => (
               <li key={item.id} className="flex gap-4 px-5 py-4">
@@ -183,6 +234,11 @@ function OrderDetail({
                   <p className="mt-1 text-sm text-muted-foreground tabular-nums">
                     {item.quantity} × {formatCurrency(item.priceAtPurchase)}
                   </p>
+                  <ItemReview
+                    item={item}
+                    canReview={canReview}
+                    onWrite={() => setReviewing(item)}
+                  />
                 </div>
                 <p className="font-semibold tabular-nums">
                   {formatCurrency(Number(item.priceAtPurchase) * item.quantity)}
@@ -295,6 +351,15 @@ function OrderDetail({
         </div>
       </div>
 
+      <ReviewItemDialog
+        open={!!reviewing}
+        onOpenChange={(open) => !open && setReviewing(null)}
+        productName={reviewing?.productName ?? ''}
+        existing={reviewing?.review}
+        onSubmit={(input) => reviewing && review.mutate({ item: reviewing, input })}
+        isPending={review.isPending}
+      />
+
       <CancelOrderDialog
         open={cancelOpen}
         onOpenChange={setCancelOpen}
@@ -304,6 +369,47 @@ function OrderDetail({
         onConfirm={(input) => cancel.mutate(input)}
         isPending={cancel.isPending}
       />
+    </div>
+  );
+}
+
+// Đánh giá của người mua cho một sản phẩm: đã viết (sửa được một lần trong hạn) hoặc nút "Rate"
+function ItemReview({
+  item,
+  canReview,
+  onWrite,
+}: {
+  item: BuyerOrderItem;
+  canReview: boolean;
+  onWrite: () => void;
+}) {
+  const { review } = item;
+  if (!review) {
+    return canReview ? (
+      <Button size="sm" variant="outline" className="mt-3" onClick={onWrite}>
+        Rate this item
+      </Button>
+    ) : null;
+  }
+  return (
+    <div className="mt-3 space-y-1.5 rounded-lg bg-muted/40 p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <StarRating value={review.rating} starClassName="size-3.5" />
+        <span className="text-xs text-muted-foreground">
+          Your review{review.editedAt && ' · Edited'}
+        </span>
+        {canReview && !review.editedAt && (
+          <Button size="xs" variant="link" className="h-auto px-0" onClick={onWrite}>
+            Edit
+          </Button>
+        )}
+      </div>
+      {review.comment && <p className="whitespace-pre-wrap">{review.comment}</p>}
+      {review.sellerReply && (
+        <p className="border-l-2 pl-2 text-muted-foreground">
+          <span className="font-medium text-foreground">Shop reply:</span> {review.sellerReply}
+        </p>
+      )}
     </div>
   );
 }

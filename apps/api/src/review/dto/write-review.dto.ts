@@ -1,7 +1,5 @@
 import {
-  IsEmail,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   Max,
@@ -13,16 +11,9 @@ import { Transform } from 'class-transformer';
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-export class CreateReviewDto {
-  @IsString()
-  @IsNotEmpty()
-  shopId: string;
-
-  // null/không gửi = đánh giá chung cho shop
-  @IsOptional()
-  @IsString()
-  productId?: string | null;
-
+// Người mua viết / sửa đánh giá cho một sản phẩm trong đơn đã giao.
+// Tên, sản phẩm, shop lấy từ đơn hàng — không nhận từ client.
+export class WriteReviewDto {
   @IsInt()
   @Min(1)
   @Max(5)
@@ -33,15 +24,4 @@ export class CreateReviewDto {
   @IsString()
   @MaxLength(2000)
   comment?: string;
-
-  @Transform(trim)
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  buyerName: string;
-
-  @Transform(trim)
-  @IsEmail()
-  @MaxLength(254)
-  buyerEmail: string;
 }

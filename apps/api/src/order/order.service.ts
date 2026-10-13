@@ -27,6 +27,9 @@ import { MailService } from '../mail/mail.service';
 import { generateOrderNumber } from './order-number';
 import { AccessTokenService } from '../auth/access-token.service';
 import type { BuyerAccess } from '../auth/guards/buyer-access.guard';
+import { buyerOrderWhere } from './buyer-order-access';
+import { BUYER_REVIEW_SELECT } from '../review/review-select';
+import { reviewDeadline } from '../review/review-rules';
 
 // Những gì người mua được thấy: không có id nội bộ, thông tin chủ shop hay email/sđt
 const PUBLIC_ORDER_SELECT = {
@@ -57,20 +60,19 @@ const PUBLIC_ORDER_SELECT = {
       variantLabel: true,
       quantity: true,
       priceAtPurchase: true,
+      review: { select: BUYER_REVIEW_SELECT },
     },
   },
   shop: { select: { name: true, slug: true } },
 } satisfies Prisma.OrderSelect;
 
-// Đơn mà người mua được xem: phiên đăng nhập → đơn của email đó; link → đúng đơn trong link
-function buyerOrderWhere(
-  orderNumber: string,
-  access: BuyerAccess,
-): Prisma.OrderWhereInput {
-  return access.kind === 'buyer'
-    ? { orderNumber, buyerEmail: access.email }
-    : { orderNumber, id: access.orderId };
-}
+// Hạn viết/sửa đánh giá do API tính (FE chỉ hiển thị)
+const withReviewDeadline = <T extends { deliveredAt: Date | null }>(
+  order: T,
+) => ({
+  ...order,
+  reviewableUntil: reviewDeadline(order.deliveredAt),
+});
 
 interface Cancellation {
   by: CancelActor;
@@ -376,12 +378,13 @@ export class OrderService {
 
   // Người mua đã đăng nhập: mọi đơn của email này tại shop đang xem
   async findForBuyer(email: string, shopSlug: string) {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: { buyerEmail: email, shop: { slug: shopSlug } },
       select: PUBLIC_ORDER_SELECT,
       orderBy: { createdAt: 'desc' },
       take: MAX_BUYER_ORDERS,
     });
+    return orders.map(withReviewDeadline);
   }
 
   async findOneForBuyer(orderNumber: string, access: BuyerAccess) {
@@ -392,6 +395,6 @@ export class OrderService {
 
     // Không có, hay đơn của người khác đều trả cùng một lỗi → không dò được đơn nào tồn tại
     if (!order) throw new NotFoundException('Order not found');
-    return order;
+    return withReviewDeadline(order);
   }
 }

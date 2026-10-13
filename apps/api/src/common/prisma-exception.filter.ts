@@ -15,6 +15,7 @@ const UNIQUE_MESSAGES: Record<string, string> = {
   'Shop:slug': 'This shop URL is already taken',
   'Shop:ownerId': 'You already own a shop',
   'Category:shopId,slug': 'A category with this name already exists',
+  'Review:orderItemId': 'You have already reviewed this item',
 };
 
 // Lỗi Prisma không bắt riêng sẽ thành 500 → chuyển các lỗi do dữ liệu người dùng thành 4xx có thông báo rõ ràng.

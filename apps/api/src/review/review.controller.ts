@@ -1,20 +1,17 @@
 import {
   BadRequestException,
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
   Param,
   Patch,
-  Delete,
-  UseGuards,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { RateLimit } from '../common/rate-limit';
+import { ReplyReviewDto } from './dto/reply-review.dto';
 
 const MAX_PUBLIC_REVIEWS = 50;
 
@@ -25,15 +22,10 @@ function parseLimit(raw?: string) {
     : MAX_PUBLIC_REVIEWS;
 }
 
+// Người mua viết đánh giá từ trang đơn hàng: xem BuyerReviewController
 @Controller('reviews')
 export class ReviewController {
   constructor(private reviewService: ReviewService) {}
-
-  @Post()
-  @RateLimit.writeReview()
-  create(@Body() dto: CreateReviewDto) {
-    return this.reviewService.create(dto);
-  }
 
   @Get('product/:productId')
   findByProduct(
@@ -48,7 +40,6 @@ export class ReviewController {
     return this.reviewService.getProductRating(productId);
   }
 
-  // `limit` đọc riêng (không dùng DTO) vì FE còn gửi kèm `status` — whitelist sẽ chặn tham số lạ
   @Get('shop/:shopId')
   findByShop(@Param('shopId') shopId: string, @Query('limit') limit?: string) {
     return this.reviewService.findByShop(shopId, parseLimit(limit));
@@ -61,11 +52,11 @@ export class ReviewController {
 
   @Get('manage/:shopId')
   @UseGuards(JwtAuthGuard)
-  findForModeration(
+  findForSeller(
     @GetUser('id') userId: string,
     @Param('shopId') shopId: string,
     @Query('rating') rating?: string,
-    @Query('status') status?: string,
+    @Query('unreplied') unreplied?: string,
   ) {
     const ratingNumber = rating ? Number(rating) : undefined;
     if (
@@ -78,19 +69,19 @@ export class ReviewController {
     ) {
       throw new BadRequestException('rating must be an integer from 1 to 5');
     }
-    if (status && !['PENDING', 'APPROVED'].includes(status)) {
-      throw new BadRequestException('status must be PENDING or APPROVED');
-    }
-    return this.reviewService.findForModeration(userId, shopId, {
+    return this.reviewService.findForSeller(userId, shopId, {
       rating: ratingNumber,
-      status,
+      unreplied: unreplied === 'true',
     });
   }
 
-  @Patch(':id/approve')
+  @Get('manage/:shopId/stats')
   @UseGuards(JwtAuthGuard)
-  approve(@GetUser('id') userId: string, @Param('id') id: string) {
-    return this.reviewService.approve(userId, id);
+  getSellerStats(
+    @GetUser('id') userId: string,
+    @Param('shopId') shopId: string,
+  ) {
+    return this.reviewService.getSellerStats(userId, shopId);
   }
 
   @Patch(':id/reply')
@@ -98,14 +89,8 @@ export class ReviewController {
   reply(
     @GetUser('id') userId: string,
     @Param('id') id: string,
-    @Body('replyText') replyText: string,
+    @Body() dto: ReplyReviewDto,
   ) {
-    return this.reviewService.reply(userId, id, replyText);
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  delete(@GetUser('id') userId: string, @Param('id') id: string) {
-    return this.reviewService.delete(userId, id);
+    return this.reviewService.reply(userId, id, dto.replyText);
   }
 }

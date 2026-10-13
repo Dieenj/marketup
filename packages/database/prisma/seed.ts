@@ -1140,161 +1140,218 @@ async function main() {
 
   console.log('✅ Created 4 orders for Volt Tech');
 
-  // ─── ĐÁNH GIÁ — Cửa hàng Lumière ─────────────────────────────────────────────────────
-  await prisma.review.createMany({
-    data: [
-      {
-        rating: 5,
-        comment:
-          'Áo chất linen cực kỳ mát, mặc cả ngày không bí. Màu Sand đẹp hơn ảnh nhiều. Sẽ mua thêm size khác!',
-        buyerName: 'Minh Tú',
-        buyerEmail: 'minhtu@gmail.com',
-        isVerified: true,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn bạn rất nhiều! Chúng mình rất vui khi bạn yêu thích chiếc áo. Hẹn gặp lại bạn nhé 🌿',
-        shopId: lumiere.id,
-        productId: linenShirt.id,
+  // ─── ĐÁNH GIÁ ─────────────────────────────────────────────────────────────────────────
+  // Giống Shopee: mỗi đánh giá gắn với một sản phẩm trong đơn ĐÃ GIAO (mỗi đánh giá một đơn riêng).
+  // Tên trên đánh giá đã che sẵn như API làm (review-rules.ts → maskBuyerName).
+  const DAY = 86_400_000;
+  const daysAgo = (n: number) => new Date(Date.now() - n * DAY);
+  type SeedProduct = typeof linenShirt;
+  let reviewOrderSeq = 100;
+
+  async function reviewedOrder(r: {
+    shopId: string;
+    product: SeedProduct;
+    buyerName: string;
+    maskedName: string;
+    buyerEmail: string;
+    rating: number;
+    comment: string;
+    sellerReply?: string;
+    deliveredDaysAgo: number;
+  }) {
+    const variant = r.product.variants[0];
+    const order = await prisma.order.create({
+      data: {
+        orderNumber: `ORD-2025-${++reviewOrderSeq}`,
+        buyerName: r.buyerName,
+        buyerEmail: r.buyerEmail,
+        buyerPhone: '0900 000 000',
+        shippingAddress: '1 Nguyễn Huệ',
+        shippingCity: 'TP. Hồ Chí Minh',
+        subtotal: variant.price,
+        totalAmount: variant.price,
+        status: 'DELIVERED',
+        createdAt: daysAgo(r.deliveredDaysAgo + 3),
+        deliveredAt: daysAgo(r.deliveredDaysAgo),
+        shopId: r.shopId,
+        items: {
+          create: [
+            {
+              quantity: 1,
+              priceAtPurchase: variant.price,
+              productName: r.product.name,
+              productImage: r.product.imageUrl,
+              variantLabel: variant.label,
+              productId: r.product.id,
+              variantId: variant.id,
+            },
+          ],
+        },
       },
-      {
-        rating: 4,
-        comment:
-          'Quần dáng đẹp, vải tốt nhưng size hơi lớn hơn bình thường một chút, nên order nhỏ hơn một size.',
-        buyerName: 'Linh Phương',
-        buyerEmail: 'linhphuong@yahoo.com',
-        isVerified: true,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn góp ý của bạn! Mình đã cập nhật bảng size chi tiết hơn ở trang sản phẩm để khách hàng dễ chọn hơn nhé.',
-        shopId: lumiere.id,
-        productId: trousers.id,
+      include: { items: true },
+    });
+    await prisma.review.create({
+      data: {
+        rating: r.rating,
+        comment: r.comment,
+        buyerName: r.maskedName,
+        sellerReply: r.sellerReply ?? null,
+        sellerRepliedAt: r.sellerReply ? daysAgo(r.deliveredDaysAgo - 2) : null,
+        createdAt: daysAgo(r.deliveredDaysAgo - 1),
+        shopId: r.shopId,
+        productId: r.product.id,
+        orderItemId: order.items[0].id,
       },
-      {
-        rating: 5,
-        comment:
-          'Túi đẹp, vải dày dặn, khoá zip chắc chắn. Mua về dùng đi làm hàng ngày rất tiện. Đóng gói cẩn thận, giao hàng nhanh!',
-        buyerName: 'Ngọc Anh',
-        buyerEmail: 'ngocanh@gmail.com',
-        isVerified: false,
-        status: 'APPROVED',
-        shopId: lumiere.id,
-        productId: canvasTote.id,
-      },
-      {
-        rating: 5,
-        comment:
-          'Áo len mịn như mơ, mặc vào ấm áp mà không bị ngứa chút nào. Màu Dusty Rose đẹp quá trời! Cực kỳ xứng đáng với giá tiền.',
-        buyerName: 'Thu Uyên',
-        buyerEmail: 'thuuyen@gmail.com',
-        isVerified: false,
-        status: 'APPROVED',
-        shopId: lumiere.id,
-        productId: merinoSweater.id,
-      },
-      {
-        rating: 4,
-        comment:
-          'Áo khoác nhẹ, may đẹp. Mình hay bị lạnh nên thích kiểu dáng này lắm. Chỉ tiếc là không có size XL.',
-        buyerName: 'Huy Hoàng',
-        buyerEmail: 'huyhoang@gmail.com',
-        isVerified: true,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn bạn đã phản hồi! Chúng mình đang cân nhắc mở rộng size range cho mùa tới, mong bạn tiếp tục ủng hộ nhé 🙏',
-        shopId: lumiere.id,
-        productId: trenchCoat.id,
-      },
-      {
-        rating: 3,
-        comment: 'Áo ok nhưng màu thực tế nhạt hơn ảnh một chút. Chất linen vẫn tốt.',
-        buyerName: 'Kim Ngân',
-        buyerEmail: 'kimngan@gmail.com',
-        isVerified: false,
-        status: 'PENDING',
-        shopId: lumiere.id,
-        productId: linenShirt.id,
-      },
-    ],
+    });
+  }
+
+  // Lumière
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: linenShirt,
+    buyerName: 'Minh Tú',
+    maskedName: 'M***ú',
+    buyerEmail: 'minhtu@gmail.com',
+    rating: 5,
+    comment:
+      'Áo chất linen cực kỳ mát, mặc cả ngày không bí. Màu Sand đẹp hơn ảnh nhiều. Sẽ mua thêm size khác!',
+    sellerReply:
+      'Cảm ơn bạn rất nhiều! Chúng mình rất vui khi bạn yêu thích chiếc áo. Hẹn gặp lại bạn nhé 🌿',
+    deliveredDaysAgo: 20,
+  });
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: trousers,
+    buyerName: 'Linh Phương',
+    maskedName: 'L***g',
+    buyerEmail: 'linhphuong@yahoo.com',
+    rating: 4,
+    comment:
+      'Quần dáng đẹp, vải tốt nhưng size hơi lớn hơn bình thường một chút, nên order nhỏ hơn một size.',
+    sellerReply:
+      'Cảm ơn góp ý của bạn! Mình đã cập nhật bảng size chi tiết hơn ở trang sản phẩm để khách hàng dễ chọn hơn nhé.',
+    deliveredDaysAgo: 18,
+  });
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: canvasTote,
+    buyerName: 'Ngọc Anh',
+    maskedName: 'N***h',
+    buyerEmail: 'ngocanh@gmail.com',
+    rating: 5,
+    comment:
+      'Túi đẹp, vải dày dặn, khoá zip chắc chắn. Mua về dùng đi làm hàng ngày rất tiện. Đóng gói cẩn thận, giao hàng nhanh!',
+    deliveredDaysAgo: 15,
+  });
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: merinoSweater,
+    buyerName: 'Thu Uyên',
+    maskedName: 'T***n',
+    buyerEmail: 'thuuyen@gmail.com',
+    rating: 5,
+    comment:
+      'Áo len mịn như mơ, mặc vào ấm áp mà không bị ngứa chút nào. Màu Dusty Rose đẹp quá trời! Cực kỳ xứng đáng với giá tiền.',
+    deliveredDaysAgo: 12,
+  });
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: trenchCoat,
+    buyerName: 'Huy Hoàng',
+    maskedName: 'H***g',
+    buyerEmail: 'huyhoang@gmail.com',
+    rating: 4,
+    comment:
+      'Áo khoác nhẹ, may đẹp. Mình hay bị lạnh nên thích kiểu dáng này lắm. Chỉ tiếc là không có size XL.',
+    sellerReply:
+      'Cảm ơn bạn đã phản hồi! Chúng mình đang cân nhắc mở rộng size range cho mùa tới, mong bạn tiếp tục ủng hộ nhé 🙏',
+    deliveredDaysAgo: 9,
+  });
+  await reviewedOrder({
+    shopId: lumiere.id,
+    product: linenShirt,
+    buyerName: 'Kim Ngân',
+    maskedName: 'K***n',
+    buyerEmail: 'kimngan@gmail.com',
+    rating: 3,
+    comment: 'Áo ok nhưng màu thực tế nhạt hơn ảnh một chút. Chất linen vẫn tốt.',
+    deliveredDaysAgo: 4,
   });
 
   console.log('✅ Created 6 reviews for Lumière');
 
-  // ─── ĐÁNH GIÁ — Cửa hàng Volt Tech ───────────────────────────────────────────────────
-  await prisma.review.createMany({
-    data: [
-      {
-        rating: 5,
-        comment:
-          'ProBuds X chống ồn cực tốt, dùng trên máy bay thấy rõ sự khác biệt. Pin trâu, đeo cả ngày không đau tai. Recommend 100%!',
-        buyerName: 'Đức Minh',
-        buyerEmail: 'ducminh@gmail.com',
-        isVerified: true,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn bạn đã review chi tiết! Rất vui khi ProBuds X đồng hành cùng bạn trên mọi chuyến đi ✈️',
-        shopId: volt.id,
-        productId: probuds.id,
-      },
-      {
-        rating: 5,
-        comment:
-          'Hub tốt, cắm vào MacBook nhận ngay 4K HDMI không delay. Nhỏ gọn bỏ túi dễ mang đi. Giá hợp lý so với chất lượng.',
-        buyerName: 'Thu Hà',
-        buyerEmail: 'thuha@hotmail.com',
-        isVerified: true,
-        status: 'APPROVED',
-        shopId: volt.id,
-        productId: usbHub.id,
-      },
-      {
-        rating: 4,
-        comment:
-          'Desk mat trải bàn trông sang hẳn, bề mặt smooth chuột di tốt. Nhược điểm nhỏ là góc cạnh hơi nhọn, cần bo tròn hơn.',
-        buyerName: 'Văn Khoa',
-        buyerEmail: 'vankhoa@gmail.com',
-        isVerified: false,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn góp ý! Chúng mình sẽ chú ý cải thiện phần hoàn thiện cạnh viền ở lô hàng tiếp theo bạn nhé.',
-        shopId: volt.id,
-        productId: deskMat.id,
-      },
-      {
-        rating: 5,
-        comment:
-          'Cáp sạc nhanh thật sự, sạc laptop 65W ngon lành. Dây bọc nylon chắc chắn, uốn thấy bền hơn cáp Apple gốc nhiều lần.',
-        buyerName: 'Phúc Long',
-        buyerEmail: 'phuclong@gmail.com',
-        isVerified: true,
-        status: 'APPROVED',
-        shopId: volt.id,
-        productId: braidedCable.id,
-      },
-      {
-        rating: 5,
-        comment:
-          'Sạc 3-in-1 rất tiện, để đầu giường sạc iPhone + Watch + AirPods một lúc. Build quality nhôm cứng cáp, không bị nóng.',
-        buyerName: 'An Nhiên',
-        buyerEmail: 'annhien@gmail.com',
-        isVerified: false,
-        status: 'APPROVED',
-        sellerReply:
-          'Cảm ơn bạn! Thiết kế nhôm nguyên khối đúng là điểm mình tự hào nhất ở sản phẩm này 🙌',
-        shopId: volt.id,
-        productId: magStand.id,
-      },
-      {
-        rating: 2,
-        comment:
-          'Sạc GaN bị nóng hơn mong đợi khi sạc đồng thời cả 2 cổng. Chờ xem có bản cải thiện không.',
-        buyerName: 'Minh Khoa',
-        buyerEmail: 'minhkhoa@gmail.com',
-        isVerified: false,
-        status: 'PENDING',
-        shopId: volt.id,
-        productId: ganCharger.id,
-      },
-    ],
+  // Volt Tech
+  await reviewedOrder({
+    shopId: volt.id,
+    product: probuds,
+    buyerName: 'Đức Minh',
+    maskedName: 'Đ***h',
+    buyerEmail: 'ducminh@gmail.com',
+    rating: 5,
+    comment:
+      'ProBuds X chống ồn cực tốt, dùng trên máy bay thấy rõ sự khác biệt. Pin trâu, đeo cả ngày không đau tai. Recommend 100%!',
+    sellerReply:
+      'Cảm ơn bạn đã review chi tiết! Rất vui khi ProBuds X đồng hành cùng bạn trên mọi chuyến đi ✈️',
+    deliveredDaysAgo: 21,
+  });
+  await reviewedOrder({
+    shopId: volt.id,
+    product: usbHub,
+    buyerName: 'Thu Hà',
+    maskedName: 'T***à',
+    buyerEmail: 'thuha@hotmail.com',
+    rating: 5,
+    comment:
+      'Hub tốt, cắm vào MacBook nhận ngay 4K HDMI không delay. Nhỏ gọn bỏ túi dễ mang đi. Giá hợp lý so với chất lượng.',
+    deliveredDaysAgo: 17,
+  });
+  await reviewedOrder({
+    shopId: volt.id,
+    product: deskMat,
+    buyerName: 'Văn Khoa',
+    maskedName: 'V***a',
+    buyerEmail: 'vankhoa@gmail.com',
+    rating: 4,
+    comment:
+      'Desk mat trải bàn trông sang hẳn, bề mặt smooth chuột di tốt. Nhược điểm nhỏ là góc cạnh hơi nhọn, cần bo tròn hơn.',
+    sellerReply:
+      'Cảm ơn góp ý! Chúng mình sẽ chú ý cải thiện phần hoàn thiện cạnh viền ở lô hàng tiếp theo bạn nhé.',
+    deliveredDaysAgo: 14,
+  });
+  await reviewedOrder({
+    shopId: volt.id,
+    product: braidedCable,
+    buyerName: 'Phúc Long',
+    maskedName: 'P***g',
+    buyerEmail: 'phuclong@gmail.com',
+    rating: 5,
+    comment:
+      'Cáp sạc nhanh thật sự, sạc laptop 65W ngon lành. Dây bọc nylon chắc chắn, uốn thấy bền hơn cáp Apple gốc nhiều lần.',
+    deliveredDaysAgo: 11,
+  });
+  await reviewedOrder({
+    shopId: volt.id,
+    product: magStand,
+    buyerName: 'An Nhiên',
+    maskedName: 'A***n',
+    buyerEmail: 'annhien@gmail.com',
+    rating: 5,
+    comment:
+      'Sạc 3-in-1 rất tiện, để đầu giường sạc iPhone + Watch + AirPods một lúc. Build quality nhôm cứng cáp, không bị nóng.',
+    sellerReply:
+      'Cảm ơn bạn! Thiết kế nhôm nguyên khối đúng là điểm mình tự hào nhất ở sản phẩm này 🙌',
+    deliveredDaysAgo: 8,
+  });
+  await reviewedOrder({
+    shopId: volt.id,
+    product: ganCharger,
+    buyerName: 'Minh Khoa',
+    maskedName: 'M***a',
+    buyerEmail: 'minhkhoa@gmail.com',
+    rating: 2,
+    comment:
+      'Sạc GaN bị nóng hơn mong đợi khi sạc đồng thời cả 2 cổng. Chờ xem có bản cải thiện không.',
+    deliveredDaysAgo: 5,
   });
 
   console.log('✅ Created 6 reviews for Volt Tech');
@@ -1304,9 +1361,9 @@ async function main() {
   console.log('   alice@lumiere.store  →  /shop/lumiere');
   console.log('   ben@volttech.shop    →  /shop/volttech\n');
   console.log(
-    '📦 Orders: 10 total  (PENDING ×2 · CONFIRMED ×1 · PROCESSING ×1 · SHIPPING ×2 · DELIVERED ×3 · CANCELLED ×1)',
+    '📦 Orders: 22 total  (PENDING ×2 · CONFIRMED ×1 · PROCESSING ×1 · SHIPPING ×2 · DELIVERED ×15 · CANCELLED ×1)',
   );
-  console.log('⭐ Reviews: 12 total  (APPROVED ×10 · PENDING ×2)\n');
+  console.log('⭐ Reviews: 12 total, each from a delivered order  (6 with a shop reply)\n');
 }
 
 main()

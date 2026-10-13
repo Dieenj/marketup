@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageIcon, ShoppingBag, Search, ArrowRight, Filter } from 'lucide-react';
 import Link from 'next/link';
-import WriteReviewDialog from '@/components/shop/write-review-dialog';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import { storefrontQueries, type StorefrontCategory } from '@/lib/storefront-queries';
 import { getMinPrice, getPriceRange } from '@/lib/price';
@@ -22,10 +21,10 @@ import ShopNotFoundView from '@/components/shop/shop-not-found';
 
 type Category = StorefrontCategory;
 
+// Điểm shop = trung bình mọi đánh giá sản phẩm (API)
 interface ShopStats {
-  averageShopRating: number;
-  averageProductRating: number;
-  totalCount: number;
+  averageRating: number;
+  count: number;
 }
 
 interface Product {
@@ -66,7 +65,6 @@ export default function StorefrontClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('default');
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const {
     data: shop,
@@ -121,12 +119,8 @@ export default function StorefrontClient() {
     return list;
   }, [products, searchQuery, selectedCategory, sortBy]);
 
-  const reviewCount = stats?.totalCount ?? 0;
-  const overallRating = stats
-    ? stats.averageShopRating > 0
-      ? stats.averageShopRating
-      : stats.averageProductRating
-    : 0;
+  const reviewCount = stats?.count ?? 0;
+  const overallRating = stats?.averageRating ?? 0;
 
   if (shopLoading || productsLoading) return <StorefrontSkeleton shop={shop} />;
 
@@ -139,7 +133,7 @@ export default function StorefrontClient() {
 
   return (
     <div className="min-h-screen">
-      <ShopHero shop={shop} onWriteReview={() => setIsReviewOpen(true)} />
+      <ShopHero shop={shop} />
 
       {/* Stats bar */}
       <section className="bg-card border-b border-border">
@@ -432,8 +426,6 @@ export default function StorefrontClient() {
           )}
         </section>
       </div>
-
-      <WriteReviewDialog open={isReviewOpen} onOpenChange={setIsReviewOpen} shopId={shop.id} />
     </div>
   );
 }

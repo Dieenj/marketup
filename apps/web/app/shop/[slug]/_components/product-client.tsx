@@ -10,7 +10,6 @@ import {
   ChevronRight,
   ImageIcon,
   ShoppingCart,
-  Star,
   MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/hooks/use-cart';
-import WriteReviewDialog from '@/components/shop/write-review-dialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
 import StarRating from '@/components/star-rating';
@@ -34,7 +32,7 @@ interface ProductReview {
   buyerName: string;
   rating: number;
   comment?: string | null;
-  isVerified: boolean;
+  editedAt?: string | null;
   sellerReply?: string | null;
   createdAt: string;
 }
@@ -76,7 +74,6 @@ export default function ProductClient() {
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const { data: shop } = useQuery(q.shop(slug));
 
@@ -521,25 +518,15 @@ export default function ProductClient() {
               </div>
             </div>
           </div>
-
-          <div className="shrink-0 pt-2">
-            <Button
-              onClick={() => setIsReviewOpen(true)}
-              className="gap-2 rounded-xl font-bold h-11 px-5"
-            >
-              <Star className="h-4 w-4 fill-current" />
-              Write a Product Review
-            </Button>
-          </div>
         </div>
 
         {/* Danh sách các đánh giá của sản phẩm */}
         {!reviews || reviews.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 border border-dashed rounded-2xl">
             <MessageSquare className="h-9 w-9 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-muted-foreground">No reviews approved yet</p>
+            <p className="text-sm font-semibold text-muted-foreground">No reviews yet</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Be the first to share your thoughts on this product!
+              Reviews come from buyers once their order has been delivered.
             </p>
           </div>
         ) : (
@@ -553,10 +540,12 @@ export default function ProductClient() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-foreground">{rev.buyerName}</span>
-                      {rev.isVerified && <Badge variant="success">Verified Purchase</Badge>}
+                      {/* Mọi đánh giá đều từ đơn đã giao */}
+                      <Badge variant="success">Verified Purchase</Badge>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       {formatDate(rev.createdAt)}
+                      {rev.editedAt && ' · Edited'}
                     </p>
                   </div>
 
@@ -584,14 +573,6 @@ export default function ProductClient() {
           </div>
         )}
       </div>
-
-      <WriteReviewDialog
-        open={isReviewOpen}
-        onOpenChange={setIsReviewOpen}
-        shopId={shop?.id || ''}
-        productId={product.id}
-        productName={product.name}
-      />
     </div>
   );
 }

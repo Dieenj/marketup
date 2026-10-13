@@ -194,6 +194,7 @@ model OrderItem {
   productId        String
   variant          ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
   variantId        String?
+  review           Review?
 
   @@map("order_items")
 }
@@ -229,24 +230,29 @@ model ProductVariant {
   @@map("product_variants")
 }
 
+// Đánh giá kiểu Shopee: chỉ từ sản phẩm trong đơn đã giao, mỗi sản phẩm của đơn tối đa một đánh giá,
+// trong 30 ngày sau khi giao, người mua sửa được một lần; shop chỉ trả lời (không ẩn/xoá).
 model Review {
-  id           String   @id @default(cuid())
-  rating       Int      // Từ 1 đến 5 sao
-  comment      String?  @db.Text
-  buyerName    String
-  buyerEmail   String
-  isVerified   Boolean  @default(false)
-  status       String   @default("PENDING") // PENDING (Chờ duyệt), APPROVED (Đã duyệt)
-  sellerReply  String?  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String    @id @default(cuid())
+  rating          Int       // Từ 1 đến 5 sao
+  comment         String?   @db.Text
+  buyerName       String    // Tên hiển thị đã che (vd. "M***u") — chụp lúc viết
+  editedAt        DateTime? // Người mua đã sửa (chỉ được một lần)
+  sellerReply     String?   @db.Text
+  sellerRepliedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // Các mối quan hệ
-  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  shopId       String
-  product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId    String?
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId      String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  orderItemId String    @unique
 
+  @@index([productId, createdAt])
+  @@index([shopId, createdAt])
   @@map("reviews")
 }
 

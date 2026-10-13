@@ -1,18 +1,11 @@
-import { MapPin, Phone, Star } from 'lucide-react';
+import { MapPin, Phone } from 'lucide-react';
 import RemoteImage from '@/components/remote-image';
 import { DEFAULT_SHOP_COLOR, getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import type { StorefrontShop } from '@/lib/storefront-queries';
 
 // Hero trang chủ shop. Dùng cả khi đang tải (loading.tsx) vì thông tin shop đã có sẵn từ layout —
 // chỉ phần sản phẩm/thống kê/review bên dưới mới cần skeleton.
-export default function ShopHero({
-  shop,
-  onWriteReview,
-}: {
-  shop: StorefrontShop;
-  /** Không truyền khi đang tải → nút hiện nhưng chưa bấm được */
-  onWriteReview?: () => void;
-}) {
+export default function ShopHero({ shop }: { shop: StorefrontShop }) {
   const primaryColor = normalizeHexColor(shop.primaryColor);
   // Có banner: phủ lớp tối nên chữ trắng; không có banner: nền là màu thương hiệu → chữ theo độ tương phản
   const fg = shop.bannerUrl ? '#ffffff' : getContrastColor(primaryColor);
@@ -68,15 +61,6 @@ export default function ShopHero({
                 {shop.contactPhone}
               </div>
             )}
-            <button
-              type="button"
-              onClick={onWriteReview}
-              disabled={!onWriteReview}
-              className="flex items-center gap-1 rounded-full border border-current/15 bg-current/10 px-3 py-1.5 text-xs font-semibold opacity-80 transition hover:bg-current/20 hover:opacity-100 disabled:pointer-events-none"
-            >
-              <Star className="h-3 w-3 fill-current" aria-hidden />
-              Write a Review
-            </button>
           </div>
         </div>
       </div>
