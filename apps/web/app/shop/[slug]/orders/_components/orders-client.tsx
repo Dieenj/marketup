@@ -1,8 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import OrderStatusBadge from '@/components/order-status-badge';
@@ -10,90 +10,125 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getErrorStatus } from '@/lib/api-client';
-import { orderLookupQuery, type BuyerOrder } from '@/lib/order-lookup';
+import { myOrdersQuery, type BuyerOrder } from '@/lib/buyer-api';
 import { useHydrated } from '@/hooks/use-hydrated';
-import { useRecentOrdersStore, type RecentOrder } from '@/hooks/use-recent-orders';
-import FindOrderForm from './find-order-form';
+import { useBuyerSession } from '@/hooks/use-buyer-session';
+import StorefrontUnavailable from '../../_components/storefront-unavailable';
+import { SignInPanel } from './buyer-sign-in';
 import OrderItemThumb from './order-item-thumb';
 
 export default function OrdersClient({ slug }: { slug: string }) {
-  const router = useRouter();
   const hydrated = useHydrated();
-  const allOrders = useRecentOrdersStore((s) => s.orders);
-  const orders = allOrders.filter((o) => o.shopSlug === slug);
-  const results = useQueries({ queries: orders.map((o) => orderLookupQuery(o)) });
+  const token = useBuyerSession((s) => s.token);
+  const email = useBuyerSession((s) => s.email);
+
+  // Phiên lưu trong localStorage → chỉ biết sau khi hydrate
+  if (!hydrated) {
+    return (
+      <OrdersShell slug={slug}>
+        <OrderRowsSkeleton count={2} />
+      </OrdersShell>
+    );
+  }
+
+  if (!token || !email) {
+    return (
+      <SignInPanel
+        slug={slug}
+        back={<BackToShop slug={slug} />}
+        title="My orders"
+        description="Enter the email you used at checkout. We'll send you a code to see all your orders on any device."
+      />
+    );
+  }
+
+  return <SignedInOrders slug={slug} token={token} email={email} />;
+}
+
+function SignedInOrders({ slug, token, email }: { slug: string; token: string; email: string }) {
+  const signOut = useBuyerSession((s) => s.signOut);
+  const query = useQuery(myOrdersQuery(slug, token));
+  const expired = query.isError && getErrorStatus(query.error) === 401;
+
+  // Phiên hết hạn (30 ngày) → quay về màn đăng nhập
+  useEffect(() => {
+    if (expired) signOut();
+  }, [expired, signOut]);
+
+  if (query.isError && !expired) {
+    return <StorefrontUnavailable onRetry={() => query.refetch()} isRetrying={query.isFetching} />;
+  }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8">
-      <Link
-        href={`/shop/${slug}`}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" aria-hidden />
-        Back to shop
-      </Link>
+    <OrdersShell
+      slug={slug}
+      account={
+        <p className="text-sm text-muted-foreground">
+          Signed in as <span className="font-medium text-foreground">{email}</span>
+          <span aria-hidden> · </span>
+          <Button variant="link" className="h-auto px-0" onClick={signOut}>
+            Sign out
+          </Button>
+        </p>
+      }
+    >
+      {!query.isSuccess ? (
+        <OrderRowsSkeleton count={2} />
+      ) : query.data.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No orders yet"
+          description={`Orders you place with ${email} will show up here.`}
+          action={
+            <Link href={`/shop/${slug}`} className={buttonVariants({ variant: 'outline' })}>
+              Start shopping
+            </Link>
+          }
+          className="py-16"
+        />
+      ) : (
+        <ul className="space-y-3">
+          {query.data.map((order) => (
+            <li key={order.orderNumber}>
+              <OrderRow slug={slug} order={order} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </OrdersShell>
+  );
+}
 
-      <h1 className="text-3xl font-bold tracking-tight">My orders</h1>
-      <p className="mt-1 mb-8 text-muted-foreground">Orders you placed on this device.</p>
-
-      <div className="grid items-start gap-8 lg:grid-cols-[1fr_360px]">
-        <section aria-label="Orders on this device">
-          {!hydrated ? (
-            // Danh sách nằm trong localStorage → chỉ biết sau khi hydrate
-            <OrderRowsSkeleton count={2} />
-          ) : orders.length === 0 ? (
-            <EmptyState
-              icon={Package}
-              title="No orders on this device yet"
-              description="Ordered on another device? Find it with the order number from your confirmation email."
-              action={
-                <Link href={`/shop/${slug}`} className={buttonVariants({ variant: 'outline' })}>
-                  Start shopping
-                </Link>
-              }
-              className="py-16"
-            />
-          ) : (
-            <ul className="space-y-3">
-              {orders.map((saved, i) => {
-                const result = results[i];
-                return (
-                  <li key={saved.orderNumber}>
-                    {result.isPending ? (
-                      <OrderRowsSkeleton count={1} />
-                    ) : result.isError ? (
-                      <OrderRowError
-                        saved={saved}
-                        isNotFound={getErrorStatus(result.error) === 404}
-                        onRetry={() => result.refetch()}
-                        isRetrying={result.isFetching}
-                      />
-                    ) : (
-                      <OrderRow slug={slug} order={result.data} />
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        <aside aria-labelledby="find-order" className="rounded-2xl border bg-card p-6">
-          <h2 id="find-order" className="font-semibold">
-            Find an order
-          </h2>
-          <p className="mt-1 mb-5 text-sm text-muted-foreground">
-            Use the order number from your confirmation email and the email you ordered with.
-          </p>
-          <FindOrderForm
-            slug={slug}
-            onFound={(order) =>
-              router.push(`/shop/${slug}/orders/${encodeURIComponent(order.orderNumber)}`)
-            }
-          />
-        </aside>
+function OrdersShell({
+  slug,
+  account,
+  children,
+}: {
+  slug: string;
+  account?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="container mx-auto max-w-3xl px-4 py-8">
+      <BackToShop slug={slug} />
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">My orders</h1>
+        {account}
       </div>
+      <section aria-label="Your orders">{children}</section>
     </div>
+  );
+}
+
+function BackToShop({ slug }: { slug: string }) {
+  return (
+    <Link
+      href={`/shop/${slug}`}
+      className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ChevronLeft className="size-4" aria-hidden />
+      Back to shop
+    </Link>
   );
 }
 
@@ -117,39 +152,6 @@ function OrderRow({ slug, order }: { slug: string; order: BuyerOrder }) {
       </div>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </Link>
-  );
-}
-
-function OrderRowError({
-  saved,
-  isNotFound,
-  onRetry,
-  isRetrying,
-}: {
-  saved: RecentOrder;
-  isNotFound: boolean;
-  onRetry: () => void;
-  isRetrying: boolean;
-}) {
-  const forget = useRecentOrdersStore((s) => s.forget);
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-dashed bg-card p-4">
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-mono text-sm font-semibold">{saved.orderNumber}</p>
-        <p className="text-sm text-muted-foreground">
-          {isNotFound ? 'This order is no longer available.' : "Couldn't load this order."}
-        </p>
-      </div>
-      {isNotFound ? (
-        <Button variant="ghost" size="sm" onClick={() => forget(saved.shopSlug, saved.orderNumber)}>
-          Remove
-        </Button>
-      ) : (
-        <Button variant="outline" size="sm" onClick={onRetry} disabled={isRetrying}>
-          {isRetrying ? 'Retrying…' : 'Try again'}
-        </Button>
-      )}
-    </div>
   );
 }
 

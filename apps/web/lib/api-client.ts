@@ -14,10 +14,10 @@ const api = axios.create({
   },
 });
 
-// Thêm một request interceptor để đính kèm JWT token vào các headers
+// Gắn token seller vào request — trừ khi request đã tự gửi token (API người mua: lib/buyer-api.ts)
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !config.headers.Authorization) {
       const token = localStorage.getItem('auth-storage')
         ? JSON.parse(localStorage.getItem('auth-storage')!).state?.token
         : null;

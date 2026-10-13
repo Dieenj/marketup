@@ -1,10 +1,9 @@
 import { IsEmail, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { normalizeEmail } from '../../common/email';
 
 export class LoginDto {
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @Transform(normalizeEmail)
   @IsEmail()
   @MaxLength(254)
   email: string;

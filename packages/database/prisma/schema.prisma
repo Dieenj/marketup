@@ -150,6 +150,8 @@ model Order {
   shopId          String
   items           OrderItem[]
 
+  // Người mua đăng nhập bằng email → liệt kê đơn theo email trong từng shop
+  @@index([buyerEmail, shopId])
   @@map("orders")
 }
 
@@ -222,4 +224,18 @@ model Review {
   productId    String?
 
   @@map("reviews")
+}
+
+// Mã đăng nhập một lần (OTP) gửi qua email cho người mua — chỉ lưu bản băm
+model BuyerLoginCode {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([email, createdAt])
+  @@map("buyer_login_codes")
 }

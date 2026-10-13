@@ -1,7 +1,6 @@
 'use client';
 
 import { useCartStore } from '@/hooks/use-cart';
-import { useRecentOrdersStore } from '@/hooks/use-recent-orders';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,7 +38,6 @@ export default function CheckoutPage() {
   const slug = params.slug as string;
   const router = useRouter();
   const { items, getTotal, clearCart, removeItem, updateQuantity } = useCartStore();
-  const rememberOrder = useRecentOrdersStore((s) => s.remember);
 
   const total = getTotal();
 
@@ -69,19 +67,19 @@ export default function CheckoutPage() {
       }));
 
       // 3. Gọi API tạo đơn hàng mới
-      return api.post('/orders', {
+      return api.post<{ orderNumber: string; accessToken: string }>('/orders', {
         ...values,
         shopId,
         items: orderItems,
       });
     },
-    onSuccess: (res, values) => {
-      const orderNumber: string = res.data.orderNumber;
-      // Thiết bị nhớ đơn này để người mua mở lại ở "My orders" mà không phải nhập email
-      rememberOrder({ shopSlug: slug, orderNumber, email: values.buyerEmail.trim() });
+    onSuccess: (res) => {
+      const { orderNumber, accessToken } = res.data;
       toast.success('Order placed successfully!');
       clearCart();
-      router.push(`/shop/${slug}/order-success?order=${encodeURIComponent(orderNumber)}`);
+      // accessToken: link xem đơn vừa đặt mà không cần đăng nhập
+      const query = new URLSearchParams({ order: orderNumber, t: accessToken });
+      router.push(`/shop/${slug}/order-success?${query}`);
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to place order'));

@@ -4,7 +4,7 @@ import OrdersClient from './_components/orders-client';
 
 type Props = { params: Promise<{ slug: string }> };
 
-// Trang riêng của người mua (dữ liệu nằm trên thiết bị) → không cho index
+// Trang riêng của người mua (cần đăng nhập) → không cho index
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const shop = await getStorefrontShop(slug);

@@ -6,11 +6,10 @@ import {
   MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { normalizeEmail } from '../../common/email';
 
 export class RegisterDto {
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
-  )
+  @Transform(normalizeEmail)
   @IsEmail()
   @MaxLength(254)
   email: string;

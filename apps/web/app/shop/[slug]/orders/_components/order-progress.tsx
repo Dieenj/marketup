@@ -1,7 +1,7 @@
 import { Check, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
-import type { BuyerOrder } from '@/lib/order-lookup';
+import type { BuyerOrder } from '@/lib/buyer-api';
 
 // Các bước người mua thấy (lời lẽ cho người mua, khác nhãn trạng thái ở dashboard người bán)
 const STEPS = [

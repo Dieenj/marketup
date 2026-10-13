@@ -1,20 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Mail, Phone } from 'lucide-react';
 import OrderStatusBadge from '@/components/order-status-badge';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getErrorStatus } from '@/lib/api-client';
-import { orderLookupQuery, type BuyerOrder } from '@/lib/order-lookup';
+import { buyerOrderQuery, isAccessDenied, type BuyerOrder } from '@/lib/buyer-api';
 import { storefrontQueries } from '@/lib/storefront-queries';
 import { useHydrated } from '@/hooks/use-hydrated';
-import { useRecentOrdersStore } from '@/hooks/use-recent-orders';
+import { useBuyerSession } from '@/hooks/use-buyer-session';
+import { cn } from '@/lib/utils';
 import StorefrontUnavailable from '../../_components/storefront-unavailable';
-import FindOrderForm from './find-order-form';
+import { SignInPanel } from './buyer-sign-in';
 import OrderItemThumb from './order-item-thumb';
 import OrderProgress from './order-progress';
 
@@ -23,38 +24,62 @@ const q = storefrontQueries();
 export default function OrderDetailClient({
   slug,
   orderNumber,
+  linkToken,
 }: {
   slug: string;
   orderNumber: string;
+  /** Token trong link email / trang đặt hàng thành công (?t=) — mở đúng đơn này, không cần đăng nhập */
+  linkToken?: string;
 }) {
   const hydrated = useHydrated();
-  const saved = useRecentOrdersStore((s) =>
-    s.orders.find((o) => o.shopSlug === slug && o.orderNumber === orderNumber),
-  );
-  const input = { shopSlug: slug, orderNumber, email: saved?.email ?? '' };
-  const query = useQuery({ ...orderLookupQuery(input), enabled: !!saved });
+  const sessionToken = useBuyerSession((s) => s.token);
+  const sessionEmail = useBuyerSession((s) => s.email);
+  const signOut = useBuyerSession((s) => s.signOut);
 
-  // Email lưu trên máy chỉ đọc được sau khi hydrate
-  if (!hydrated || (saved && query.isPending)) return <OrderDetailSkeleton />;
+  // Ưu tiên link (?t=); link hết hạn/không hợp lệ → dùng phiên đăng nhập nếu có
+  const linkQuery = useQuery({
+    ...buyerOrderQuery(orderNumber, linkToken ?? ''),
+    enabled: hydrated && !!linkToken,
+  });
+  const linkFailed = !!linkToken && isAccessDenied(linkQuery.error);
+  const usingLink = !!linkToken && !linkFailed;
+  const sessionQuery = useQuery({
+    ...buyerOrderQuery(orderNumber, sessionToken ?? ''),
+    enabled: hydrated && !!sessionToken && !usingLink,
+  });
+  const query = usingLink ? linkQuery : sessionQuery;
+  const token = usingLink ? linkToken : sessionToken;
+  const status = query.isError ? getErrorStatus(query.error) : undefined;
+  const denied = isAccessDenied(query.error);
 
-  // Thiết bị chưa biết đơn này (mở từ email) hoặc email đã lưu không còn khớp → hỏi email
-  const notFound = query.isError && getErrorStatus(query.error) === 404;
-  if (!saved || notFound) {
+  // Phiên hết hạn (30 ngày) → xoá để hiện màn đăng nhập
+  useEffect(() => {
+    if (!usingLink && status === 401) signOut();
+  }, [usingLink, status, signOut]);
+
+  // Phiên lưu trong localStorage → chỉ biết sau khi hydrate
+  if (!hydrated || (token && query.isPending)) {
+    return <OrderDetailSkeleton />;
+  }
+
+  if (!token || denied) {
     return (
-      <div className="container mx-auto max-w-md px-4 py-12 sm:py-20">
-        <BackLink slug={slug} />
-        <div className="rounded-2xl border bg-card p-6 sm:p-8">
-          <h1 className="text-2xl font-bold tracking-tight">View your order</h1>
-          <p className="mt-2 mb-6 text-sm text-muted-foreground">
-            {notFound
-              ? "We couldn't find this order with the email saved on this device. "
-              : 'To protect your details, '}
-            enter the email you used to place order{' '}
+      <SignInPanel
+        slug={slug}
+        back={<BackLink slug={slug} />}
+        title="View your order"
+        description={
+          <>
+            {sessionEmail && status === 404
+              ? `This order isn't one of the orders placed with ${sessionEmail}. `
+              : linkFailed
+                ? 'This order link is no longer valid. '
+                : null}
+            Sign in with the email you used to place order{' '}
             <span className="font-mono font-medium text-foreground">{orderNumber}</span>.
-          </p>
-          <FindOrderForm slug={slug} orderNumber={orderNumber} onFound={() => {}} />
-        </div>
-      </div>
+          </>
+        }
+      />
     );
   }
 
@@ -62,7 +87,7 @@ export default function OrderDetailClient({
     return <StorefrontUnavailable onRetry={() => query.refetch()} isRetrying={query.isFetching} />;
   }
 
-  return <OrderDetail slug={slug} order={query.data!} />;
+  return <OrderDetail slug={slug} order={query.data!} signedIn={!!sessionToken} />;
 }
 
 function BackLink({ slug }: { slug: string }) {
@@ -77,18 +102,19 @@ function BackLink({ slug }: { slug: string }) {
   );
 }
 
-function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
-  const router = useRouter();
-  const forget = useRecentOrdersStore((s) => s.forget);
+function OrderDetail({
+  slug,
+  order,
+  signedIn,
+}: {
+  slug: string;
+  order: BuyerOrder;
+  signedIn: boolean;
+}) {
   const { data: shop } = useQuery(q.shop(slug));
   const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const shippingFee = Number(order.shippingFee);
   const discount = Number(order.discount);
-
-  const removeFromDevice = () => {
-    forget(slug, order.orderNumber);
-    router.push(`/shop/${slug}/orders`);
-  };
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -221,14 +247,18 @@ function OrderDetail({ slug, order }: { slug: string; order: BuyerOrder }) {
             </section>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-muted-foreground"
-            onClick={removeFromDevice}
-          >
-            Remove from this device
-          </Button>
+          {/* Mở bằng link của một đơn → gợi ý đăng nhập để xem mọi đơn */}
+          {!signedIn && (
+            <Link
+              href={`/shop/${slug}/orders`}
+              className={cn(
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'w-full text-muted-foreground',
+              )}
+            >
+              See all your orders
+            </Link>
+          )}
         </div>
       </div>
     </div>

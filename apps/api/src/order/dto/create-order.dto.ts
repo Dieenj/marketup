@@ -14,6 +14,7 @@ import {
   Matches,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { normalizeEmail } from '../../common/email';
 
 // Giới hạn an toàn; giới hạn thật của số lượng là tồn kho của biến thể
 export const MAX_QUANTITY_PER_LINE = 999;
@@ -54,7 +55,7 @@ export class CreateOrderDto {
   @MaxLength(100)
   buyerName: string;
 
-  @Transform(trim)
+  @Transform(normalizeEmail)
   @IsEmail()
   @MaxLength(254)
   buyerEmail: string;

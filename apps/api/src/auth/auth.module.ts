@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AccessTokenService } from './access-token.service';
 
 @Module({
   imports: [
@@ -21,8 +22,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, AccessTokenService],
   controllers: [AuthController],
-  exports: [AuthService],
+  // Guard người mua (guards/buyer-access.guard.ts) cần AccessTokenService trong module dùng nó
+  exports: [AccessTokenService],
 })
 export class AuthModule {}

@@ -6,11 +6,9 @@ import {
   Param,
   Patch,
   UseGuards,
-  HttpCode,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { LookupOrderDto } from './dto/lookup-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -30,14 +28,6 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   findAll(@GetUser('id') userId: string, @Param('shopId') shopId: string) {
     return this.orderService.findAllByShop(userId, shopId);
-  }
-
-  // Người mua tra cứu đơn (không cần đăng nhập). POST để email không nằm trên URL/log
-  @RateLimit.orderLookup()
-  @Post('lookup')
-  @HttpCode(200)
-  lookup(@Body() dto: LookupOrderDto) {
-    return this.orderService.lookup(dto);
   }
 
   // Chi tiết đầy đủ (có thông tin liên hệ người mua) → chỉ chủ shop

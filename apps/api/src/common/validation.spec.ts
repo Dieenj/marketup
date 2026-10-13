@@ -7,6 +7,7 @@ import { CreateShopDto } from '../shop/dto/create-shop.dto';
 import { UpdateShopDto } from '../shop/dto/update-shop.dto';
 import { CreateReviewDto } from '../review/dto/create-review.dto';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { VerifyLoginCodeDto } from '../buyer-auth/dto/verify-login-code.dto';
 
 // Giống ValidationPipe toàn cục trong main.ts
 function check<T extends object>(cls: new () => T, body: object) {
@@ -23,7 +24,7 @@ describe('CreateOrderDto', () => {
   const order = {
     shopId: 's1',
     buyerName: ' An ',
-    buyerEmail: 'an@example.com',
+    buyerEmail: ' An@Example.com ',
     buyerPhone: '0901 234 567',
     shippingAddress: '12 Lê Lợi',
     shippingCity: 'HCM',
@@ -34,6 +35,8 @@ describe('CreateOrderDto', () => {
     const { dto, fields } = check(CreateOrderDto, order);
     expect(fields).toEqual([]);
     expect(dto.buyerName).toBe('An');
+    // Người mua đăng nhập bằng email → đơn phải lưu email dạng chuẩn để tìm lại được
+    expect(dto.buyerEmail).toBe('an@example.com');
   });
 
   it.each([
@@ -124,5 +127,22 @@ describe('RegisterDto', () => {
     });
     expect(fields).toEqual([]);
     expect(dto.email).toBe('an@example.com');
+  });
+});
+
+describe('VerifyLoginCodeDto', () => {
+  it('normalises the email and strips spaces from a pasted code', () => {
+    const { dto, fields } = check(VerifyLoginCodeDto, {
+      email: ' Buyer@Example.COM',
+      code: '123 456',
+    });
+    expect(fields).toEqual([]);
+    expect(dto).toMatchObject({ email: 'buyer@example.com', code: '123456' });
+  });
+
+  it.each(['12345', '1234567', 'abcdef', ''])('rejects code %p', (code) => {
+    expect(check(VerifyLoginCodeDto, { email: 'a@b.co', code }).fields).toEqual(
+      ['code'],
+    );
   });
 });

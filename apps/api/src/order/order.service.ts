@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { LookupOrderDto } from './dto/lookup-order.dto';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { generateOrderNumber } from './order-number';
+import { AccessTokenService } from '../auth/access-token.service';
+import type { BuyerAccess } from '../auth/guards/buyer-access.guard';
 
-// Những gì người mua được thấy khi tra cứu: không có id nội bộ, thông tin chủ shop hay email/sđt
+// Những gì người mua được thấy: không có id nội bộ, thông tin chủ shop hay email/sđt
 const PUBLIC_ORDER_SELECT = {
   orderNumber: true,
   status: true,
@@ -42,6 +43,9 @@ const PUBLIC_ORDER_SELECT = {
   shop: { select: { name: true, slug: true } },
 } satisfies Prisma.OrderSelect;
 
+// Trang "My orders" chưa phân trang; đủ cho người mua lẻ của một shop
+const MAX_BUYER_ORDERS = 100;
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -49,6 +53,7 @@ export class OrderService {
   constructor(
     private prisma: PrismaService,
     private mailService: MailService,
+    private tokens: AccessTokenService,
   ) {}
 
   async create(dto: CreateOrderDto) {
@@ -147,7 +152,8 @@ export class OrderService {
       );
     });
 
-    return order;
+    // Link xem đơn cho người vừa đặt (trang "đặt hàng thành công"), không cần đăng nhập
+    return { ...order, accessToken: this.tokens.signOrder(order.id) };
   }
 
   async findAllByShop(userId: string, shopId: string) {
@@ -255,17 +261,28 @@ export class OrderService {
     return order;
   }
 
-  async lookup({ shopSlug, orderNumber, email }: LookupOrderDto) {
+  // Người mua đã đăng nhập: mọi đơn của email này tại shop đang xem
+  async findForBuyer(email: string, shopSlug: string) {
+    return this.prisma.order.findMany({
+      where: { buyerEmail: email, shop: { slug: shopSlug } },
+      select: PUBLIC_ORDER_SELECT,
+      orderBy: { createdAt: 'desc' },
+      take: MAX_BUYER_ORDERS,
+    });
+  }
+
+  async findOneForBuyer(orderNumber: string, access: BuyerAccess) {
     const order = await this.prisma.order.findFirst({
       where: {
         orderNumber,
-        buyerEmail: { equals: email, mode: 'insensitive' },
-        shop: { slug: shopSlug },
+        ...(access.kind === 'buyer'
+          ? { buyerEmail: access.email }
+          : { id: access.orderId }),
       },
       select: PUBLIC_ORDER_SELECT,
     });
 
-    // Sai mã, sai email hay khác shop đều trả cùng một lỗi → không dò được đơn nào tồn tại
+    // Không có, hay đơn của người khác đều trả cùng một lỗi → không dò được đơn nào tồn tại
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }

@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { Prisma } from '@prisma/client';
 import { escapeHtml } from '../common/html';
+import { AccessTokenService } from '../auth/access-token.service';
 
 type Money = Prisma.Decimal | number | string;
 
@@ -17,6 +18,7 @@ interface MailOrderItem {
 
 // Các trường email dùng — khớp với đơn trả về từ OrderService (create / updateStatus)
 export interface MailOrder {
+  id: string;
   orderNumber: string;
   buyerName: string;
   buyerEmail: string;
@@ -31,7 +33,7 @@ export interface MailOrder {
   shop?: { name: string; slug: string } | null;
 }
 
-type OrderLink = Pick<MailOrder, 'orderNumber' | 'shop'>;
+type OrderLink = Pick<MailOrder, 'id' | 'orderNumber' | 'shop'>;
 
 @Injectable()
 export class MailService {
@@ -39,7 +41,10 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly isMailConfigured: boolean;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private tokens: AccessTokenService,
+  ) {
     const host = this.configService.get<string>('SMTP_HOST');
     const port = this.configService.get<number>('SMTP_PORT');
     const user = this.configService.get<string>('SMTP_USER');
@@ -75,9 +80,10 @@ export class MailService {
     );
   }
 
-  // Trang tra cứu đơn của người mua (thiết bị lạ sẽ được hỏi email trước khi xem)
+  // Trang đơn của người mua; token trong link mở đúng đơn này mà không cần đăng nhập
   private getOrderUrl(order: OrderLink): string {
-    return `${this.getBaseUrl()}/shop/${order.shop?.slug ?? ''}/orders/${encodeURIComponent(order.orderNumber)}`;
+    const path = `/shop/${order.shop?.slug ?? ''}/orders/${encodeURIComponent(order.orderNumber)}`;
+    return `${this.getBaseUrl()}${path}?t=${this.tokens.signOrder(order.id)}`;
   }
 
   private orderButton(order: OrderLink): string {
@@ -100,6 +106,55 @@ Subject: ${options.subject ?? ''}
 Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0} characters)
       `);
     }
+  }
+
+  async sendLoginCodeEmail({
+    to,
+    code,
+    shopName,
+  }: {
+    to: string;
+    code: string;
+    shopName?: string;
+  }) {
+    // Chưa cấu hình SMTP ở máy dev → in mã ra log để đăng nhập/test được; không bao giờ in trên server
+    if (
+      !this.isMailConfigured &&
+      this.configService.get('NODE_ENV') !== 'production'
+    ) {
+      this.logger.log(`[DEV] Login code for ${to}: ${code}`);
+    }
+
+    const store = escapeHtml(shopName || 'MarketUp');
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Your sign-in code</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #eef2f5;">
+          <tr>
+            <td style="padding: 40px; text-align: center;">
+              <h1 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #111111;">Sign in to ${store}</h1>
+              <p style="margin: 0 0 24px 0; color: #555555; font-size: 14px; line-height: 1.6;">Enter this code to see your orders. It expires in 10 minutes.</p>
+              <div style="display: inline-block; padding: 16px 28px; background-color: #f4f4f5; border-radius: 12px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #111111; font-family: 'SFMono-Regular', Consolas, monospace;">${code}</div>
+              <p style="margin: 24px 0 0 0; color: #888888; font-size: 12px; line-height: 1.5;">If you didn't ask for this code, you can ignore this email — nobody can sign in without it.</p>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    await this.sendMail({
+      from: this.getFromHeader(),
+      to,
+      subject: `${code} is your ${shopName || 'MarketUp'} sign-in code`,
+      html: htmlContent,
+    });
   }
 
   async sendOrderPlacedEmail(order: MailOrder) {

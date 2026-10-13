@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { BuyerAuthModule } from './buyer-auth/buyer-auth.module';
 import { ShopModule } from './shop/shop.module';
 import { ProductModule } from './product/product.module';
 import { CategoryModule } from './category/category.module';
@@ -53,6 +54,7 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
     }),
     PrismaModule,
     AuthModule,
+    BuyerAuthModule,
     ShopModule,
     ProductModule,
     CategoryModule,

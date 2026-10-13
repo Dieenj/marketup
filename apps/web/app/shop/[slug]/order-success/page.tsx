@@ -12,6 +12,7 @@ export default function OrderSuccessPage() {
   const slug = params.slug as string;
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
+  const accessToken = searchParams.get('t');
 
   return (
     <div className="container mx-auto px-4 py-20 text-center max-w-2xl">
@@ -44,7 +45,7 @@ export default function OrderSuccessPage() {
         <Link
           href={
             orderNumber
-              ? `/shop/${slug}/orders/${encodeURIComponent(orderNumber)}`
+              ? `/shop/${slug}/orders/${encodeURIComponent(orderNumber)}${accessToken ? `?t=${encodeURIComponent(accessToken)}` : ''}`
               : `/shop/${slug}/orders`
           }
           className={cn(buttonVariants(), 'w-full gap-2 py-6')}
