@@ -14,10 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Phiên bản pnpm lấy từ trường "packageManager" trong package.json
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -45,10 +44,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Phiên bản pnpm lấy từ trường "packageManager" trong package.json
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -73,10 +71,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Phiên bản pnpm lấy từ trường "packageManager" trong package.json
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -101,10 +98,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Phiên bản pnpm lấy từ trường "packageManager" trong package.json
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4

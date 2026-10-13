@@ -10,8 +10,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY packages/database/package.json ./packages/database/
 COPY apps/web/package.json ./apps/web/
 
-# Install workspace dependencies
-RUN pnpm install --frozen-lockfile
+# Install workspace dependencies (ignore scripts — postinstall needs prisma schema which isn't copied yet)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Build the Next.js application
 FROM node:20-alpine AS builder

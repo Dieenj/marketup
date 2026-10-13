@@ -1,0 +1,5 @@
+# File sinh tự động / do công cụ quản lý — không format tay
+pnpm-lock.yaml
+apps/web/next-env.d.ts
+apps/web/android
+packages/database/prisma/migrations

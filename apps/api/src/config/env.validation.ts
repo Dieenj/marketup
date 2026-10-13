@@ -22,7 +22,11 @@ export function validateEnv(config: Record<string, unknown>) {
   }
 
   const hops = config.TRUST_PROXY_HOPS;
-  if (hops !== undefined && hops !== '' && !/^\d+$/.test(String(hops))) {
+  if (
+    hops !== undefined &&
+    hops !== '' &&
+    !(typeof hops === 'string' && /^\d+$/.test(hops))
+  ) {
     errors.push(
       'TRUST_PROXY_HOPS must be a whole number (proxies in front of the API)',
     );

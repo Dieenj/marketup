@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from './decorators/get-user.decorator';
 import { RateLimit } from '../common/rate-limit';
+import type { AuthUser } from './auth-user';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMe(@GetUser() user: any) {
+  getMe(@GetUser() user: AuthUser) {
     return user;
   }
 }

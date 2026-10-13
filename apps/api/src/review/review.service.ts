@@ -149,13 +149,11 @@ export class ReviewService {
       throw new ForbiddenException('Access denied');
     }
 
-    const where: any = { shopId };
-    if (query.rating) {
-      where.rating = Number(query.rating);
-    }
-    if (query.status) {
-      where.status = query.status;
-    }
+    const where: Prisma.ReviewWhereInput = {
+      shopId,
+      ...(query.rating && { rating: query.rating }),
+      ...(query.status && { status: query.status }),
+    };
 
     return this.prisma.review.findMany({
       where,

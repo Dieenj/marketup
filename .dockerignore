@@ -5,6 +5,13 @@ dist/
 .turbo/
 out/
 build/
+# Mẫu ở trên chỉ khớp thư mục gốc — thêm bản cho các package con (apps/*, packages/*)
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+apps/web/android
 
 # IDE files
 .vscode/
@@ -32,6 +39,8 @@ pnpm-debug.log*
 .env.test.local
 .env.production.local
 .env.*
+**/.env
+**/.env.*
 
 # OS files
 .DS_Store

@@ -69,6 +69,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Tách passwordHash ra để không bao giờ trả về client
     const { passwordHash, ...safeUser } = user;
 
     return {
@@ -79,16 +80,5 @@ export class AuthService {
         role: user.role,
       }),
     };
-  }
-
-  async validateUser(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) return null;
-
-    const { passwordHash, ...safeUser } = user;
-    return safeUser;
   }
 }

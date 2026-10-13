@@ -31,30 +31,32 @@ export class PrismaService
 
   private startKeepalive() {
     this.keepAliveInterval = setInterval(
-      async () => {
-        try {
-          await this.$queryRaw`SELECT 1`;
-        } catch (error) {
-          this.logger.warn(
-            'Database keepalive ping failed. Attempting to reconnect...',
-            error,
-          );
-          try {
-            await this.$connect();
-            this.logger.log('Database connection re-established successfully.');
-          } catch (reconnectError) {
-            this.logger.error(
-              'Failed to re-establish database connection.',
-              reconnectError,
-            );
-          }
-        }
-      },
+      () => void this.pingDatabase(),
       4 * 60 * 1000,
     );
 
     // Unref the timer so it doesn't block the process from exiting cleanly (e.g. during testing or shutdown)
     this.keepAliveInterval.unref?.();
+  }
+
+  private async pingDatabase() {
+    try {
+      await this.$queryRaw`SELECT 1`;
+    } catch (error) {
+      this.logger.warn(
+        'Database keepalive ping failed. Attempting to reconnect...',
+        error,
+      );
+      try {
+        await this.$connect();
+        this.logger.log('Database connection re-established successfully.');
+      } catch (reconnectError) {
+        this.logger.error(
+          'Failed to re-establish database connection.',
+          reconnectError,
+        );
+      }
+    }
   }
 
   async onModuleDestroy() {
