@@ -2,6 +2,8 @@
 
 **MarketUp** giúp bất kỳ ai mở một cửa hàng trực tuyến riêng trong vài phút. Người bán quản lý sản phẩm, đơn hàng và đánh giá trên dashboard; người mua đặt hàng tại storefront `/shop/<slug>` của shop mà không cần tạo tài khoản, thanh toán khi nhận hàng (COD).
 
+MarketUp hướng tới mô hình **Shopify cho người bán nhỏ**: mỗi shop là một cửa hàng độc lập mang thương hiệu riêng, không phải một sàn gom nhiều shop ([định hướng sản phẩm](docs/product-spec.md#định-hướng-sản-phẩm)).
+
 **Demo:** https://marketup-dien.vercel.app. Đăng nhập người bán bằng `alice@lumiere.store` / `password123`, hoặc xem storefront mẫu tại [/shop/lumiere](https://marketup-dien.vercel.app/shop/lumiere).
 
 ## Tính năng

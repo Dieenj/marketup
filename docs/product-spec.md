@@ -1,6 +1,17 @@
 # Đặc tả sản phẩm
 
-MarketUp cho phép một người bán tạo cửa hàng trực tuyến riêng (storefront) tại địa chỉ `/shop/<slug>` và quản lý nó qua dashboard. Người mua đặt hàng không cần tài khoản, thanh toán khi nhận hàng (COD). Cách huỷ đơn và đánh giá tham khảo Shopee.
+MarketUp cho phép một người bán tạo cửa hàng trực tuyến riêng (storefront) tại địa chỉ `/shop/<slug>` và quản lý nó qua dashboard. Người mua đặt hàng không cần tài khoản, thanh toán khi nhận hàng (COD).
+
+## Định hướng sản phẩm
+
+MarketUp là **"Shopify cho người bán nhỏ"**, không phải sàn thương mại điện tử kiểu Shopee.
+
+- Mỗi shop là một cửa hàng độc lập, có thương hiệu riêng (slug, logo, banner, màu). Người bán tự đưa khách tới shop bằng link chia sẻ qua mạng xã hội, tin nhắn, bio…
+- Người mua luôn ở **trong một shop**: giỏ hàng, checkout, đơn hàng, đăng nhập và tìm kiếm đều theo từng shop.
+- **Không** làm các tính năng của sàn: trang chủ gom nhiều shop, tìm kiếm trên mọi shop, giỏ hàng gộp nhiều shop, so sánh giá giữa các shop, xếp hạng shop.
+- Luật vòng đời đơn hàng (huỷ đơn có lý do, đánh giá từ đơn đã giao, shop không xoá được đánh giá) tham khảo Shopee, vì chúng giúp người mua tin tưởng một shop họ chưa từng mua. Các luật này không làm MarketUp thành sàn.
+
+Khi cân nhắc tính năng mới, câu hỏi đầu tiên là: tính năng này phục vụ một shop và khách của shop đó, hay cần nhìn qua nhiều shop? Nếu cần nhìn qua nhiều shop thì nó nằm ngoài định hướng.
 
 ## 1. Vai trò
 
@@ -86,7 +97,7 @@ Người bán chỉ **xem và trả lời** đánh giá; không duyệt, ẩn ha
 
 ### 3.1 Storefront
 
-- `/shop/<slug>`: banner, logo, màu chủ đạo của shop, danh sách sản phẩm, lọc theo danh mục, điểm đánh giá của shop và các đánh giá mới nhất.
+- `/shop/<slug>`: banner, logo, màu chủ đạo của shop, danh sách sản phẩm, tìm theo tên/mô tả và lọc theo danh mục (trong shop đó, xử lý trên trình duyệt), điểm đánh giá của shop và các đánh giá mới nhất.
 - `/shop/<slug>/products/<id>`: thư viện ảnh, chọn biến thể (giá và tồn kho đổi theo), phân bố số sao, danh sách đánh giá.
 - Storefront được render phía server (SSR) để link chia sẻ có tiêu đề, mô tả và ảnh xem trước.
 - Shop không tồn tại hoặc ngừng hoạt động → trang 404 thật.
@@ -150,9 +161,20 @@ Nếu chưa cấu hình SMTP, API chạy ở chế độ mock: email được in
 
 ## 5. Hạn chế đã biết và ngoài phạm vi
 
-- **Giỏ hàng chung cho mọi shop**: thêm hàng ở shop A rồi sang shop B thì giỏ vẫn hiện hàng của A, và đặt hàng ở B sẽ bị API từ chối ("Some items are no longer available"). Mỗi món trong giỏ đã lưu `shopId` nên có thể tách giỏ theo shop.
+### Hạn chế đã biết
+
+- **Giỏ hàng chung cho mọi shop**: thêm hàng ở shop A rồi sang shop B thì giỏ vẫn hiện hàng của A, và đặt hàng ở B sẽ bị API từ chối ("Some items are no longer available"). Cần tách giỏ theo shop.
+- **Giá trong giỏ có thể cũ**: giỏ lưu giá lúc bấm "Add to Cart". Nếu shop đổi giá sau đó, checkout vẫn hiện giá cũ trong khi API tính theo giá hiện tại.
+- **Giỏ không biết tồn kho**: tăng số lượng trong checkout không bị chặn theo tồn kho; chỉ khi đặt hàng API mới báo "Only N left".
+- Tìm kiếm sản phẩm chạy trên trình duyệt với toàn bộ sản phẩm của shop; cần chuyển sang server (kèm phân trang) khi shop có nhiều sản phẩm. Các danh sách khác có giới hạn cứng: 100 đơn trong "My orders", 200 đánh giá ở dashboard.
+
+### Ngoài phạm vi hiện tại
 
 - Thanh toán online. Dependency `stripe` và biến môi trường mẫu có sẵn nhưng chưa có code tích hợp.
 - Phí vận chuyển, mã giảm giá.
-- Tìm kiếm và phân trang phía server. Danh sách có giới hạn cứng: 100 đơn trong "My orders", 200 đánh giá ở dashboard.
 - Tính năng cho vai trò `ADMIN`.
+
+### Không làm (trái định hướng)
+
+- Tìm kiếm hoặc duyệt sản phẩm trên nhiều shop, trang chủ dạng sàn.
+- Giỏ hàng hoặc checkout gộp nhiều shop.
