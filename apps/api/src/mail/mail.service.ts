@@ -10,6 +10,15 @@ import {
   type MailTransport,
   type OutgoingMail,
 } from './mail-transport';
+import {
+  button,
+  detail,
+  emailLayout,
+  itemsTable,
+  money,
+  paragraph,
+  strong,
+} from './email-layout';
 
 type Money = Prisma.Decimal | number | string;
 
@@ -124,8 +133,12 @@ export class MailService implements OnModuleInit {
     return `${this.getBaseUrl()}${path}?t=${this.tokens.signOrder(order.id)}`;
   }
 
-  private orderButton(order: OrderLink, label = 'Track your order'): string {
-    return `<a href="${this.getOrderUrl(order)}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px;">${label}</a>`;
+  private shopName(order: { shop?: { name: string } | null }) {
+    return order.shop?.name || 'MarketUp';
+  }
+
+  private orderFooter(order: OrderLink) {
+    return `You're receiving this email because of order ${escapeHtml(order.orderNumber)} at ${escapeHtml(this.shopName(order))}. The shop's contact details are on your order page.`;
   }
 
   private async sendMail(mail: OutgoingMail) {
@@ -167,364 +180,145 @@ Body: (HTML length: ${mail.html.length} characters)
       this.logger.log(`[DEV] Login code for ${to}: ${code}`);
     }
 
-    const store = escapeHtml(shopName || 'MarketUp');
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your sign-in code</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #eef2f5;">
-          <tr>
-            <td style="padding: 40px; text-align: center;">
-              <h1 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: #111111;">Sign in to ${store}</h1>
-              <p style="margin: 0 0 24px 0; color: #555555; font-size: 14px; line-height: 1.6;">Enter this code to see your orders. It expires in 10 minutes.</p>
-              <div style="display: inline-block; padding: 16px 28px; background-color: #f4f4f5; border-radius: 12px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #111111; font-family: 'SFMono-Regular', Consolas, monospace;">${code}</div>
-              <p style="margin: 24px 0 0 0; color: #888888; font-size: 12px; line-height: 1.5;">If you didn't ask for this code, you can ignore this email — nobody can sign in without it.</p>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
-
+    const brand = shopName || 'MarketUp';
     await this.sendMail({
       from: this.getFromHeader(),
       to,
-      subject: `${code} is your ${shopName || 'MarketUp'} sign-in code`,
-      html: htmlContent,
+      subject: `${code} is your ${brand} sign-in code`,
+      html: emailLayout({
+        title: 'Your sign-in code',
+        preview: `${code} is your sign-in code. It expires in 10 minutes.`,
+        brand,
+        html: [
+          paragraph(
+            `Enter this code on ${escapeHtml(brand)} to see your orders. It expires in 10 minutes.`,
+          ),
+          `<p style="margin: 8px 0 24px 0; font-size: 30px; font-weight: 600; letter-spacing: 6px; font-family: 'SFMono-Regular', Consolas, monospace;">${escapeHtml(code)}</p>`,
+        ].join(''),
+        footer:
+          "If you didn't ask for this code, you can ignore this email. Nobody can sign in without it.",
+      }),
     });
   }
 
   async sendOrderPlacedEmail(order: MailOrder) {
-    const formattedDate = new Date(order.createdAt).toLocaleDateString(
-      'en-US',
-      {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'Asia/Ho_Chi_Minh',
-      },
-    );
-
-    const itemsHtml = order.items
-      .map(
-        (item) => `
-      <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #eeeeee;">
-          <div style="font-weight: bold; font-size: 14px; color: #111111;">${escapeHtml(item.productName)}</div>
-          ${
-            item.variantLabel
-              ? `<div style="font-size: 12px; color: #666666; margin-top: 2px;">Variant: ${escapeHtml(item.variantLabel)}</div>`
-              : ''
-          }
-        </td>
-        <td style="padding: 12px; border-bottom: 1px solid #eeeeee; text-align: center; color: #666666;">
-          x${item.quantity}
-        </td>
-        <td style="padding: 12px; border-bottom: 1px solid #eeeeee; text-align: right; font-weight: bold; color: #111111;">
-          $${Number(item.priceAtPurchase).toFixed(2)}
-        </td>
-      </tr>
-    `,
-      )
-      .join('');
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Confirmed</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eef2f5;">
-          <!-- Header Banner -->
-          <tr>
-            <td style="background-color: #111111; padding: 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Order Placed</h1>
-              <p style="margin: 8px 0 0 0; color: #aaaaaa; font-size: 14px; font-weight: 500;">Thank you for shopping with ${escapeHtml(
-                order.shop?.name || 'our store',
-              )}!</p>
-            </td>
-          </tr>
-
-          <!-- Message Block -->
-          <tr>
-            <td style="padding: 40px 40px 20px 40px;">
-              <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #111111;">Hello ${escapeHtml(
-                order.buyerName,
-              )},</h2>
-              <p style="margin: 0; color: #555555; font-size: 14px; line-height: 1.6;">
-                Your order <strong>${escapeHtml(
-                  order.orderNumber,
-                )}</strong> has been successfully placed on <strong>${formattedDate}</strong> and is currently <strong>awaiting shop confirmation</strong>.
-              </p>
-              <div style="margin-top: 20px; padding: 16px; background-color: #f9fbfd; border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-                ℹ️ <strong>Payment Method: Cash on Delivery (COD)</strong><br/>
-                Payment is only due once your package arrives at your delivery address. You do not need to make any online transactions now.
-              </div>
-            </td>
-          </tr>
-
-          <!-- Order details -->
-          <tr>
-            <td style="padding: 0 40px 20px 40px;">
-              <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Order Summary</h3>
-              <table cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
-                <thead>
-                  <tr style="background-color: #fafafa;">
-                    <th style="padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 700; color: #666666; border-bottom: 2px solid #eeeeee;">Product</th>
-                    <th style="padding: 10px 12px; text-align: center; font-size: 12px; font-weight: 700; color: #666666; border-bottom: 2px solid #eeeeee;">Qty</th>
-                    <th style="padding: 10px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #666666; border-bottom: 2px solid #eeeeee;">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${itemsHtml}
-                  <tr>
-                    <td colspan="2" style="padding: 16px 12px 6px 12px; text-align: right; font-size: 14px; color: #666666;">Subtotal:</td>
-                    <td style="padding: 16px 12px 6px 12px; text-align: right; font-size: 14px; font-weight: bold; color: #111111;">$${Number(
-                      order.subtotal,
-                    ).toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="padding: 6px 12px 16px 12px; text-align: right; font-size: 16px; font-weight: bold; color: #111111;">Total (COD):</td>
-                    <td style="padding: 6px 12px 16px 12px; text-align: right; font-size: 18px; font-weight: 800; color: #111111;">$${Number(
-                      order.totalAmount,
-                    ).toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Shipping Details -->
-          <tr>
-            <td style="padding: 0 40px 40px 40px;">
-              <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Shipping Address</h3>
-              <div style="padding: 20px; background-color: #fafafa; border-radius: 12px; border: 1px solid #eeeeee; font-size: 13.5px; color: #555555; line-height: 1.6;">
-                <strong style="color: #111111; font-size: 14px;">${escapeHtml(
-                  order.buyerName,
-                )}</strong><br/>
-                📞 ${escapeHtml(order.buyerPhone)}<br/>
-                📍 ${escapeHtml(order.shippingAddress)}, ${escapeHtml(order.shippingCity)}<br/>
-                ${
-                  order.shippingNote
-                    ? `<span style="font-style: italic; color: #888888; display: block; margin-top: 6px;">Note: ${escapeHtml(order.shippingNote)}</span>`
-                    : ''
-                }
-              </div>
-            </td>
-          </tr>
-
-          <!-- Track order -->
-          <tr>
-            <td style="padding: 0 40px 40px 40px; text-align: center;">
-              ${this.orderButton(order)}
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee; font-size: 12px; color: #999999;">
-              <p style="margin: 0;">This is an automated order confirmation from MarketUp.</p>
-              <p style="margin: 4px 0 0 0;">Need help? Please reply to this email or contact the shop directly.</p>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
+    const shop = this.shopName(order);
+    const placedOn = new Date(order.createdAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Ho_Chi_Minh',
+    });
 
     await this.sendMail({
       from: this.getFromHeader(),
       to: order.buyerEmail,
-      subject: `Order Confirmation #${order.orderNumber}`,
-      html: htmlContent,
+      subject: `We've received your order ${order.orderNumber}`,
+      html: emailLayout({
+        title: 'Thanks for your order',
+        preview: `${shop} will confirm order ${order.orderNumber} soon.`,
+        brand: shop,
+        html: [
+          paragraph(`Hi ${escapeHtml(order.buyerName)},`),
+          paragraph(
+            `We've received your order ${strong(order.orderNumber)}, placed on ${escapeHtml(placedOn)}. ${escapeHtml(shop)} will confirm it soon, and we'll email you again when it ships.`,
+          ),
+          paragraph(
+            `You'll pay ${strong(money(order.totalAmount))} in cash when it's delivered.`,
+          ),
+          itemsTable(order.items, [
+            { label: 'Subtotal', value: order.subtotal },
+            { label: 'Total', value: order.totalAmount, bold: true },
+          ]),
+          detail('Delivery address', [
+            order.buyerName,
+            order.buyerPhone,
+            `${order.shippingAddress}, ${order.shippingCity}`,
+            order.shippingNote && `Note: ${order.shippingNote}`,
+          ]),
+          button(this.getOrderUrl(order), 'View your order'),
+        ].join(''),
+        footer: this.orderFooter(order),
+      }),
     });
   }
 
   // Báo cho người mua khi đơn bị huỷ (do shop, hoặc xác nhận khi người mua tự huỷ)
   async sendOrderCancelledEmail(order: MailCancelledOrder) {
-    const byBuyer = order.cancelledBy === 'BUYER';
-    const shopName = escapeHtml(order.shop?.name || 'the shop');
+    const shop = this.shopName(order);
     const reason = order.cancelReason
       ? CANCEL_REASON_LABELS[order.cancelReason]
       : null;
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order cancelled</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #eef2f5;">
-          <tr>
-            <td style="padding: 40px; text-align: center;">
-              <h1 style="margin: 0 0 12px 0; font-size: 22px; font-weight: 800; color: #111111;">Order cancelled</h1>
-              <p style="margin: 0 0 20px 0; color: #555555; font-size: 15px; line-height: 1.6;">
-                Hi <strong>${escapeHtml(order.buyerName)}</strong>, ${
-                  byBuyer
-                    ? `you cancelled order <strong>${escapeHtml(order.orderNumber)}</strong> from <strong>${shopName}</strong>.`
-                    : `<strong>${shopName}</strong> cancelled your order <strong>${escapeHtml(order.orderNumber)}</strong>.`
-                } You won't be charged.
-              </p>
-              ${
-                reason
-                  ? `<p style="margin: 0 0 24px 0; padding: 14px 18px; background-color: #fafafa; border: 1px solid #eeeeee; border-radius: 12px; font-size: 14px; color: #555555; text-align: left;">
-                <strong style="color: #111111;">Reason:</strong> ${escapeHtml(reason)}${
-                  order.cancelNote
-                    ? `<br/><span style="color: #777777;">${escapeHtml(order.cancelNote)}</span>`
-                    : ''
-                }
-              </p>`
-                  : ''
-              }
-              ${this.orderButton(order, 'View order')}
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
 
     await this.sendMail({
       from: this.getFromHeader(),
       to: order.buyerEmail,
-      subject: `Order cancelled: #${order.orderNumber}`,
-      html: htmlContent,
+      subject: `Order ${order.orderNumber} has been cancelled`,
+      html: emailLayout({
+        title: 'Your order has been cancelled',
+        preview: `Order ${order.orderNumber} from ${shop} has been cancelled.`,
+        brand: shop,
+        html: [
+          paragraph(`Hi ${escapeHtml(order.buyerName)},`),
+          paragraph(
+            order.cancelledBy === 'BUYER'
+              ? `You cancelled order ${strong(order.orderNumber)} from ${escapeHtml(shop)}. You won't be charged.`
+              : `${escapeHtml(shop)} cancelled your order ${strong(order.orderNumber)}. You won't be charged.`,
+          ),
+          reason ? detail('Reason', [reason, order.cancelNote]) : '',
+          button(this.getOrderUrl(order), 'View order'),
+        ].join(''),
+        footer: this.orderFooter(order),
+      }),
     });
   }
 
   async sendOrderShippedEmail(order: MailOrder) {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Order is on its Way!</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eef2f5;">
-          <!-- Header Banner -->
-          <tr>
-            <td style="background-color: #111111; padding: 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">On Its Way!</h1>
-              <p style="margin: 8px 0 0 0; color: #aaaaaa; font-size: 14px; font-weight: 500;">Your package is being shipped!</p>
-            </td>
-          </tr>
-
-          <!-- Message Block -->
-          <tr>
-            <td style="padding: 40px 40px 40px 40px; text-align: center;">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Good news, ${escapeHtml(
-                order.buyerName,
-              )}!</h2>
-              <p style="margin: 0 0 25px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                <strong>${escapeHtml(
-                  order.shop?.name || 'The shop',
-                )}</strong> has handed your order <strong>${escapeHtml(
-                  order.orderNumber,
-                )}</strong> to the courier. It's on its way to you!
-              </p>
-              
-              <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 24px; font-size: 14px; font-weight: bold; color: #166534; line-height: 1.4; text-align: left;">
-                📦 Status: On the way<br/>
-                💵 Cash on delivery: $${Number(order.totalAmount).toFixed(2)}
-              </div>
-              <div style="margin-top: 28px;">
-                ${this.orderButton(order)}
-              </div>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee; font-size: 12px; color: #999999;">
-              <p style="margin: 0;">This is an automated shipment update from MarketUp.</p>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
+    const shop = this.shopName(order);
 
     await this.sendMail({
       from: this.getFromHeader(),
       to: order.buyerEmail,
-      subject: `Order Shipped: #${order.orderNumber}`,
-      html: htmlContent,
+      subject: `Your order ${order.orderNumber} is on its way`,
+      html: emailLayout({
+        title: 'Your order is on its way',
+        preview: `${shop} has shipped order ${order.orderNumber}.`,
+        brand: shop,
+        html: [
+          paragraph(`Hi ${escapeHtml(order.buyerName)},`),
+          paragraph(
+            `${escapeHtml(shop)} has handed order ${strong(order.orderNumber)} to the courier. Please have ${strong(money(order.totalAmount))} ready in cash when it arrives.`,
+          ),
+          button(this.getOrderUrl(order), 'Track your order'),
+        ].join(''),
+        footer: this.orderFooter(order),
+      }),
     });
   }
 
   async sendOrderDeliveredEmail(order: MailOrder) {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Delivered</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #eef2f5;">
-          <!-- Header Banner -->
-          <tr>
-            <td style="background-color: #10b981; padding: 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Delivered!</h1>
-              <p style="margin: 8px 0 0 0; color: #d1fae5; font-size: 14px; font-weight: 500;">Your order was successfully delivered!</p>
-            </td>
-          </tr>
-
-          <!-- Message Block -->
-          <tr>
-            <td style="padding: 40px 40px 30px 40px; text-align: center;">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Delivered successfully!</h2>
-              <p style="margin: 0 0 30px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Hi <strong>${escapeHtml(order.buyerName)}</strong>, your order <strong>${escapeHtml(
-                  order.orderNumber,
-                )}</strong> from <strong>${escapeHtml(
-                  order.shop?.name || 'our store',
-                )}</strong> has been delivered. We hope you love your new items!
-              </p>
-
-              <!-- Star Rating Call to Action Box -->
-              <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 30px; max-width: 440px; margin: 0 auto; box-sizing: border-box;">
-                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #111111;">Share Your Feedback</h3>
-                <p style="margin: 0 0 20px 0; font-size: 13px; color: #666666; line-height: 1.5;">
-                  Take a minute to rate what you received — your review helps other shoppers decide.
-                </p>
-                ${this.orderButton(order, '⭐ Rate your items')}
-                <p style="margin: 12px 0 0 0; font-size: 11px; color: #888888;">
-                  You can review each item for ${REVIEW_WINDOW_DAYS} days after delivery.
-                </p>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee; font-size: 12px; color: #999999;">
-              <p style="margin: 0;">Thank you for being our valued customer.</p>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-    `;
+    const shop = this.shopName(order);
 
     await this.sendMail({
       from: this.getFromHeader(),
       to: order.buyerEmail,
-      subject: `Order Delivered! Write a review for #${order.orderNumber}`,
-      html: htmlContent,
+      subject: `Your order ${order.orderNumber} has been delivered`,
+      html: emailLayout({
+        title: 'Your order has been delivered',
+        preview: `Order ${order.orderNumber} from ${shop} has arrived.`,
+        brand: shop,
+        html: [
+          paragraph(`Hi ${escapeHtml(order.buyerName)},`),
+          paragraph(
+            `Order ${strong(order.orderNumber)} from ${escapeHtml(shop)} has been delivered.`,
+          ),
+          paragraph(
+            `If you have a minute, rate what you bought. It helps other shoppers, and you can leave a review for the next ${REVIEW_WINDOW_DAYS} days.`,
+          ),
+          button(this.getOrderUrl(order), 'Rate your items'),
+        ].join(''),
+        footer: this.orderFooter(order),
+      }),
     });
   }
 }
