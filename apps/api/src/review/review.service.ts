@@ -1,86 +1,91 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateReviewDto } from './dto/create-review.dto';
+
+// Review hiển thị công khai: không có email người viết
+const PUBLIC_REVIEW_SELECT = {
+  id: true,
+  rating: true,
+  comment: true,
+  buyerName: true,
+  isVerified: true,
+  sellerReply: true,
+  createdAt: true,
+  productId: true,
+  product: { select: { id: true, name: true } },
+} satisfies Prisma.ReviewSelect;
 
 @Injectable()
 export class ReviewService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: {
-    shopId: string;
-    productId?: string;
-    rating: number;
-    comment?: string;
-    buyerName: string;
-    buyerEmail: string;
-  }) {
-    const { shopId, productId, rating, comment, buyerName, buyerEmail } = dto;
+  async create(dto: CreateReviewDto) {
+    const { shopId, rating, comment, buyerName, buyerEmail } = dto;
+    const productId = dto.productId || null;
 
-    if (rating < 1 || rating > 5) {
-      throw new BadRequestException('Rating must be between 1 and 5');
+    const shop = await this.prisma.shop.findUnique({ where: { id: shopId } });
+    if (!shop || !shop.isActive) throw new NotFoundException('Shop not found');
+
+    // Chỉ đánh giá sản phẩm đang bán của chính shop này
+    if (productId) {
+      const product = await this.prisma.product.findFirst({
+        where: { id: productId, shopId, isVisible: true },
+        select: { id: true },
+      });
+      if (!product) throw new NotFoundException('Product not found');
     }
 
-    // Xác thực lượt mua hàng
-    let isVerified = false;
-    
-    // Tìm kiếm các đơn hàng đã hoàn thành khớp với email này
-    const orders = await this.prisma.order.findMany({
+    // "Đã mua hàng": có đơn đã giao tại shop với email này (không phân biệt hoa thường),
+    // và nếu đánh giá sản phẩm thì đơn phải có sản phẩm đó
+    const deliveredOrder = await this.prisma.order.findFirst({
       where: {
-        buyerEmail: buyerEmail,
-        shopId: shopId,
-        status: 'DELIVERED', // Phải ở trạng thái đã giao hàng thành công
+        shopId,
+        status: 'DELIVERED',
+        buyerEmail: { equals: buyerEmail, mode: 'insensitive' },
+        ...(productId ? { items: { some: { productId } } } : {}),
       },
-      include: {
-        items: true,
-      },
+      select: { id: true },
     });
 
-    if (orders.length > 0) {
-      if (productId) {
-        // Phải chứa một chi tiết đơn hàng (OrderItem) khớp với productId này
-        isVerified = orders.some((order) =>
-          order.items.some((item) => item.productId === productId),
-        );
-      } else {
-        // Đối với đánh giá chung của cửa hàng, chỉ cần có bất kỳ đơn hàng nào đã giao tại cửa hàng này
-        isVerified = true;
-      }
-    }
-
-    return this.prisma.review.create({
+    const review = await this.prisma.review.create({
       data: {
         shopId,
-        productId: productId || null,
+        productId,
         rating,
         comment,
         buyerName,
         buyerEmail,
-        isVerified,
+        isVerified: !!deliveredOrder,
         status: 'PENDING', // Tất cả đánh giá đều bắt đầu với trạng thái PENDING để người bán kiểm duyệt
       },
     });
+    return {
+      id: review.id,
+      status: review.status,
+      isVerified: review.isVerified,
+    };
   }
 
-  async findByProduct(productId: string) {
+  async findByProduct(productId: string, take: number) {
     return this.prisma.review.findMany({
-      where: {
-        productId,
-        status: 'APPROVED',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { productId, status: 'APPROVED' },
+      select: PUBLIC_REVIEW_SELECT,
+      orderBy: { createdAt: 'desc' },
+      take,
     });
   }
 
-  async findByShop(shopId: string) {
+  async findByShop(shopId: string, take: number) {
     return this.prisma.review.findMany({
-      where: {
-        shopId,
-        status: 'APPROVED',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { shopId, status: 'APPROVED' },
+      select: PUBLIC_REVIEW_SELECT,
+      orderBy: { createdAt: 'desc' },
+      take,
     });
   }
 
@@ -130,7 +135,11 @@ export class ReviewService {
     };
   }
 
-  async findForModeration(userId: string, shopId: string, query: { rating?: number; status?: string }) {
+  async findForModeration(
+    userId: string,
+    shopId: string,
+    query: { rating?: number; status?: string },
+  ) {
     // Xác thực quyền sở hữu cửa hàng
     const shop = await this.prisma.shop.findUnique({
       where: { id: shopId },

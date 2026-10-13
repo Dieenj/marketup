@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { PrismaClient } from '@marketup/database';
 
 @Injectable()
@@ -11,7 +16,10 @@ export class PrismaService
 
   constructor() {
     super({
-      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      log:
+        process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+      // Mặc định chờ lấy kết nối 2s — sau cold start trên Render, mở kết nối tới Supabase có thể lâu hơn
+      transactionOptions: { maxWait: 5000, timeout: 10000 },
     });
   }
 
@@ -22,19 +30,28 @@ export class PrismaService
   }
 
   private startKeepalive() {
-    this.keepAliveInterval = setInterval(async () => {
-      try {
-        await this.$queryRaw`SELECT 1`;
-      } catch (error) {
-        this.logger.warn('Database keepalive ping failed. Attempting to reconnect...', error);
+    this.keepAliveInterval = setInterval(
+      async () => {
         try {
-          await this.$connect();
-          this.logger.log('Database connection re-established successfully.');
-        } catch (reconnectError) {
-          this.logger.error('Failed to re-establish database connection.', reconnectError);
+          await this.$queryRaw`SELECT 1`;
+        } catch (error) {
+          this.logger.warn(
+            'Database keepalive ping failed. Attempting to reconnect...',
+            error,
+          );
+          try {
+            await this.$connect();
+            this.logger.log('Database connection re-established successfully.');
+          } catch (reconnectError) {
+            this.logger.error(
+              'Failed to re-establish database connection.',
+              reconnectError,
+            );
+          }
         }
-      }
-    }, 4 * 60 * 1000);
+      },
+      4 * 60 * 1000,
+    );
 
     // Unref the timer so it doesn't block the process from exiting cleanly (e.g. during testing or shutdown)
     this.keepAliveInterval.unref?.();

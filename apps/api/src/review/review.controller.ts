@@ -1,29 +1,43 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { CreateReviewDto } from './dto/create-review.dto';
+
+const MAX_PUBLIC_REVIEWS = 50;
+
+function parseLimit(raw?: string) {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0
+    ? Math.min(n, MAX_PUBLIC_REVIEWS)
+    : MAX_PUBLIC_REVIEWS;
+}
 
 @Controller('reviews')
 export class ReviewController {
   constructor(private reviewService: ReviewService) {}
 
   @Post()
-  create(
-    @Body() dto: {
-      shopId: string;
-      productId?: string;
-      rating: number;
-      comment?: string;
-      buyerName: string;
-      buyerEmail: string;
-    },
-  ) {
+  create(@Body() dto: CreateReviewDto) {
     return this.reviewService.create(dto);
   }
 
   @Get('product/:productId')
-  findByProduct(@Param('productId') productId: string) {
-    return this.reviewService.findByProduct(productId);
+  findByProduct(
+    @Param('productId') productId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.reviewService.findByProduct(productId, parseLimit(limit));
   }
 
   @Get('product/:productId/rating')
@@ -31,9 +45,10 @@ export class ReviewController {
     return this.reviewService.getProductRating(productId);
   }
 
+  // `limit` đọc riêng (không dùng DTO) vì FE còn gửi kèm `status` — whitelist sẽ chặn tham số lạ
   @Get('shop/:shopId')
-  findByShop(@Param('shopId') shopId: string) {
-    return this.reviewService.findByShop(shopId);
+  findByShop(@Param('shopId') shopId: string, @Query('limit') limit?: string) {
+    return this.reviewService.findByShop(shopId, parseLimit(limit));
   }
 
   @Get('shop/:shopId/stats')
@@ -49,7 +64,10 @@ export class ReviewController {
     @Query('rating') rating?: number,
     @Query('status') status?: string,
   ) {
-    return this.reviewService.findForModeration(userId, shopId, { rating, status });
+    return this.reviewService.findForModeration(userId, shopId, {
+      rating,
+      status,
+    });
   }
 
   @Patch(':id/approve')

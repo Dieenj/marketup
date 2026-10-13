@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { LookupOrderDto } from './dto/lookup-order.dto';
 import { OrderStatus, Prisma } from '@prisma/client';
+import { randomInt } from 'node:crypto';
 import { MailService } from '../mail/mail.service';
 
 // Những gì người mua được thấy khi tra cứu: không có id nội bộ, thông tin chủ shop hay email/sđt
@@ -41,6 +42,27 @@ const PUBLIC_ORDER_SELECT = {
   shop: { select: { name: true, slug: true } },
 } satisfies Prisma.OrderSelect;
 
+// Bỏ các ký tự dễ nhầm (0/O, 1/I/L) vì người mua có thể phải đọc hoặc gõ lại mã đơn
+const ORDER_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+// VD: ORD-251013-7K3QX9 — ngày đặt (giờ VN) + 6 ký tự ngẫu nhiên (~887 triệu tổ hợp mỗi ngày):
+// không trùng khi nhiều đơn đặt cùng lúc và không đoán được từ thời điểm đặt
+function generateOrderNumber() {
+  const date = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+  })
+    .format(new Date())
+    .replaceAll('-', '');
+  const code = Array.from(
+    { length: 6 },
+    () => ORDER_CODE_ALPHABET[randomInt(ORDER_CODE_ALPHABET.length)],
+  ).join('');
+  return `ORD-${date}-${code}`;
+}
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -53,62 +75,68 @@ export class OrderService {
   async create(dto: CreateOrderDto) {
     const { items, ...orderData } = dto;
 
-    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const orderNumber = generateOrderNumber();
+
+    // Cùng một biến thể xuất hiện nhiều dòng → gộp lại để kiểm tra tồn kho trên tổng số lượng
+    const lines = new Map<string, { productId: string; quantity: number }>();
+    for (const item of items) {
+      const line = lines.get(item.variantId);
+      if (line && line.productId !== item.productId) {
+        throw new BadRequestException(`Variant ${item.variantId} not found`);
+      }
+      lines.set(item.variantId, {
+        productId: item.productId,
+        quantity: (line?.quantity ?? 0) + item.quantity,
+      });
+    }
 
     const order = await this.prisma.$transaction(async (tx) => {
-      let subtotal = 0;
-      const orderItemsData: any[] = [];
+      const shop = await tx.shop.findUnique({ where: { id: dto.shopId } });
+      if (!shop || !shop.isActive) {
+        throw new BadRequestException('Shop not found');
+      }
 
-      for (const item of items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          include: { variants: true },
-        });
+      let subtotal = new Prisma.Decimal(0);
+      const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
 
-        if (!product || product.shopId !== dto.shopId) {
-          throw new BadRequestException(
-            `Product ${item.productId} not found in this shop`,
-          );
-        }
-
-        if (!item.variantId) {
-          throw new BadRequestException(
-            `Variant selection required for ${product.name}`,
-          );
-        }
-
-        // Lấy biến thể sản phẩm bên trong transaction để nhận trạng thái tồn kho mới nhất đã được khóa
+      for (const [variantId, { productId, quantity }] of lines) {
         const variant = await tx.productVariant.findUnique({
-          where: { id: item.variantId },
+          where: { id: variantId },
+          include: { product: true },
         });
 
-        if (!variant || variant.productId !== item.productId) {
-          throw new BadRequestException(`Variant ${item.variantId} not found`);
+        // Sản phẩm ẩn hoặc thuộc shop khác coi như không tồn tại
+        if (
+          !variant ||
+          variant.productId !== productId ||
+          variant.product.shopId !== dto.shopId ||
+          !variant.product.isVisible
+        ) {
+          throw new BadRequestException('Some items are no longer available');
         }
 
-        if (variant.stock < item.quantity) {
+        // Trừ kho nguyên tử: chỉ trừ khi còn đủ hàng → hai đơn đặt cùng lúc không thể bán quá tồn kho
+        const { count } = await tx.productVariant.updateMany({
+          where: { id: variantId, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity } },
+        });
+        if (count === 0) {
           throw new BadRequestException(
-            `Insufficient stock for variant ${variant.label}. Available: ${variant.stock}, Requested: ${item.quantity}`,
+            `Only ${variant.stock} left of ${variant.product.name} (${variant.label})`,
           );
         }
 
-        const price = Number(variant.price);
-        subtotal += price * item.quantity;
+        subtotal = subtotal.add(variant.price.mul(quantity));
 
+        // Chụp lại tên, ảnh, nhãn, giá tại thời điểm mua (snapshot)
         orderItemsData.push({
-          productId: item.productId,
-          quantity: item.quantity,
-          priceAtPurchase: price,
-          productName: product.name,
-          productImage: product.imageUrl,
-          variantId: item.variantId,
-          variantLabel: variant.label, // Chụp lại thông tin trực tiếp từ cơ sở dữ liệu (Snapshot)!
-        });
-
-        // Giảm số lượng tồn kho của biến thể bên trong transaction
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: { stock: { decrement: item.quantity } },
+          product: { connect: { id: productId } },
+          variant: { connect: { id: variantId } },
+          quantity,
+          priceAtPurchase: variant.price,
+          productName: variant.product.name,
+          productImage: variant.product.imageUrl,
+          variantLabel: variant.label,
         });
       }
 
@@ -124,9 +152,10 @@ export class OrderService {
             create: orderItemsData,
           },
         },
+        // Email chỉ cần tên + slug shop; không trả thông tin chủ shop cho người mua
         include: {
           items: true,
-          shop: true,
+          shop: { select: { name: true, slug: true } },
         },
       });
     });

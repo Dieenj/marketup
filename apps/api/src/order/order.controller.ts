@@ -11,9 +11,9 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { LookupOrderDto } from './dto/lookup-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { OrderStatus } from '@prisma/client';
 
 @Controller('orders')
 export class OrderController {
@@ -49,8 +49,8 @@ export class OrderController {
   updateStatus(
     @GetUser('id') userId: string,
     @Param('id') id: string,
-    @Body('status') status: OrderStatus,
+    @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.orderService.updateStatus(userId, id, status);
+    return this.orderService.updateStatus(userId, id, dto.status);
   }
 }

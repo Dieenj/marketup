@@ -7,6 +7,22 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
+import { Prisma } from '@prisma/client';
+
+// Thông tin shop công khai trên storefront (không có ownerId, trạng thái nội bộ)
+const PUBLIC_SHOP_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  logoUrl: true,
+  bannerUrl: true,
+  primaryColor: true,
+  contactEmail: true,
+  contactPhone: true,
+  address: true,
+  categories: { select: { id: true, name: true, slug: true } },
+} satisfies Prisma.ShopSelect;
 
 @Injectable()
 export class ShopService {
@@ -37,9 +53,7 @@ export class ShopService {
   async findBySlug(slug: string) {
     const shop = await this.prisma.shop.findUnique({
       where: { slug, isActive: true },
-      include: {
-        categories: true,
-      },
+      select: PUBLIC_SHOP_SELECT,
     });
 
     if (!shop) {

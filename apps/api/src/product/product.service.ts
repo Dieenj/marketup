@@ -147,9 +147,10 @@ export class ProductService {
     return products.map((p) => this.addTotalStock(p));
   }
 
+  // Trang sản phẩm công khai: sản phẩm ẩn hoặc shop ngừng hoạt động coi như không tồn tại
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
+    const product = await this.prisma.product.findFirst({
+      where: { id, isVisible: true, shop: { isActive: true } },
       include: { category: true, attributes: true, variants: true },
     });
     if (!product) throw new NotFoundException('Product not found');
@@ -209,7 +210,8 @@ export class ProductService {
     }
 
     if (rawVar !== undefined) {
-      const incomingVariants: (CreateVariantDto & { id?: string })[] = JSON.parse(rawVar);
+      const incomingVariants: (CreateVariantDto & { id?: string })[] =
+        JSON.parse(rawVar);
 
       // Kiểm tra hợp lệ: Sản phẩm phải có ít nhất một biến thể (variant)
       if (incomingVariants.length === 0) {
@@ -221,7 +223,9 @@ export class ProductService {
         where: { productId: id },
       });
 
-      const incomingIds = incomingVariants.map((v) => v.id).filter(Boolean) as string[];
+      const incomingIds = incomingVariants
+        .map((v) => v.id)
+        .filter(Boolean) as string[];
 
       // Các biến thể cần xóa là các biến thể có trong DB nhưng không có trong danh sách gửi lên
       const idsToDelete = existingVariants
@@ -241,9 +245,7 @@ export class ProductService {
             ? Number(v.price)
             : undefined;
         if (price === undefined || Number.isNaN(price)) {
-          throw new BadRequestException(
-            'Each variant must have a valid price',
-          );
+          throw new BadRequestException('Each variant must have a valid price');
         }
 
         const variantData = {
