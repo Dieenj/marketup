@@ -6,9 +6,11 @@ import {
   Param,
   Patch,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { LookupOrderDto } from './dto/lookup-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { OrderStatus } from '@prisma/client';
@@ -28,9 +30,18 @@ export class OrderController {
     return this.orderService.findAllByShop(userId, shopId);
   }
 
+  // Người mua tra cứu đơn (không cần đăng nhập). POST để email không nằm trên URL/log
+  @Post('lookup')
+  @HttpCode(200)
+  lookup(@Body() dto: LookupOrderDto) {
+    return this.orderService.lookup(dto);
+  }
+
+  // Chi tiết đầy đủ (có thông tin liên hệ người mua) → chỉ chủ shop
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderService.findOne(id);
+  @UseGuards(JwtAuthGuard)
+  findOne(@GetUser('id') userId: string, @Param('id') id: string) {
+    return this.orderService.findOne(userId, id);
   }
 
   @Patch(':id/status')

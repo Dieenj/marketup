@@ -7,8 +7,39 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus } from '@prisma/client';
+import { LookupOrderDto } from './dto/lookup-order.dto';
+import { OrderStatus, Prisma } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
+
+// Những gì người mua được thấy khi tra cứu: không có id nội bộ, thông tin chủ shop hay email/sđt
+const PUBLIC_ORDER_SELECT = {
+  orderNumber: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  deliveredAt: true,
+  buyerName: true,
+  shippingAddress: true,
+  shippingCity: true,
+  shippingDistrict: true,
+  shippingNote: true,
+  subtotal: true,
+  shippingFee: true,
+  discount: true,
+  totalAmount: true,
+  items: {
+    select: {
+      id: true,
+      productId: true,
+      productName: true,
+      productImage: true,
+      variantLabel: true,
+      quantity: true,
+      priceAtPurchase: true,
+    },
+  },
+  shop: { select: { name: true, slug: true } },
+} satisfies Prisma.OrderSelect;
 
 @Injectable()
 export class OrderService {
@@ -204,12 +235,29 @@ export class OrderService {
     return updatedOrder;
   }
 
-  async findOne(id: string) {
+  async findOne(userId: string, id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: { items: true, shop: true },
     });
 
+    if (!order || order.shop.ownerId !== userId) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
+  }
+
+  async lookup({ shopSlug, orderNumber, email }: LookupOrderDto) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNumber,
+        buyerEmail: { equals: email, mode: 'insensitive' },
+        shop: { slug: shopSlug },
+      },
+      select: PUBLIC_ORDER_SELECT,
+    });
+
+    // Sai mã, sai email hay khác shop đều trả cùng một lỗi → không dò được đơn nào tồn tại
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }

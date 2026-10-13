@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
+type OrderLink = { orderNumber: string; shop?: { slug: string } | null };
+
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
@@ -40,9 +42,17 @@ export class MailService {
 
   private getBaseUrl(): string {
     return (
-      this.configService.get<string>('FRONTEND_URL') ||
-      'http://localhost:3000'
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'
     );
+  }
+
+  // Trang tra cứu đơn của người mua (thiết bị lạ sẽ được hỏi email trước khi xem)
+  private getOrderUrl(order: OrderLink): string {
+    return `${this.getBaseUrl()}/shop/${order.shop?.slug ?? ''}/orders/${encodeURIComponent(order.orderNumber)}`;
+  }
+
+  private orderButton(order: OrderLink): string {
+    return `<a href="${this.getOrderUrl(order)}" style="display: inline-block; background-color: #111111; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 12px 28px; border-radius: 12px;">Track your order</a>`;
   }
 
   private async sendMail(options: nodemailer.SendMailOptions) {
@@ -64,11 +74,14 @@ Body: (HTML length: ${String(options.html).length} characters)
   }
 
   async sendOrderPlacedEmail(order: any) {
-    const formattedDate = new Date(order.createdAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    const formattedDate = new Date(order.createdAt).toLocaleDateString(
+      'en-US',
+      {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      },
+    );
 
     const itemsHtml = order.items
       .map(
@@ -181,6 +194,13 @@ Body: (HTML length: ${String(options.html).length} characters)
             </td>
           </tr>
 
+          <!-- Track order -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px; text-align: center;">
+              ${this.orderButton(order)}
+            </td>
+          </tr>
+
           <!-- Footer -->
           <tr>
             <td style="background-color: #fafafa; padding: 30px; text-align: center; border-top: 1px solid #eeeeee; font-size: 12px; color: #999999;">
@@ -240,6 +260,9 @@ Body: (HTML length: ${String(options.html).length} characters)
                   2,
                 )}
               </div>
+              <div style="margin-top: 28px;">
+                ${this.orderButton(order)}
+              </div>
             </td>
           </tr>
 
@@ -265,7 +288,7 @@ Body: (HTML length: ${String(options.html).length} characters)
   async sendOrderDeliveredEmail(order: any) {
     const baseUrl = this.getBaseUrl();
     const shopSlug = order.shop?.slug || '';
-    
+
     // Tạo liên kết đánh giá cho các sản phẩm trong đơn hàng
     const firstItem = order.items?.[0];
     const reviewUrl = firstItem
@@ -295,9 +318,7 @@ Body: (HTML length: ${String(options.html).length} characters)
             <td style="padding: 40px 40px 30px 40px; text-align: center;">
               <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Delivered successfully!</h2>
               <p style="margin: 0 0 30px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Hi <strong>${
-                  order.buyerName
-                }</strong>, đơn hàng <strong>${
+                Hi <strong>${order.buyerName}</strong>, đơn hàng <strong>${
                   order.orderNumber
                 }</strong> từ shop <strong>${
                   order.shop?.name || 'our store'
