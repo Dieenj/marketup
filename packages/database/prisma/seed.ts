@@ -255,7 +255,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catBags.id,
       isVisible: true,
-      imageUrl: 'https://images.unsplash.com/photo-1512641407323-51c321a29aaa?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600',
       attributes: {
         create: [{ name: 'Color', options: ['Cream', 'Black'] }],
       },
@@ -350,7 +350,7 @@ async function main() {
       shopId: lumiere.id,
       categoryId: catOuterwear.id,
       isVisible: true,
-      imageUrl: 'https://images.unsplash.com/photo-1520962915122-8bcbf628a0f0?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600',
       attributes: {
         create: [
           { name: 'Size', options: ['S', 'M', 'L'] },
@@ -507,7 +507,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catCables.id,
       isVisible: true,
-      imageUrl: 'https://images.unsplash.com/photo-1583394293214-5de0b5c28ba5?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1595756630452-736bc8ef3693?w=600',
       attributes: {
         create: [
           { name: 'Length', options: ['1m', '2m'] },
@@ -558,7 +558,7 @@ async function main() {
       shopId: volt.id,
       categoryId: catCables.id,
       isVisible: true,
-      imageUrl: 'https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?w=600',
+      imageUrl: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600',
       attributes: {
         create: [{ name: 'Port', options: ['1×USB-C', '2×USB-C'] }],
       },
@@ -758,7 +758,7 @@ async function main() {
   const sweaterV = merinoSweater.variants.find((v) => v.label === 'M / Oatmeal')!;
   const trenchV = trenchCoat.variants.find((v) => v.label === 'M / Sand')!;
 
-  // ORD-2025-001 — ĐÃ GIAO HÀNG (đã thanh toán qua Stripe)
+  // ORD-2025-001 — ĐÃ GIAO HÀNG (COD, quá 30 ngày → không còn đánh giá được)
   await prisma.order.create({
     data: {
       orderNumber: 'ORD-2025-001',
@@ -902,7 +902,7 @@ async function main() {
     },
   });
 
-  // ORD-2025-005 — ĐÃ HỦY (đã hoàn tiền)
+  // ORD-2025-005 — ĐÃ HỦY (người mua đổi ý khi shop chưa xác nhận)
   await prisma.order.create({
     data: {
       orderNumber: 'ORD-2025-005',
@@ -915,6 +915,9 @@ async function main() {
       shippingFee: 8.0,
       totalAmount: 97.0,
       status: 'CANCELLED',
+      cancelledAt: new Date('2025-03-20'),
+      cancelledBy: 'BUYER',
+      cancelReason: 'CHANGED_MIND',
       shopId: lumiere.id,
       items: {
         create: [

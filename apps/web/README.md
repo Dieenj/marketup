@@ -13,19 +13,20 @@ Dự án này tích hợp hai phân hệ chính trong cùng một hệ thống �
 
 ### 1. Phân hệ Storefront (Công khai cho Khách hàng)
 
-- **`/shop/[slug]`**: Trang chủ cửa hàng công khai. Hiển thị banner, danh sách sản phẩm, bộ lọc danh mục và phần **Đánh giá chất lượng dịch vụ chung của shop**.
-- **`/shop/[slug]/products/[productId]`**: Trang chi tiết sản phẩm. Hiển thị thư viện ảnh, giá bán, chọn biến thể (Size/Màu), mô tả chi tiết, **bảng phân tích biểu đồ sao đánh giá** và danh sách phản hồi từ người mua thực tế (hiển thị nhãn kiểm chứng `Verified Purchase`).
+- **`/shop/[slug]`**: Trang chủ cửa hàng công khai. Hiển thị banner, danh sách sản phẩm, bộ lọc danh mục, điểm đánh giá shop (trung bình đánh giá sản phẩm) và các đánh giá mới nhất.
+- **`/shop/[slug]/products/[productId]`**: Trang chi tiết sản phẩm. Hiển thị thư viện ảnh, giá bán, chọn biến thể (Size/Màu), mô tả chi tiết, **bảng phân tích biểu đồ sao đánh giá** và danh sách đánh giá từ đơn đã giao (nhãn `Verified Purchase`).
 - **`/shop/[slug]/checkout`**: Giỏ hàng và trang đặt hàng nhanh sử dụng phương thức nhận hàng thanh toán COD.
+- **`/shop/[slug]/orders`**: Đơn của người mua: đăng nhập bằng mã gửi qua email để xem mọi đơn trên mọi thiết bị; trang chi tiết mở được bằng link trong email (`?t=`), cho huỷ khi shop chưa xác nhận và đánh giá sản phẩm sau khi giao.
 
 ### 2. Phân hệ Dashboard (Quản lý dành cho Người bán)
 
 - **`/login` & `/register`**: Đăng nhập, đăng ký tài khoản Seller.
 - **`/setup`**: Trang thiết lập thông tin ban đầu (Tên, Slug, mô tả) khi mới đăng ký shop.
-- **`/dashboard`**: Bảng điều khiển trung tâm hiển thị doanh thu, tổng đơn hàng, sản phẩm thịnh hành nhất và biểu đồ tăng trưởng doanh số.
+- **`/dashboard`**: Bảng điều khiển trung tâm hiển thị doanh thu, tổng đơn hàng, đơn chờ xác nhận, đơn gần đây và biểu đồ doanh thu 7 ngày.
 - **`/products`**: Quản lý kho hàng, CRUD sản phẩm kèm thiết lập các biến thể và thuộc tính tùy chọn.
 - **`/categories`**: Quản lý phân nhóm danh mục sản phẩm của shop.
-- **`/orders`**: Danh sách đơn đặt hàng từ khách, cập nhật trạng thái đơn hàng (sẽ tự động kích hoạt gửi thông báo email cho khách).
-- **`/reviews`**: Khu vực quản lý phản hồi của khách hàng. Chủ shop có thể duyệt đánh giá đang chờ, xem điểm xếp hạng, phản hồi câu trả lời trực tiếp hoặc xóa đánh giá rác.
+- **`/orders`**: Danh sách đơn đặt hàng từ khách, cập nhật trạng thái đơn hàng, huỷ đơn kèm lý do (tự động gửi email cho khách).
+- **`/reviews`**: Đánh giá của khách (hiện ngay, không cần duyệt). Chủ shop xem điểm, lọc theo số sao hoặc "cần trả lời", và trả lời đánh giá.
 - **`/settings`**: Cấu hình thông tin tài khoản và thông tin liên hệ của shop.
 
 ---

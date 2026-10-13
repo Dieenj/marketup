@@ -12,12 +12,4 @@ export class DashboardController {
   getStats(@GetUser('id') userId: string, @Param('shopId') shopId: string) {
     return this.dashboardService.getStats(userId, shopId);
   }
-
-  @Get('top-products/:shopId')
-  getTopProducts(
-    @GetUser('id') userId: string,
-    @Param('shopId') shopId: string,
-  ) {
-    return this.dashboardService.getTopProducts(userId, shopId);
-  }
 }

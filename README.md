@@ -32,31 +32,33 @@ marketup/
 
 ### Các module API chính
 
-- **auth** — Đăng ký, đăng nhập, JWT
+- **auth** — Đăng ký, đăng nhập seller, JWT (mỗi token có loại: seller / người mua / link đơn)
+- **buyer-auth** — Người mua đăng nhập bằng mã 6 số gửi qua email (không mật khẩu)
 - **shop** — Tạo và quản lý shop
 - **product** — CRUD sản phẩm, quản lý biến thể (variants), upload ảnh Cloudinary
 - **category** — Danh mục sản phẩm
-- **order** — Đặt hàng, cập nhật trạng thái đơn (COD, Stripe)
-- **review** — Đánh giá cửa hàng và sản phẩm (tích hợp check mua hàng thật `Verified Purchase`)
-- **mail** — Hệ thống email tự động gửi hóa đơn COD khi đặt hàng, thông báo khi vận chuyển và giao hàng (CTA Đánh giá)
+- **order** — Đặt hàng COD, cập nhật trạng thái, huỷ đơn có lý do (người mua tự huỷ khi shop chưa xác nhận), trang đơn của người mua
+- **review** — Đánh giá sản phẩm từ đơn đã giao (30 ngày, sửa 1 lần); shop chỉ trả lời
+- **mail** — Hệ thống email tự động gửi hóa đơn COD khi đặt hàng, thông báo khi vận chuyển, giao hàng (mời đánh giá), huỷ đơn; mã đăng nhập người mua
 - **dashboard** — Thống kê doanh thu, đơn hàng
 - **upload** — Xử lý upload file qua Cloudinary
 
 ### Các trang Frontend chính
 
-| Đường dẫn                    | Mô tả                                                      |
-| ---------------------------- | ---------------------------------------------------------- |
-| `/register`, `/login`        | Xác thực người dùng                                        |
-| `/setup`                     | Tạo shop lần đầu                                           |
-| `/dashboard`                 | Tổng quan doanh thu, đơn hàng gần đây                      |
-| `/products`                  | Quản lý sản phẩm & biến thể                                |
-| `/categories`                | Quản lý danh mục                                           |
-| `/orders`                    | Quản lý & cập nhật trạng thái đơn hàng                     |
-| `/reviews`                   | Quản lý & duyệt đánh giá sản phẩm / dịch vụ shop           |
-| `/settings`                  | Cài đặt tài khoản                                          |
-| `/shop/[slug]`               | Storefront công khai của shop (kèm Đánh giá chung dịch vụ) |
-| `/shop/[slug]/products/[id]` | Chi tiết sản phẩm & xem danh sách đánh giá từ khách hàng   |
-| `/shop/[slug]/checkout`      | Giỏ hàng và Thanh toán COD                                 |
+| Đường dẫn                    | Mô tả                                                         |
+| ---------------------------- | ------------------------------------------------------------- |
+| `/register`, `/login`        | Xác thực người dùng                                           |
+| `/setup`                     | Tạo shop lần đầu                                              |
+| `/dashboard`                 | Tổng quan doanh thu, đơn hàng gần đây                         |
+| `/products`                  | Quản lý sản phẩm & biến thể                                   |
+| `/categories`                | Quản lý danh mục                                              |
+| `/orders`                    | Quản lý & cập nhật trạng thái đơn hàng                        |
+| `/reviews`                   | Xem & trả lời đánh giá của khách                              |
+| `/settings`                  | Cài đặt tài khoản                                             |
+| `/shop/[slug]`               | Storefront công khai của shop (kèm điểm đánh giá shop)        |
+| `/shop/[slug]/products/[id]` | Chi tiết sản phẩm & xem danh sách đánh giá từ khách hàng      |
+| `/shop/[slug]/checkout`      | Giỏ hàng và Thanh toán COD                                    |
+| `/shop/[slug]/orders`        | Đơn của người mua (đăng nhập bằng mã email), xem/huỷ/đánh giá |
 
 ---
 

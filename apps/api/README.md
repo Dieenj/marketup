@@ -8,14 +8,15 @@
 
 Backend được chia nhỏ thành các module rõ ràng theo chức năng:
 
-- **`AuthModule`**: Quản lý đăng ký, đăng nhập và phân quyền của chủ shop (Seller) sử dụng JWT.
+- **`AuthModule`**: Quản lý đăng ký, đăng nhập và phân quyền của chủ shop (Seller) sử dụng JWT. Mọi token có trường `typ` (seller / buyer / order) nên token người mua không mở được dashboard.
+- **`BuyerAuthModule`**: Người mua đăng nhập bằng mã 6 số gửi qua email (băm HMAC, hết hạn 10 phút, tối đa 5 lần thử, giới hạn gửi theo email và IP).
 - **`ShopModule`**: Xử lý thông tin cửa hàng, slug định danh độc nhất, cấu hình và trạng thái của shop.
 - **`ProductModule`**: CRUD sản phẩm, quản lý tồn kho và thông số các biến thể (Product Variants).
 - **`CategoryModule`**: Quản lý các danh mục sản phẩm theo từng shop.
-- **`OrderModule`**: Xử lý tạo đơn hàng, tính toán tổng tiền, cập nhật trạng thái đơn hàng (COD).
-- **`ReviewModule`**: Quản lý hệ thống đánh giá sản phẩm & dịch vụ. Có tính năng kiểm tra tự động xem khách hàng đã mua sản phẩm đó hay chưa để gắn nhãn `Verified Purchase` (Đã mua hàng).
+- **`OrderModule`**: Tạo đơn (trừ kho nguyên tử), cập nhật trạng thái, huỷ đơn có lý do kiểu Shopee, API phía người mua (`/buyer/orders`) dùng phiên đăng nhập hoặc link của đơn.
+- **`ReviewModule`**: Đánh giá kiểu Shopee: chỉ từ sản phẩm trong đơn đã giao, mỗi sản phẩm một đánh giá, trong 30 ngày, sửa được một lần, tên hiển thị được che. Shop chỉ trả lời, không ẩn/xoá.
 - **`MailModule`**: Hệ thống xử lý gửi email tự động được xây dựng trên **Nodemailer**, hỗ trợ gửi email HTML chuẩn SEO/Aesthetics cực đẹp.
-- **`DashboardModule`**: Cung cấp số liệu thống kê tổng hợp (doanh thu, biểu đồ tăng trưởng, sản phẩm bán chạy) cho người bán.
+- **`DashboardModule`**: Cung cấp số liệu thống kê tổng hợp (doanh thu, biểu đồ doanh thu 7 ngày theo giờ Việt Nam, đơn gần đây) cho người bán.
 - **`UploadModule`**: Tiếp nhận và đẩy ảnh trực tiếp lên **Cloudinary Cloud Storage**.
 - **`PrismaModule`**: Cung cấp kết nối prisma client chia sẻ dùng chung trong toàn bộ hệ thống.
 

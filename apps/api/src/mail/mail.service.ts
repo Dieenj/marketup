@@ -404,18 +404,16 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
                 order.buyerName,
               )}!</h2>
               <p style="margin: 0 0 25px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Chủ shop <strong>${escapeHtml(
-                  order.shop?.name || 'our store',
-                )}</strong> đã bàn giao đơn hàng <strong>${escapeHtml(
+                <strong>${escapeHtml(
+                  order.shop?.name || 'The shop',
+                )}</strong> has handed your order <strong>${escapeHtml(
                   order.orderNumber,
-                )}</strong> của bạn cho đơn vị vận chuyển. Gói hàng đang trên đường di chuyển đến bạn!
+                )}</strong> to the courier. It's on its way to you!
               </p>
               
               <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 24px; font-size: 14px; font-weight: bold; color: #166534; line-height: 1.4; text-align: left;">
-                📦 Trạng thái: Đang vận chuyển (Shipping)<br/>
-                💵 Số tiền thanh toán COD: $${Number(order.totalAmount).toFixed(
-                  2,
-                )}
+                📦 Status: On the way<br/>
+                💵 Cash on delivery: $${Number(order.totalAmount).toFixed(2)}
               </div>
               <div style="margin-top: 28px;">
                 ${this.orderButton(order)}
@@ -466,18 +464,18 @@ Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0
             <td style="padding: 40px 40px 30px 40px; text-align: center;">
               <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Delivered successfully!</h2>
               <p style="margin: 0 0 30px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Hi <strong>${escapeHtml(order.buyerName)}</strong>, đơn hàng <strong>${escapeHtml(
+                Hi <strong>${escapeHtml(order.buyerName)}</strong>, your order <strong>${escapeHtml(
                   order.orderNumber,
-                )}</strong> từ shop <strong>${escapeHtml(
+                )}</strong> from <strong>${escapeHtml(
                   order.shop?.name || 'our store',
-                )}</strong> đã được giao thành công đến bạn! Chúng tôi hy vọng bạn hài lòng với các sản phẩm vừa nhận được.
+                )}</strong> has been delivered. We hope you love your new items!
               </p>
 
               <!-- Star Rating Call to Action Box -->
               <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 30px; max-width: 440px; margin: 0 auto; box-sizing: border-box;">
                 <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; color: #111111;">Share Your Feedback</h3>
                 <p style="margin: 0 0 20px 0; font-size: 13px; color: #666666; line-height: 1.5;">
-                  Hãy dành ra 1 phút để đánh giá chất lượng sản phẩm & dịch vụ của shop nhé. Ý kiến của bạn sẽ rất hữu ích cho những khách hàng sau!
+                  Take a minute to rate what you received — your review helps other shoppers decide.
                 </p>
                 ${this.orderButton(order, '⭐ Rate your items')}
                 <p style="margin: 12px 0 0 0; font-size: 11px; color: #888888;">
