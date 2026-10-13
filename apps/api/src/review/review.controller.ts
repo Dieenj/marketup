@@ -14,6 +14,7 @@ import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { RateLimit } from '../common/rate-limit';
 
 const MAX_PUBLIC_REVIEWS = 50;
 
@@ -29,6 +30,7 @@ export class ReviewController {
   constructor(private reviewService: ReviewService) {}
 
   @Post()
+  @RateLimit.writeReview()
   create(@Body() dto: CreateReviewDto) {
     return this.reviewService.create(dto);
   }

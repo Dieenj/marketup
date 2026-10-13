@@ -1,12 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { Prisma } from '@prisma/client';
 
-type OrderLink = { orderNumber: string; shop?: { slug: string } | null };
+type Money = Prisma.Decimal | number | string;
+
+interface MailOrderItem {
+  productId: string;
+  productName: string;
+  variantLabel: string | null;
+  quantity: number;
+  priceAtPurchase: Money;
+}
+
+// Các trường email dùng — khớp với đơn trả về từ OrderService (create / updateStatus)
+export interface MailOrder {
+  orderNumber: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingNote: string | null;
+  createdAt: Date;
+  subtotal: Money;
+  totalAmount: Money;
+  items: MailOrderItem[];
+  shop?: { name: string; slug: string } | null;
+}
+
+type OrderLink = Pick<MailOrder, 'orderNumber' | 'shop'>;
+
+// Tên, địa chỉ, ghi chú… do người mua/người bán nhập → escape trước khi chèn vào HTML email,
+// nếu không ai cũng chèn được thẻ HTML/link giả vào email gửi đi từ hệ thống
+function escapeHtml(value: string | null | undefined) {
+  return (value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo>;
   private readonly logger = new Logger(MailService.name);
   private readonly isMailConfigured: boolean;
 
@@ -66,32 +105,33 @@ export class MailService {
       }
     } else {
       this.logger.log(`[MOCK EMAIL DISPATCH]
-To: ${options.to}
-Subject: ${options.subject}
-Body: (HTML length: ${String(options.html).length} characters)
+To: ${JSON.stringify(options.to)}
+Subject: ${options.subject ?? ''}
+Body: (HTML length: ${typeof options.html === 'string' ? options.html.length : 0} characters)
       `);
     }
   }
 
-  async sendOrderPlacedEmail(order: any) {
+  async sendOrderPlacedEmail(order: MailOrder) {
     const formattedDate = new Date(order.createdAt).toLocaleDateString(
       'en-US',
       {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
+        timeZone: 'Asia/Ho_Chi_Minh',
       },
     );
 
     const itemsHtml = order.items
       .map(
-        (item: any) => `
+        (item) => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #eeeeee;">
-          <div style="font-weight: bold; font-size: 14px; color: #111111;">${item.productName}</div>
+          <div style="font-weight: bold; font-size: 14px; color: #111111;">${escapeHtml(item.productName)}</div>
           ${
             item.variantLabel
-              ? `<div style="font-size: 12px; color: #666666; margin-top: 2px;">Variant: ${item.variantLabel}</div>`
+              ? `<div style="font-size: 12px; color: #666666; margin-top: 2px;">Variant: ${escapeHtml(item.variantLabel)}</div>`
               : ''
           }
         </td>
@@ -120,22 +160,22 @@ Body: (HTML length: ${String(options.html).length} characters)
           <tr>
             <td style="background-color: #111111; padding: 40px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Order Placed</h1>
-              <p style="margin: 8px 0 0 0; color: #aaaaaa; font-size: 14px; font-weight: 500;">Thank you for shopping with ${
-                order.shop?.name || 'our store'
-              }!</p>
+              <p style="margin: 8px 0 0 0; color: #aaaaaa; font-size: 14px; font-weight: 500;">Thank you for shopping with ${escapeHtml(
+                order.shop?.name || 'our store',
+              )}!</p>
             </td>
           </tr>
 
           <!-- Message Block -->
           <tr>
             <td style="padding: 40px 40px 20px 40px;">
-              <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #111111;">Hello ${
-                order.buyerName
-              },</h2>
+              <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #111111;">Hello ${escapeHtml(
+                order.buyerName,
+              )},</h2>
               <p style="margin: 0; color: #555555; font-size: 14px; line-height: 1.6;">
-                Your order <strong>${
-                  order.orderNumber
-                }</strong> has been successfully placed on <strong>${formattedDate}</strong> and is currently <strong>awaiting shop confirmation</strong>.
+                Your order <strong>${escapeHtml(
+                  order.orderNumber,
+                )}</strong> has been successfully placed on <strong>${formattedDate}</strong> and is currently <strong>awaiting shop confirmation</strong>.
               </p>
               <div style="margin-top: 20px; padding: 16px; background-color: #f9fbfd; border-left: 4px solid #3b82f6; border-radius: 4px; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
                 ℹ️ <strong>Payment Method: Cash on Delivery (COD)</strong><br/>
@@ -180,14 +220,14 @@ Body: (HTML length: ${String(options.html).length} characters)
             <td style="padding: 0 40px 40px 40px;">
               <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Shipping Address</h3>
               <div style="padding: 20px; background-color: #fafafa; border-radius: 12px; border: 1px solid #eeeeee; font-size: 13.5px; color: #555555; line-height: 1.6;">
-                <strong style="color: #111111; font-size: 14px;">${
-                  order.buyerName
-                }</strong><br/>
-                📞 ${order.buyerPhone}<br/>
-                📍 ${order.shippingAddress}, ${order.shippingCity}<br/>
+                <strong style="color: #111111; font-size: 14px;">${escapeHtml(
+                  order.buyerName,
+                )}</strong><br/>
+                📞 ${escapeHtml(order.buyerPhone)}<br/>
+                📍 ${escapeHtml(order.shippingAddress)}, ${escapeHtml(order.shippingCity)}<br/>
                 ${
                   order.shippingNote
-                    ? `<span style="font-style: italic; color: #888888; display: block; margin-top: 6px;">Note: ${order.shippingNote}</span>`
+                    ? `<span style="font-style: italic; color: #888888; display: block; margin-top: 6px;">Note: ${escapeHtml(order.shippingNote)}</span>`
                     : ''
                 }
               </div>
@@ -221,7 +261,7 @@ Body: (HTML length: ${String(options.html).length} characters)
     });
   }
 
-  async sendOrderShippedEmail(order: any) {
+  async sendOrderShippedEmail(order: MailOrder) {
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -243,15 +283,15 @@ Body: (HTML length: ${String(options.html).length} characters)
           <!-- Message Block -->
           <tr>
             <td style="padding: 40px 40px 40px 40px; text-align: center;">
-              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Good news, ${
-                order.buyerName
-              }!</h2>
+              <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Good news, ${escapeHtml(
+                order.buyerName,
+              )}!</h2>
               <p style="margin: 0 0 25px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Chủ shop <strong>${
-                  order.shop?.name || 'our store'
-                }</strong> đã bàn giao đơn hàng <strong>${
-                  order.orderNumber
-                }</strong> của bạn cho đơn vị vận chuyển. Gói hàng đang trên đường di chuyển đến bạn!
+                Chủ shop <strong>${escapeHtml(
+                  order.shop?.name || 'our store',
+                )}</strong> đã bàn giao đơn hàng <strong>${escapeHtml(
+                  order.orderNumber,
+                )}</strong> của bạn cho đơn vị vận chuyển. Gói hàng đang trên đường di chuyển đến bạn!
               </p>
               
               <div style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 24px; font-size: 14px; font-weight: bold; color: #166534; line-height: 1.4; text-align: left;">
@@ -285,7 +325,7 @@ Body: (HTML length: ${String(options.html).length} characters)
     });
   }
 
-  async sendOrderDeliveredEmail(order: any) {
+  async sendOrderDeliveredEmail(order: MailOrder) {
     const baseUrl = this.getBaseUrl();
     const shopSlug = order.shop?.slug || '';
 
@@ -318,11 +358,11 @@ Body: (HTML length: ${String(options.html).length} characters)
             <td style="padding: 40px 40px 30px 40px; text-align: center;">
               <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #111111;">Delivered successfully!</h2>
               <p style="margin: 0 0 30px 0; color: #555555; font-size: 15px; line-height: 1.6; max-width: 460px; margin-left: auto; margin-right: auto;">
-                Hi <strong>${order.buyerName}</strong>, đơn hàng <strong>${
-                  order.orderNumber
-                }</strong> từ shop <strong>${
-                  order.shop?.name || 'our store'
-                }</strong> đã được giao thành công đến bạn! Chúng tôi hy vọng bạn hài lòng với các sản phẩm vừa nhận được.
+                Hi <strong>${escapeHtml(order.buyerName)}</strong>, đơn hàng <strong>${escapeHtml(
+                  order.orderNumber,
+                )}</strong> từ shop <strong>${escapeHtml(
+                  order.shop?.name || 'our store',
+                )}</strong> đã được giao thành công đến bạn! Chúng tôi hy vọng bạn hài lòng với các sản phẩm vừa nhận được.
               </p>
 
               <!-- Star Rating Call to Action Box -->
@@ -335,9 +375,9 @@ Body: (HTML length: ${String(options.html).length} characters)
                   ⭐ Write a Product Review
                 </a>
                 <p style="margin: 12px 0 0 0; font-size: 11px; color: #888888;">
-                  Note: Write the review using email <strong>${
-                    order.buyerEmail
-                  }</strong> to receive your <strong>Verified Purchase</strong> badge!
+                  Note: Write the review using email <strong>${escapeHtml(
+                    order.buyerEmail,
+                  )}</strong> to receive your <strong>Verified Purchase</strong> badge!
                 </p>
               </div>
             </td>

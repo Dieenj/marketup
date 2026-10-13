@@ -13,9 +13,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret:
-          config.get('JWT_SECRET') ||
-          'your-super-secret-jwt-key-change-in-production',
+        // Đã kiểm tra khi khởi động (config/env.validation.ts) — không có giá trị dự phòng
+        secret: config.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: config.get('JWT_EXPIRES_IN') || '7d',
         },

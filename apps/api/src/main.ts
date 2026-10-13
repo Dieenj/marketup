@@ -1,10 +1,16 @@
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Số proxy đứng trước API (Render: proxy của nền tảng). Express lấy IP người dùng từ X-Forwarded-For
+  // tính từ phải sang theo đúng số lớp này: thiếu → mọi người chung IP của proxy (rate limit chặn nhầm cả loạt);
+  // thừa → client tự gửi X-Forwarded-For giả để lách giới hạn. Đo bằng GET /api/health/client-ip sau khi deploy.
+  app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 0));
 
   // Lỗi ràng buộc dữ liệu (trùng slug/email, bản ghi không tồn tại) → 409/404/400 thay vì 500
   app.useGlobalFilters(
@@ -43,7 +49,8 @@ async function bootstrap() {
   // Tiền tố đường dẫn toàn cục (Global prefix)
   app.setGlobalPrefix('api');
 
-  const port = process.env.API_PORT || 3001;
+  // Render cấp cổng qua PORT; API_PORT cho môi trường local
+  const port = process.env.PORT || process.env.API_PORT || 3001;
   await app.listen(port);
   console.log(`🚀 API running on http://localhost:${port}/api`);
 }

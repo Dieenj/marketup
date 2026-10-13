@@ -32,7 +32,7 @@ services:
       - "3001:3001"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/marketup?schema=public
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set to a random secret of at least 32 characters}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}

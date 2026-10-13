@@ -14,12 +14,14 @@ import { LookupOrderDto } from './dto/lookup-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { RateLimit } from '../common/rate-limit';
 
 @Controller('orders')
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
   @Post()
+  @RateLimit.placeOrder()
   create(@Body() dto: CreateOrderDto) {
     return this.orderService.create(dto);
   }
@@ -31,6 +33,7 @@ export class OrderController {
   }
 
   // Người mua tra cứu đơn (không cần đăng nhập). POST để email không nằm trên URL/log
+  @RateLimit.orderLookup()
   @Post('lookup')
   @HttpCode(200)
   lookup(@Body() dto: LookupOrderDto) {

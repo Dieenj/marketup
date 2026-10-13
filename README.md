@@ -83,7 +83,9 @@ marketup/
    DATABASE_URL="postgresql://postgres:2203@localhost:5432/marketup"
 
    # ---- JWT ----
-   JWT_SECRET="your-super-secret-jwt-key"
+   # Bắt buộc: chuỗi ngẫu nhiên ≥ 32 ký tự — API không khởi động nếu thiếu hoặc dùng chuỗi mẫu
+   # node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+   JWT_SECRET="<chuỗi ngẫu nhiên>"
    JWT_EXPIRES_IN="7d"
 
    # ---- Cloudinary ----
