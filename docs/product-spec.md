@@ -104,7 +104,14 @@ Người bán chỉ **xem và trả lời** đánh giá; không duyệt, ẩn ha
 
 ### 3.2 Giỏ hàng và đặt hàng
 
-- Giỏ hàng lưu trong trình duyệt (`localStorage`, khoá `cart-storage`). Hiện là **một giỏ chung cho mọi shop** (xem mục 5).
+- **Mỗi shop một giỏ riêng**, lưu trong trình duyệt (`localStorage`, khoá `cart-storage`). Trong `/shop/lumiere` chỉ thấy giỏ của Lumière; không có trang giỏ gộp nhiều shop.
+- Thêm vào giỏ từ trang sản phẩm: số đã có trong giỏ được tính vào tồn kho, nên không thêm quá số shop còn.
+- Checkout luôn tải lại sản phẩm của shop và đối chiếu giỏ với **giá và tồn kho hiện tại** (`apps/web/lib/cart-checkout.ts`):
+  - Giá đổi so với lúc thêm vào giỏ: hiện giá mới kèm "Price updated (was …)". Tổng tiền tính theo giá hiện tại.
+  - Giỏ nhiều hơn số còn lại: tự giảm về tồn kho kèm "Only N left"; nút tăng số lượng dừng ở mức tồn kho.
+  - Món hết hàng, bị ẩn hoặc bị xoá: hiện riêng trong nhóm "No longer available", không được đặt và không tính vào tổng. Người mua vẫn đặt được các món còn lại (giống Shopee).
+  - API vẫn kiểm tra lại khi tạo đơn. Nếu API từ chối (ví dụ người khác vừa mua hết), checkout tải lại dữ liệu sản phẩm.
+- Đặt hàng xong chỉ xoá giỏ của shop đó.
 - Checkout gồm: tên, email, số điện thoại, địa chỉ, thành phố, quận/huyện (tuỳ chọn), ghi chú (tuỳ chọn). Không cần tài khoản.
 - Chỉ có thanh toán COD. Phí vận chuyển và giảm giá có cột trong DB nhưng hiện luôn bằng 0.
 - Luật API kiểm tra khi tạo đơn:
@@ -163,10 +170,7 @@ Nếu chưa cấu hình SMTP, API chạy ở chế độ mock: email được in
 
 ### Hạn chế đã biết
 
-- **Giỏ hàng chung cho mọi shop**: thêm hàng ở shop A rồi sang shop B thì giỏ vẫn hiện hàng của A, và đặt hàng ở B sẽ bị API từ chối ("Some items are no longer available"). Cần tách giỏ theo shop.
-- **Giá trong giỏ có thể cũ**: giỏ lưu giá lúc bấm "Add to Cart". Nếu shop đổi giá sau đó, checkout vẫn hiện giá cũ trong khi API tính theo giá hiện tại.
-- **Giỏ không biết tồn kho**: tăng số lượng trong checkout không bị chặn theo tồn kho; chỉ khi đặt hàng API mới báo "Only N left".
-- Tìm kiếm sản phẩm chạy trên trình duyệt với toàn bộ sản phẩm của shop; cần chuyển sang server (kèm phân trang) khi shop có nhiều sản phẩm. Các danh sách khác có giới hạn cứng: 100 đơn trong "My orders", 200 đánh giá ở dashboard.
+- Tìm kiếm sản phẩm chạy trên trình duyệt với toàn bộ sản phẩm của shop; cần chuyển sang server (kèm phân trang) khi shop có nhiều sản phẩm. Lúc đó checkout cũng cần một API tra biến thể theo id thay vì tải toàn bộ sản phẩm. Các danh sách khác có giới hạn cứng: 100 đơn trong "My orders", 200 đánh giá ở dashboard.
 
 ### Ngoài phạm vi hiện tại
 

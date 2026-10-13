@@ -60,11 +60,11 @@ Next.js 16 (App Router, `output: 'standalone'`), React 19, Tailwind CSS 4, shadc
 
 ### 3.4 State phía client
 
-| Store                        | Khoá `localStorage` | Nội dung                                 |
-| ---------------------------- | ------------------- | ---------------------------------------- |
-| `hooks/use-auth.ts`          | `auth-storage`      | Token và thông tin người bán             |
-| `hooks/use-buyer-session.ts` | `buyer-session`     | Phiên người mua (email + token, 30 ngày) |
-| `hooks/use-cart.ts`          | `cart-storage`      | Giỏ hàng                                 |
+| Store                        | Khoá `localStorage` | Nội dung                                     |
+| ---------------------------- | ------------------- | -------------------------------------------- |
+| `hooks/use-auth.ts`          | `auth-storage`      | Token và thông tin người bán                 |
+| `hooks/use-buyer-session.ts` | `buyer-session`     | Phiên người mua (email + token, 30 ngày)     |
+| `hooks/use-cart.ts`          | `cart-storage`      | Giỏ hàng, mỗi shop một giỏ (`carts[shopId]`) |
 
 `lib/api-client.ts` tự gắn token người bán vào mọi request, **trừ khi** request đã có header `Authorization` riêng. API phía người mua (`lib/buyer-api.ts`) luôn tự gửi token của mình: link token của đơn, hoặc phiên người mua.
 

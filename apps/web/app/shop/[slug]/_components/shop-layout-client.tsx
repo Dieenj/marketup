@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Package, ShoppingCart, Store } from 'lucide-react';
-import { useCartStore } from '@/hooks/use-cart';
+import { useShopCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import { storefrontQueries } from '@/lib/storefront-queries';
@@ -13,12 +13,12 @@ const q = storefrontQueries();
 export default function ShopLayoutClient({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const slug = params.slug as string;
-  const { items } = useCartStore();
 
   // Dữ liệu đã được prefetch ở server (layout.tsx) và hydrate vào cache; tiêu đề trang do generateMetadata đặt
   const { data: shop } = useQuery(q.shop(slug));
 
-  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const cartLines = useShopCart(shop?.id);
+  const cartCount = cartLines.reduce((acc, line) => acc + line.quantity, 0);
   // Màu do người bán nhập được chèn vào <style> → luôn chuẩn hoá về #rrggbb.
   // scroll-padding-top = chiều cao header sticky (h-16): khi điều hướng, Next cuộn tới đầu trang mới mà không bị header che
   const primaryColor = normalizeHexColor(shop?.primaryColor);

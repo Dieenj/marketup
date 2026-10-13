@@ -19,7 +19,7 @@ import { formatPriceRange, getPriceRange } from '@/lib/price';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useCartStore } from '@/hooks/use-cart';
+import { useCartStore, useShopCart } from '@/hooks/use-cart';
 import { formatCurrency, formatDate } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
 import StarRating from '@/components/star-rating';
@@ -75,8 +75,6 @@ export default function ProductClient() {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const { data: shop } = useQuery(q.shop(slug));
-
   const {
     data: product,
     isLoading,
@@ -84,6 +82,7 @@ export default function ProductClient() {
     refetch: refetchProduct,
     isRefetching: isRefetchingProduct,
   } = useQuery(q.product<ProductDetail>(productId));
+  const cartLines = useShopCart(product?.shopId);
 
   const { data: reviews } = useQuery({
     ...q.productReviews<ProductReview>(productId),
@@ -152,8 +151,14 @@ export default function ProductClient() {
   const nextAttribute = hasVariants
     ? attributes.find((attribute) => !selectedOptions[attribute.name])
     : null;
-  const normalizedQuantity = effectiveStock > 0 ? Math.min(quantity, effectiveStock) : 1;
   const actualVariant = hasVariants ? selectedVariant : variants[0];
+  // Số đã có trong giỏ tính vào tồn kho → giỏ không vượt quá số shop còn
+  const inCart = actualVariant
+    ? (cartLines.find((line) => line.variantId === actualVariant.id)?.quantity ?? 0)
+    : 0;
+  const remainingStock = Math.max(effectiveStock - inCart, 0);
+  const allStockInCart = !isSelectedVariantOutOfStock && inCart > 0 && remainingStock === 0;
+  const normalizedQuantity = remainingStock > 0 ? Math.min(quantity, remainingStock) : 1;
 
   const canSelectOption = (attributeIndex: number, option: string) => {
     if (!hasVariants) {
@@ -422,60 +427,67 @@ export default function ProductClient() {
                   In Stock ({effectiveStock} left)
                 </Badge>
               )}
+              {inCart > 0 && (
+                <span className="text-sm text-muted-foreground">{inCart} in your cart</span>
+              )}
             </div>
           )}
 
-          {!isSelectedVariantOutOfStock && allOptionsSelected && hasAnyStock && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">Quantity:</span>
-              <div className="flex items-center overflow-hidden rounded-lg border">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-none"
-                  onClick={() => setQuantity(Math.max(1, normalizedQuantity - 1))}
-                >
-                  −
-                </Button>
-                <span className="min-w-10 px-4 py-1 text-center font-semibold">
-                  {normalizedQuantity}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-none"
-                  onClick={() => setQuantity(Math.min(effectiveStock, normalizedQuantity + 1))}
-                >
-                  +
-                </Button>
+          {!isSelectedVariantOutOfStock &&
+            allOptionsSelected &&
+            hasAnyStock &&
+            remainingStock > 0 && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">Quantity:</span>
+                <div className="flex items-center overflow-hidden rounded-lg border">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-none"
+                    onClick={() => setQuantity(Math.max(1, normalizedQuantity - 1))}
+                  >
+                    −
+                  </Button>
+                  <span className="min-w-10 px-4 py-1 text-center font-semibold">
+                    {normalizedQuantity}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-none"
+                    onClick={() => setQuantity(Math.min(remainingStock, normalizedQuantity + 1))}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           <Button
             size="lg"
             className="h-14 gap-2 text-base font-bold"
-            disabled={!allOptionsSelected || isSelectedVariantOutOfStock || !hasAnyStock}
+            disabled={
+              !allOptionsSelected || isSelectedVariantOutOfStock || !hasAnyStock || allStockInCart
+            }
             onClick={() => {
-              if (hasVariants && !selectedVariant) {
+              if (!actualVariant || !product.shopId || remainingStock <= 0) {
                 return;
               }
 
-              const variantLabel = actualVariant?.label;
-              for (let index = 0; index < normalizedQuantity; index += 1) {
-                addItem({
-                  id: product.id,
-                  name: product.name,
-                  price: effectivePrice,
-                  quantity: 1,
-                  imageUrl: product.imageUrl,
-                  shopId: shop?.id || '',
-                  variantId: actualVariant?.id,
-                  variantLabel: variantLabel === 'Default' ? undefined : variantLabel,
-                });
-              }
+              const variantLabel =
+                actualVariant.label === 'Default' ? undefined : actualVariant.label;
+              addItem(product.shopId, {
+                productId: product.id,
+                variantId: actualVariant.id,
+                quantity: normalizedQuantity,
+                name: product.name,
+                imageUrl: product.imageUrl,
+                variantLabel,
+                price: effectivePrice,
+              });
+              setQuantity(1);
               toast.success(
-                `Added ${normalizedQuantity}x "${product.name}"${variantLabel && variantLabel !== 'Default' ? ` (${variantLabel})` : ''} to cart`,
+                `Added ${normalizedQuantity}x "${product.name}"${variantLabel ? ` (${variantLabel})` : ''} to cart`,
               );
             }}
           >
@@ -486,7 +498,9 @@ export default function ProductClient() {
                 : 'Select Options'
               : isSelectedVariantOutOfStock || !hasAnyStock
                 ? 'Out of Stock'
-                : 'Add to Cart'}
+                : allStockInCart
+                  ? 'All available stock is in your cart'
+                  : 'Add to Cart'}
           </Button>
 
           <Link
