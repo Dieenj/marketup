@@ -1,6 +1,7 @@
 'use client';
 
 import { useCartStore } from '@/hooks/use-cart';
+import { useRecentOrdersStore } from '@/hooks/use-recent-orders';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
   const slug = params.slug as string;
   const router = useRouter();
   const { items, getTotal, clearCart, removeItem, updateQuantity } = useCartStore();
+  const rememberOrder = useRecentOrdersStore((s) => s.remember);
   
   const total = getTotal();
 
@@ -78,10 +80,13 @@ export default function CheckoutPage() {
         items: orderItems,
       });
     },
-    onSuccess: (res) => {
+    onSuccess: (res, values) => {
+      const orderNumber: string = res.data.orderNumber;
+      // Thiết bị nhớ đơn này để người mua mở lại ở "My orders" mà không phải nhập email
+      rememberOrder({ shopSlug: slug, orderNumber, email: values.buyerEmail.trim() });
       toast.success('Order placed successfully!');
       clearCart();
-      router.push(`/shop/${slug}/order-success?id=${res.data.id}`);
+      router.push(`/shop/${slug}/order-success?order=${encodeURIComponent(orderNumber)}`);
     },
     onError: (error) => {
       toast.error(getErrorMessage(error, 'Failed to place order'));

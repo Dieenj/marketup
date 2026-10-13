@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, Package, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -11,7 +11,7 @@ export default function OrderSuccessPage() {
   const params = useParams();
   const slug = params.slug as string;
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('id');
+  const orderNumber = searchParams.get('order');
 
   return (
     <div className="container mx-auto px-4 py-20 text-center max-w-2xl">
@@ -25,19 +25,26 @@ export default function OrderSuccessPage() {
       <p className="text-xl text-muted-foreground mb-2">
         Thank you for shopping with us.
       </p>
-      {orderId && (
-        <p className="text-sm font-mono text-muted-foreground mb-10">
-          Order ID: {orderId}
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground mb-10">
+        {orderNumber ? (
+          <>
+            Your order number is <span className="font-mono font-medium text-foreground">{orderNumber}</span>.{' '}
+          </>
+        ) : null}
+        We&apos;ve emailed you a confirmation.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
         <Link href={`/shop/${slug}`} className={cn(buttonVariants({ variant: 'outline' }), 'w-full gap-2 py-6')}>
           <ShoppingBag className="h-5 w-5" />
           Continue Shopping
         </Link>
-        <Link href="/" className={cn(buttonVariants(), 'w-full py-6')}>
-          View My Orders
+        <Link
+          href={orderNumber ? `/shop/${slug}/orders/${encodeURIComponent(orderNumber)}` : `/shop/${slug}/orders`}
+          className={cn(buttonVariants(), 'w-full gap-2 py-6')}
+        >
+          <Package className="h-5 w-5" />
+          Track your order
         </Link>
       </div>
     </div>

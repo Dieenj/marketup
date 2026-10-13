@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ShoppingCart, Store } from 'lucide-react';
+import { Package, ShoppingCart, Store } from 'lucide-react';
 import { useCartStore } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
@@ -47,7 +47,14 @@ export default function ShopLayoutClient({
             <span className="font-bold text-[17px] tracking-tight">{shop?.name || slug.toUpperCase()}</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/shop/${slug}/orders`}
+              className="flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Package className="h-4.5 w-4.5" aria-hidden />
+              <span className="sr-only sm:not-sr-only">My orders</span>
+            </Link>
             <Link
               href={`/shop/${slug}/checkout`}
               aria-label={cartCount > 0 ? `View cart (${cartCount} items)` : 'View cart'}
