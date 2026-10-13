@@ -1,154 +1,91 @@
-# MarketUp — Nền tảng Cửa hàng Cá nhân (SaaS)
+# MarketUp
 
-**MarketUp** là một nền tảng monorepo cho phép bất kỳ ai tạo cửa hàng trực tuyến của riêng mình chỉ trong vài phút. Người bán có dashboard quản lý sản phẩm, danh mục, đơn hàng và đánh giá khách hàng; khách hàng có thể duyệt, đặt hàng và để lại phản hồi (review) qua trang storefront công khai theo slug riêng của mỗi shop.
+**MarketUp** giúp bất kỳ ai mở một cửa hàng trực tuyến riêng trong vài phút. Người bán quản lý sản phẩm, đơn hàng và đánh giá trên dashboard; người mua đặt hàng tại storefront `/shop/<slug>` của shop mà không cần tạo tài khoản, thanh toán khi nhận hàng (COD).
 
----
+**Demo:** https://marketup-dien.vercel.app. Đăng nhập người bán bằng `alice@lumiere.store` / `password123`, hoặc xem storefront mẫu tại [/shop/lumiere](https://marketup-dien.vercel.app/shop/lumiere).
 
-## Công nghệ sử dụng
+## Tính năng
 
-| Lớp              | Công nghệ                                             |
-| ---------------- | ----------------------------------------------------- |
-| Monorepo         | Turborepo + pnpm                                      |
-| Frontend         | Next.js 15, Tailwind CSS 4, shadcn/ui                 |
-| State Management | TanStack Query (server state), Zustand (client state) |
-| Backend          | NestJS, Prisma ORM, Passport.js (JWT)                 |
-| Cơ sở dữ liệu    | PostgreSQL                                            |
-| Lưu trữ ảnh      | Cloudinary                                            |
-| Biểu đồ          | Recharts                                              |
-| SMTP Mail        | Nodemailer                                            |
+**Người bán**
 
----
+- Tạo shop với slug, logo, banner, màu chủ đạo, thông tin liên hệ
+- Sản phẩm có thuộc tính, biến thể (giá, giá gạch, tồn kho, SKU), nhiều ảnh, danh mục, ẩn/hiện
+- Xử lý đơn theo từng bước: xác nhận → xử lý → giao → đã giao; huỷ đơn kèm lý do
+- Xem và trả lời đánh giá, lọc theo sao hoặc "cần trả lời"
+- Dashboard: doanh thu, số đơn, đơn chờ xác nhận, biểu đồ doanh thu 7 ngày
 
-## Cấu trúc dự án
+**Người mua**
+
+- Storefront render phía server, có ảnh xem trước khi chia sẻ link
+- Giỏ hàng, checkout COD, email xác nhận kèm link xem đơn
+- Đăng nhập không mật khẩu bằng mã 6 số gửi qua email để xem mọi đơn trên mọi thiết bị
+- Tự huỷ đơn khi shop chưa xác nhận
+- Đánh giá sản phẩm đã nhận trong 30 ngày (sửa được một lần), tên hiển thị được che
+
+**Hệ thống**
+
+- Trừ kho nguyên tử, cập nhật trạng thái đơn có điều kiện để chống bán quá tồn kho và xung đột
+- Token tách loại (người bán / người mua / link đơn), giới hạn tần suất theo IP, kiểm tra env khi khởi động
+- Email tự động khi đặt hàng, giao hàng, đã giao, huỷ đơn
+- App Android/iOS qua Capacitor (WebView của bản web)
+
+## Công nghệ
+
+| Lớp      | Công nghệ                                                                |
+| -------- | ------------------------------------------------------------------------ |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, TanStack Query, Zustand |
+| Backend  | NestJS 11, Prisma 6, Passport JWT, class-validator, Nodemailer           |
+| Dữ liệu  | PostgreSQL, Cloudinary (ảnh)                                             |
+| Hạ tầng  | Vercel (web), Render (API), Supabase (DB), GitHub Actions (CI)           |
+| Monorepo | pnpm workspaces, Turborepo                                               |
+
+## Cấu trúc
 
 ```
 marketup/
 ├── apps/
-│   ├── web/          # Frontend Next.js (Dashboard + Storefront)
-│   └── api/          # Backend NestJS REST API
-└── packages/
-    └── database/     # Prisma client & schema dùng chung
+│   ├── web/          # Next.js: dashboard + storefront + trang đơn người mua
+│   └── api/          # NestJS REST API
+├── packages/
+│   └── database/     # Prisma schema, migrations, seed
+└── docs/             # Tài liệu chi tiết
 ```
 
-### Các module API chính
+## Chạy nhanh
 
-- **auth** — Đăng ký, đăng nhập seller, JWT (mỗi token có loại: seller / người mua / link đơn)
-- **buyer-auth** — Người mua đăng nhập bằng mã 6 số gửi qua email (không mật khẩu)
-- **shop** — Tạo và quản lý shop
-- **product** — CRUD sản phẩm, quản lý biến thể (variants), upload ảnh Cloudinary
-- **category** — Danh mục sản phẩm
-- **order** — Đặt hàng COD, cập nhật trạng thái, huỷ đơn có lý do (người mua tự huỷ khi shop chưa xác nhận), trang đơn của người mua
-- **review** — Đánh giá sản phẩm từ đơn đã giao (30 ngày, sửa 1 lần); shop chỉ trả lời
-- **mail** — Hệ thống email tự động gửi hóa đơn COD khi đặt hàng, thông báo khi vận chuyển, giao hàng (mời đánh giá), huỷ đơn; mã đăng nhập người mua
-- **dashboard** — Thống kê doanh thu, đơn hàng
-- **upload** — Xử lý upload file qua Cloudinary
+Cần Node.js 20+, pnpm 9 và Docker.
 
-### Các trang Frontend chính
+```bash
+pnpm install
+cp .env.example .env        # điền JWT_SECRET (≥ 32 ký tự) và các biến cần thiết
+docker compose up -d        # PostgreSQL local
+pnpm run db:migrate
+pnpm --filter @marketup/database db:seed   # dữ liệu mẫu, xoá dữ liệu cũ
+pnpm dev                    # web http://localhost:3000, API http://localhost:3001/api
+```
 
-| Đường dẫn                    | Mô tả                                                         |
-| ---------------------------- | ------------------------------------------------------------- |
-| `/register`, `/login`        | Xác thực người dùng                                           |
-| `/setup`                     | Tạo shop lần đầu                                              |
-| `/dashboard`                 | Tổng quan doanh thu, đơn hàng gần đây                         |
-| `/products`                  | Quản lý sản phẩm & biến thể                                   |
-| `/categories`                | Quản lý danh mục                                              |
-| `/orders`                    | Quản lý & cập nhật trạng thái đơn hàng                        |
-| `/reviews`                   | Xem & trả lời đánh giá của khách                              |
-| `/settings`                  | Cài đặt tài khoản                                             |
-| `/shop/[slug]`               | Storefront công khai của shop (kèm điểm đánh giá shop)        |
-| `/shop/[slug]/products/[id]` | Chi tiết sản phẩm & xem danh sách đánh giá từ khách hàng      |
-| `/shop/[slug]/checkout`      | Giỏ hàng và Thanh toán COD                                    |
-| `/shop/[slug]/orders`        | Đơn của người mua (đăng nhập bằng mã email), xem/huỷ/đánh giá |
+Hướng dẫn đầy đủ, ý nghĩa từng biến môi trường và các lỗi hay gặp: [docs/development.md](docs/development.md).
 
----
+## Tài liệu
 
-## Bắt đầu
+| Tài liệu                                | Nội dung                                                                                      |
+| --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Đặc tả sản phẩm](docs/product-spec.md) | Vai trò, tính năng, luật nghiệp vụ: đặt hàng, tồn kho, huỷ đơn, đánh giá, đăng nhập người mua |
+| [Kiến trúc](docs/architecture.md)       | Frontend (SSR, state, ảnh, Capacitor), backend (module, token, bảo mật, chạy đồng thời)       |
+| [Mô hình dữ liệu](docs/data-model.md)   | Bảng, enum, quan hệ, cách thay đổi schema                                                     |
+| [API](docs/api-reference.md)            | Endpoint, quyền truy cập, mã lỗi                                                              |
+| [Phát triển local](docs/development.md) | Cài đặt, biến môi trường, seed, kiểm tra code, lỗi hay gặp                                    |
+| [Triển khai](docs/deployment.md)        | Vercel, Render, Supabase, migration production, CI, Docker                                    |
 
-### Yêu cầu
+Khi đổi luật nghiệp vụ, endpoint hoặc schema, cập nhật tài liệu tương ứng trong cùng commit.
 
-- Node.js 20+
-- pnpm 9+
-- Docker (tuỳ chọn, để chạy PostgreSQL local)
+## Lệnh thường dùng
 
-### Cài đặt môi trường
-
-1. **Clone và cài dependencies:**
-
-   ```bash
-   git clone <repo-url>
-   cd marketup
-   pnpm install
-   ```
-
-2. **Tạo file biến môi trường** tại thư mục gốc `.env`:
-
-   ```env
-   # ---- Database ----
-   DATABASE_URL="postgresql://postgres:2203@localhost:5432/marketup"
-
-   # ---- JWT ----
-   # Bắt buộc: chuỗi ngẫu nhiên ≥ 32 ký tự — API không khởi động nếu thiếu hoặc dùng chuỗi mẫu
-   # node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-   JWT_SECRET="<chuỗi ngẫu nhiên>"
-   JWT_EXPIRES_IN="7d"
-
-   # ---- Cloudinary ----
-   CLOUDINARY_CLOUD_NAME="your-cloudinary-name"
-   CLOUDINARY_API_KEY="your-api-key"
-   CLOUDINARY_API_SECRET="your-api-secret"
-
-   # ---- SMTP Mail Configuration (Gmail App Password) ----
-   SMTP_HOST="smtp.gmail.com"
-   SMTP_PORT=587
-   SMTP_USER="your-email@gmail.com"
-   SMTP_PASS="your-gmail-app-password"
-   SMTP_FROM="MarketUp <your-email@gmail.com>"
-   FRONTEND_URL="http://localhost:3000"
-   ```
-
-3. **Khởi động PostgreSQL (Docker):**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Tạo Prisma client và chạy migration:**
-
-   ```bash
-   pnpm run db:generate
-   pnpm run db:migrate
-   ```
-
-5. **Chạy toàn bộ dự án ở chế độ development:**
-
-   ```bash
-   pnpm run dev
-   ```
-
-   - Storefront & Dashboard: `http://localhost:3000`
-   - Backend API: `http://localhost:3001/api`
-
----
-
-## Luồng sử dụng chính
-
-1. **Người bán đăng ký** → Tạo tài khoản tại `/register`
-2. **Tạo shop** → Điền tên, slug, mô tả tại `/setup`
-3. **Quản lý sản phẩm** → Thêm sản phẩm kèm ảnh, giá, biến thể và tồn kho tại `/products`
-4. **Chia sẻ storefront** → Gửi link `/shop/[slug]` cho khách hàng mua sắm
-5. **Khách hàng đặt hàng** → Duyệt sản phẩm, thêm vào giỏ, checkout và nhận **Email Xác Nhận Hóa Đơn (COD)**
-6. **Người bán xử lý** → Nhận thông tin, đổi trạng thái sang "Shipping" (**Khách nhận Email đang giao hàng**)
-7. **Giao hàng thành công** → Đổi sang "Delivered" (**Khách nhận Email chúc mừng kèm link viết đánh giá**)
-8. **Viết Đánh Gia** → Khách hàng phản hồi chất lượng. Người bán quản lý và trả lời đánh giá tại `/reviews`
-
----
-
-## Các script chính hữu ích
-
-| Lệnh                   | Mô tả                                                            |
-| ---------------------- | ---------------------------------------------------------------- |
-| `pnpm dev`             | Chạy đồng thời cả Frontend và Backend (Hot-reload)               |
-| `pnpm build`           | Biên dịch toàn bộ các ứng dụng trong monorepo                    |
-| `pnpm run db:generate` | Tạo lại Prisma client từ schema chung                            |
-| `pnpm run db:migrate`  | Chạy migration đẩy cấu trúc schema lên database                  |
-| `pnpm run db:studio`   | Mở giao diện Prisma Studio để quản lý bản ghi database trực quan |
+| Lệnh                            | Mô tả                            |
+| ------------------------------- | -------------------------------- |
+| `pnpm dev`                      | Chạy web + API (hot reload)      |
+| `pnpm build`                    | Build toàn bộ                    |
+| `pnpm lint` / `pnpm type-check` | ESLint / TypeScript              |
+| `pnpm test`                     | Unit test của API                |
+| `pnpm run db:migrate`           | Tạo và áp dụng migration ở local |
+| `pnpm run db:studio`            | Mở Prisma Studio                 |
