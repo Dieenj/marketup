@@ -1,14 +1,12 @@
-import { notFound } from 'next/navigation';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import StorefrontClient from './_components/storefront-client';
+import StorefrontClient from '../_components/storefront-client';
 import { storefrontQueries } from '@/lib/storefront-queries';
 import { getStorefrontShop, makeServerQueryClient, serverFetcher } from '@/lib/storefront-server';
 
 export default async function StorefrontPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  // Shop không tồn tại đã bị layout chặn (404 thật). Khi tải trang đầy đủ, cache() dùng lại kết quả của layout.
   const result = await getStorefrontShop(slug);
-  // API xác nhận không có shop → trả HTTP 404 (không để crawler index trang rỗng)
-  if (result.status === 'not-found') notFound();
 
   const queryClient = makeServerQueryClient();
   if (result.status === 'ok') {

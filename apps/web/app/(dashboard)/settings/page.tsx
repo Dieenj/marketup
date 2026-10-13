@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Form,
   FormControl,
@@ -22,6 +23,8 @@ import { useEffect } from 'react';
 import { ColorPicker } from '@/components/shop/color-picker';
 import { BannerImageInput } from '@/components/shop/banner-image-input';
 import { useMyShop, MY_SHOP_QUERY_KEY } from '@/hooks/use-my-shop';
+import { DEFAULT_SHOP_COLOR } from '@/lib/color-utils';
+import PageHeader from '@/components/dashboard/page-header';
 
 const shopSchema = z.object({
   name: z.string().min(2, 'Shop name is required'),
@@ -36,7 +39,8 @@ const shopSchema = z.object({
 export default function SettingsPage() {
   const queryClient = useQueryClient();
 
-  const { data: shop, isLoading } = useMyShop();
+  // Layout dashboard chỉ render trang khi đã tải xong shop → dữ liệu luôn có sẵn ở đây
+  const { data: shop } = useMyShop();
 
   const form = useForm<z.infer<typeof shopSchema>>({
     resolver: zodResolver(shopSchema),
@@ -44,7 +48,7 @@ export default function SettingsPage() {
       name: '',
       description: '',
       bannerUrl: '',
-      primaryColor: '#111111',
+      primaryColor: DEFAULT_SHOP_COLOR,
       contactEmail: '',
       contactPhone: '',
       address: '',
@@ -57,7 +61,7 @@ export default function SettingsPage() {
         name: shop.name,
         description: shop.description || '',
         bannerUrl: shop.bannerUrl || '',
-        primaryColor: shop.primaryColor || '#111111',
+        primaryColor: shop.primaryColor || DEFAULT_SHOP_COLOR,
         contactEmail: shop.contactEmail || '',
         contactPhone: shop.contactPhone || '',
         address: shop.address || '',
@@ -73,8 +77,8 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: MY_SHOP_QUERY_KEY });
       toast.success('Shop settings updated successfully');
     },
-    onError: () => {
-      toast.error('Failed to update shop settings');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to update shop settings'));
     },
   });
 
@@ -82,24 +86,14 @@ export default function SettingsPage() {
     mutation.mutate(values);
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="h-8 w-8 rounded-full border-2 border-[#111111] border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Shop Settings</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          Update the public information for your online storefront.
-        </p>
-      </div>
+      <PageHeader
+        title="Shop Settings"
+        description="Update the public information for your online storefront."
+      />
 
-      <div className="bg-white rounded-2xl border border-border/60 p-8 shadow-sm">
+      <div className="rounded-xl border bg-card p-6 shadow-xs sm:p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -219,11 +213,8 @@ export default function SettingsPage() {
                 />
 
               <div className="flex justify-end pt-4">
-                <Button
-                  type="submit"
-                  className="bg-[#111111] text-white hover:bg-[#222222] rounded-xl h-10 px-6"
-                  disabled={mutation.isPending}
-                >
+                <Button type="submit" size="xl" disabled={mutation.isPending}>
+                  {mutation.isPending && <Spinner />}
                   {mutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>

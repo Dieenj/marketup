@@ -38,14 +38,27 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Lấy thông báo lỗi từ response của API (NestJS có thể trả `message` dạng chuỗi hoặc mảng)
+// Lỗi kiểm tra do client chủ động ném, message viết sẵn để hiển thị cho người dùng
+export class UserFacingError extends Error {}
+
+// Lấy thông báo lỗi để hiển thị:
+// - lỗi API: `message` từ NestJS (chuỗi hoặc mảng); lỗi mạng của axios không có message dễ hiểu → fallback
+// - UserFacingError (vd. biến thể thiếu giá) → dùng chính message đó
+// - lỗi khác (bug lập trình) → fallback, không lộ message kỹ thuật
 export function getErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError<{ message?: string | string[] }>(error)) {
     const message = error.response?.data?.message;
     if (Array.isArray(message) && message.length > 0) return message.join(', ');
     if (typeof message === 'string' && message) return message;
+    return fallback;
   }
+  if (error instanceof UserFacingError) return error.message;
   return fallback;
+}
+
+// Mã HTTP của lỗi API (undefined nếu là lỗi mạng / timeout)
+export function getErrorStatus(error: unknown) {
+  return axios.isAxiosError(error) ? error.response?.status : undefined;
 }
 
 export default api;

@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
+import { useCategories } from '@/hooks/use-categories';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import {
   Package,
@@ -27,7 +28,8 @@ import {
 import { cn } from '@/lib/utils';
 
 // Step Subcomponents & Types
-import BasicStep, { productSchema } from './basic-step';
+import BasicStep from './basic-step';
+import { buildProductFormData, productSchema, type ProductBasicValues } from '../product-form-data';
 import VariantsEditor, { AttributeDef, VariantDef, cartesian } from '../variants-editor';
 import ImagesStep from './images-step';
 
@@ -53,7 +55,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   const [attributes, setAttributes] = useState<AttributeDef[]>([]);
   const [variants, setVariants] = useState<VariantDef[]>([]);
 
-  const form = useForm<z.infer<typeof productSchema>>({
+  const form = useForm<ProductBasicValues>({
     resolver: zodResolver(productSchema),
     defaultValues: { name: '', description: '', categoryId: '' },
   });
@@ -72,40 +74,12 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
   };
 
   // ─── Quản lý danh mục ─────────────────────────────────────────────────────────────
-  const { data: categories } = useQuery({
-    queryKey: ['categories', shopId],
-    queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shopId}`);
-      return data;
-    },
-    enabled: !!shopId && open,
-  });
+  const { data: categories } = useCategories(shopId, { enabled: open });
 
   // ─── Logic lưu sản phẩm (Submit) ──────────────────────────────────────────────────────────────────
   const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof productSchema>) => {
-      if (variants.length === 0) throw new Error('Product must have at least one variant');
-
-      const normalizedVariants = variants.map((v) => ({
-        label: v.label,
-        options: v.options,
-        stock: Number(v.stock) || 0,
-        price: v.price ? Number(v.price) : undefined,
-        sku: v.sku || undefined,
-      }));
-
-      if (normalizedVariants.some((v) => v.price === undefined || Number.isNaN(v.price))) {
-        throw new Error('Each variant must have a valid price');
-      }
-
-      const formData = new FormData();
-      formData.append('name', values.name);
-      if (values.description) formData.append('description', values.description);
-      if (values.categoryId) formData.append('categoryId', values.categoryId);
-      images.forEach((img) => formData.append('images', img));
-      if (attributes.length > 0) formData.append('attributes', JSON.stringify(attributes));
-      formData.append('variants', JSON.stringify(normalizedVariants));
-
+    mutationFn: async (values: ProductBasicValues) => {
+      const formData = buildProductFormData(values, { attributes, variants, images });
       return api.post(`/products/${shopId}`, formData);
     },
     onSuccess: () => {
@@ -115,7 +89,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
       onOpenChange(false);
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, error.message || 'Failed to create product'));
+      toast.error(getErrorMessage(error, 'Failed to create product'));
     },
   });
 
@@ -276,7 +250,7 @@ export default function CreateProductDialog({ open, onOpenChange, shopId }: Crea
                   >
                     {mutation.isPending ? (
                       <>
-                        <span className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <Spinner />
                         Creating...
                       </>
                     ) : (

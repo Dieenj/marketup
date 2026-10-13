@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
 import {
   Dialog,
@@ -24,31 +24,24 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 
 // Shared Subcomponent & Types
 import VariantsEditor, { AttributeDef, VariantDef } from './variants-editor';
 import FilePreviewImage from '@/components/file-preview-image';
 import RemoteImage from '@/components/remote-image';
+import CategorySelectField from './category-select-field';
+import { buildProductFormData, productSchema } from './product-form-data';
+import { useCategories } from '@/hooks/use-categories';
 
-const productSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  description: z.string().optional(),
-  categoryId: z.string().optional(),
+const editProductSchema = productSchema.extend({
   isVisible: z.boolean().default(true),
 });
 
-type ProductFormValues = z.input<typeof productSchema>;
+type ProductFormValues = z.input<typeof editProductSchema>;
 
 interface ProductVariant {
   id: string;
@@ -98,7 +91,7 @@ export default function EditProductDialog({
   const [variants, setVariants] = useState<VariantDef[]>([]);
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(editProductSchema),
     defaultValues: { name: '', description: '', categoryId: '', isVisible: true },
   });
 
@@ -145,40 +138,12 @@ export default function EditProductDialog({
     }
   }, [product, open, form]);
 
-  const { data: categories } = useQuery({
-    queryKey: ['categories', shopId],
-    queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shopId}`);
-      return data;
-    },
-    enabled: !!shopId && open,
-  });
+  const { data: categories } = useCategories(shopId, { enabled: open });
 
   // ─── Logic lưu sản phẩm (Submit) ───────────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (values: ProductFormValues) => {
-      if (variants.length === 0) throw new Error('Product must have at least one variant');
-
-      const formData = new FormData();
-      formData.append('name', values.name);
-      if (values.description) formData.append('description', values.description);
-      if (values.categoryId) formData.append('categoryId', values.categoryId);
-      formData.append('isVisible', String(values.isVisible));
-      images.forEach((img) => formData.append('images', img));
-      formData.append('attributes', JSON.stringify(attributes));
-      formData.append(
-        'variants',
-        JSON.stringify(
-          variants.map((v) => ({
-            id: v.id,
-            label: v.label,
-            options: v.options,
-            stock: Number(v.stock) || 0,
-            price: v.price ? Number(v.price) : undefined,
-            sku: v.sku || undefined,
-          }))
-        )
-      );
+      const formData = buildProductFormData(values, { attributes, variants, images });
       return api.patch(`/products/${product!.id}`, formData);
     },
     onSuccess: () => {
@@ -232,37 +197,11 @@ export default function EditProductDialog({
                 </FormItem>
               )}
             />
-            <FormField
+            <CategorySelectField
               control={form.control}
               name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    key={categories ? field.value : 'loading'}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category">
-                          {categories?.find(
-                            (c: { id: string; name: string }) => c.id === field.value
-                          )?.name || 'Select a category'}
-                        </SelectValue>
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories?.map((cat: { id: string; name: string }) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              categories={categories}
+              placeholder="Select a category"
             />
             <FormField
               control={form.control}
@@ -355,7 +294,7 @@ export default function EditProductDialog({
                 disabled={mutation.isPending || variants.length === 0}
                 className="gap-2"
               >
-                {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {mutation.isPending && <Spinner />}
                 Save Changes
               </Button>
             </DialogFooter>

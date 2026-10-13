@@ -10,18 +10,21 @@ import {
   ShoppingBag,
   Search,
   ArrowRight,
-  Star,
-  MapPin,
-  Phone,
   Filter,
 } from 'lucide-react';
 import Link from 'next/link';
 import WriteReviewDialog from '@/components/shop/write-review-dialog';
-import { DEFAULT_SHOP_COLOR, getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import { storefrontQueries, type StorefrontCategory } from '@/lib/storefront-queries';
 import { getMinPrice, getPriceRange } from '@/lib/price';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
+import StarRating from '@/components/star-rating';
+import { getErrorStatus } from '@/lib/api-client';
+import StorefrontUnavailable from './storefront-unavailable';
+import ShopHero from './shop-hero';
+import { StorefrontSkeleton } from './skeletons';
+import ShopNotFoundView from '@/components/shop/shop-not-found';
 
 type Category = StorefrontCategory;
 
@@ -71,7 +74,13 @@ export default function StorefrontClient() {
   const [sortBy, setSortBy] = useState('default');
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  const { data: shop, isLoading: shopLoading } = useQuery(q.shop(slug));
+  const {
+    data: shop,
+    isLoading: shopLoading,
+    error: shopError,
+    refetch: refetchShop,
+    isRefetching: isRefetchingShop,
+  } = useQuery(q.shop(slug));
   const shopId = shop?.id ?? '';
 
   const { data: products, isLoading: productsLoading } = useQuery({
@@ -120,93 +129,18 @@ export default function StorefrontClient() {
     ? (stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating)
     : 0;
 
-  if (shopLoading || productsLoading) {
-    return (
-      <div className="min-h-screen">
-        {/* Hero skeleton — reserves the same footprint as the loaded hero to avoid a large layout shift */}
-        <section className="relative overflow-hidden bg-secondary animate-pulse">
-          <div className="relative container mx-auto px-4 py-20 sm:py-28">
-            <div className="max-w-2xl space-y-4">
-              <div className="h-10 w-3/4 rounded-lg bg-muted-foreground/15" />
-              <div className="h-4 w-full rounded bg-muted-foreground/10" />
-              <div className="h-4 w-2/3 rounded bg-muted-foreground/10" />
-            </div>
-          </div>
-        </section>
-        <section className="bg-card border-b border-border">
-          <div className="container mx-auto px-4 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-10 rounded bg-muted animate-pulse" />
-            ))}
-          </div>
-        </section>
-        <div className="container mx-auto px-4 py-10">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="aspect-4/3 rounded-2xl bg-muted animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (shopLoading || productsLoading) return <StorefrontSkeleton shop={shop} />;
 
   if (!shop) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-4xl font-bold mb-4">Shop Not Found</h1>
-        <p className="text-muted-foreground">The store you are looking for does not exist.</p>
-      </div>
-    );
+    // Thường layout đã trả 404 từ server; tới đây nghĩa là server không gọi được API lúc render
+    // mà client mới nhận 404 → hiện thẳng giao diện "Shop Not Found" (boundary cùng cấp chỉ dành cho sản phẩm)
+    if (getErrorStatus(shopError) === 404) return <ShopNotFoundView />;
+    return <StorefrontUnavailable onRetry={() => refetchShop()} isRetrying={isRefetchingShop} />;
   }
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        {shop.bannerUrl ? (
-          <>
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url('${shop.bannerUrl}')` }}
-            />
-            <div className="absolute inset-0 bg-black/55" />
-          </>
-        ) : (
-          <div className="absolute inset-0" style={{ backgroundColor: primaryColor }} />
-        )}
-        <div className="relative container mx-auto px-4 py-20 sm:py-28">
-          <div className="max-w-2xl">
-            <h1 className="text-white text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
-              {shop.name}
-            </h1>
-            <p className="text-white/75 text-base leading-relaxed mb-8 max-w-lg">
-              {shop.description || 'Welcome to our store! Browse our collection of products.'}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {shop.address && (
-                <div className="flex items-center gap-1.5 text-white/85 text-sm">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor === DEFAULT_SHOP_COLOR ? '#34d399' : 'rgba(255,255,255,0.9)' }} />
-                  {shop.address}
-                </div>
-              )}
-              {shop.contactPhone && (
-                <div className="flex items-center gap-1.5 text-white/85 text-sm">
-                  <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor === DEFAULT_SHOP_COLOR ? '#34d399' : 'rgba(255,255,255,0.9)' }} />
-                  {shop.contactPhone}
-                </div>
-              )}
-              <button
-                onClick={() => setIsReviewOpen(true)}
-                className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/15 transition-colors"
-              >
-                <Star className="h-3 w-3 fill-current" />
-                Write a Review
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ShopHero shop={shop} onWriteReview={() => setIsReviewOpen(true)} />
 
       {/* Stats bar */}
       <section className="bg-card border-b border-border">
@@ -245,14 +179,7 @@ export default function StorefrontClient() {
               </div>
               {overallRating > 0 && (
                 <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`h-4 w-4 ${s <= Math.round(overallRating) ? 'fill-amber-400 text-amber-400' : 'text-muted fill-muted'}`}
-                      />
-                    ))}
-                  </div>
+                  <StarRating value={overallRating} />
                   <span className="font-semibold text-foreground">{overallRating}</span>
                 </div>
               )}
@@ -266,17 +193,10 @@ export default function StorefrontClient() {
                       <div>
                         <p className="text-sm font-medium text-foreground">{review.buyerName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {formatDate(review.createdAt)}
                         </p>
                       </div>
-                      <div className="flex shrink-0">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-3 w-3 ${s <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted fill-muted'}`}
-                          />
-                        ))}
-                      </div>
+                      <StarRating value={review.rating} className="shrink-0" starClassName="size-3" />
                     </div>
                     {review.comment && (
                       <p className="text-sm text-foreground/80 leading-relaxed mb-3 line-clamp-3">
@@ -319,8 +239,9 @@ export default function StorefrontClient() {
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
             <Input
+              aria-label="Search products"
               placeholder="Search products..."
               className="pl-10 h-11 bg-white rounded-xl border-border/70"
               value={searchQuery}
@@ -400,12 +321,16 @@ export default function StorefrontClient() {
                   ? Math.round((1 - minPrice / maxComparePrice) * 100)
                   : 0;
 
+                // Không prefetch: trang sản phẩm là dữ liệu động, prefetch phải gọi API (shop + sản phẩm) cho
+                // mọi thẻ đang hiện mà không nhanh hơn — bấm vào là loading.tsx hiện skeleton ngay sau 1 lượt request
+                const productHref = `/shop/${slug}/products/${product.id}`;
+
                 return (
                   <div
                     key={product.id}
                     className="group bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   >
-                    <Link href={`/shop/${slug}/products/${product.id}`} className="block relative">
+                    <Link href={productHref} prefetch={false} className="block relative">
                       <div className="aspect-4/3 relative bg-secondary overflow-hidden">
                         {product.imageUrl ? (
                           <RemoteImage
@@ -443,7 +368,7 @@ export default function StorefrontClient() {
                     </Link>
 
                     <div className="flex flex-col flex-1 p-4 gap-3">
-                      <Link href={`/shop/${slug}/products/${product.id}`}>
+                      <Link href={productHref} prefetch={false}>
                         <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors leading-snug">
                           {product.name}
                         </h3>
@@ -466,14 +391,14 @@ export default function StorefrontClient() {
                         )}
                       </div>
 
-                      <Link href={`/shop/${slug}/products/${product.id}`} className="mt-auto block">
-                        <button
-                          className="w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
-                          style={{ backgroundColor: primaryColor, color: primaryFg }}
-                        >
-                          View details
-                          <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
-                        </button>
+                      <Link
+                        href={productHref}
+                        prefetch={false}
+                        className="mt-auto w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
+                        style={{ backgroundColor: primaryColor, color: primaryFg }}
+                      >
+                        View details
+                        <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                       </Link>
                     </div>
                   </div>

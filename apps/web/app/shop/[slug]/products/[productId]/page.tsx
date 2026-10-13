@@ -9,6 +9,7 @@ import {
   makeServerQueryClient,
   serverFetcher,
 } from '@/lib/storefront-server';
+import { shareMetadata } from '@/lib/share-metadata';
 
 type Props = { params: Promise<{ slug: string; productId: string }> };
 
@@ -30,23 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = shopName ? `${product.data.name} — ${shopName}` : product.data.name;
   const description = product.data.description || (shopName ? `${product.data.name} at ${shopName}` : undefined);
   const image = product.data.images?.[0] || product.data.imageUrl || undefined;
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url: `/shop/${slug}/products/${productId}`,
-      ...(image && { images: [{ url: image }] }),
-    },
-    twitter: {
-      card: image ? 'summary_large_image' : 'summary',
-      title,
-      description,
-      ...(image && { images: [image] }),
-    },
-  };
+  return shareMetadata({ title, description, url: `/shop/${slug}/products/${productId}`, image });
 }
 
 export default async function ProductPage({ params }: Props) {

@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 // Tiêu đề trang dùng chung cho mọi trang trong dashboard
@@ -19,6 +20,19 @@ export default function PageHeader({
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+// Bản skeleton cùng kích thước với PageHeader (tiêu đề text-2xl + mô tả text-sm)
+export function PageHeaderSkeleton({ withAction = false }: { withAction?: boolean }) {
+  return (
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+      </div>
+      {withAction && <Skeleton className="h-9 w-32" />}
     </div>
   );
 }

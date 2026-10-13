@@ -2,20 +2,24 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, ImageIcon, Package, ShoppingCart, Star, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ImageIcon, ShoppingCart, Star, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { storefrontQueries } from '@/lib/storefront-queries';
 import { formatPriceRange, getPriceRange } from '@/lib/price';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useCartStore } from '@/hooks/use-cart';
 import WriteReviewDialog from '@/components/shop/write-review-dialog';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
+import StarRating from '@/components/star-rating';
+import { getErrorStatus } from '@/lib/api-client';
+import StorefrontUnavailable from './storefront-unavailable';
+import { ProductDetailSkeleton } from './skeletons';
 
 interface ProductReview {
   id: string;
@@ -68,7 +72,13 @@ export default function ProductClient() {
 
   const { data: shop } = useQuery(q.shop(slug));
 
-  const { data: product, isLoading } = useQuery(q.product<ProductDetail>(productId));
+  const {
+    data: product,
+    isLoading,
+    error: productError,
+    refetch: refetchProduct,
+    isRefetching: isRefetchingProduct,
+  } = useQuery(q.product<ProductDetail>(productId));
 
   const { data: reviews } = useQuery({
     ...q.productReviews<ProductReview>(productId),
@@ -189,33 +199,12 @@ export default function ProductClient() {
     setQuantity(1);
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="mb-8 h-6 w-32" />
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-          <Skeleton className="aspect-square rounded-2xl" />
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <ProductDetailSkeleton />;
 
   if (!product) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <Package className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-        <h1 className="mb-4 text-3xl font-bold">Product Not Found</h1>
-        <Link href={`/shop/${slug}`}>
-          <Button>Back to Shop</Button>
-        </Link>
-      </div>
-    );
+    // 404 dùng chung boundary not-found.tsx; lỗi khác (API chưa sẵn sàng) cho phép thử lại
+    if (getErrorStatus(productError) === 404) notFound();
+    return <StorefrontUnavailable onRetry={() => refetchProduct()} isRetrying={isRefetchingProduct} />;
   }
 
   return (
@@ -319,18 +308,7 @@ export default function ProductClient() {
             )}
             <h1 className="text-4xl font-extrabold tracking-tight">{product.name}</h1>
             <div className="flex items-center gap-2 mt-2">
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`h-4.5 w-4.5 ${
-                      star <= (ratingInfo?.averageRating || 0)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-muted-foreground/30 fill-transparent'
-                    }`}
-                  />
-                ))}
-              </div>
+              <StarRating value={ratingInfo?.averageRating || 0} starClassName="size-4.5" />
               <span className="text-xs font-semibold text-muted-foreground">
                 {ratingInfo && ratingInfo.averageRating > 0
                   ? `${ratingInfo.averageRating} (${ratingInfo.count} reviews)`
@@ -499,10 +477,11 @@ export default function ProductClient() {
                 : 'Add to Cart'}
           </Button>
 
-          <Link href={`/shop/${slug}/checkout`}>
-            <Button variant="outline" size="lg" className="h-12 w-full font-semibold">
-              View Cart & Checkout
-            </Button>
+          <Link
+            href={`/shop/${slug}/checkout`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-12 w-full font-semibold')}
+          >
+            View Cart & Checkout
           </Link>
         </div>
       </div>
@@ -517,18 +496,7 @@ export default function ProductClient() {
                 {ratingInfo?.averageRating || '0.0'}
               </span>
               <div>
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-5 w-5 ${
-                        star <= (ratingInfo?.averageRating || 0)
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'text-muted-foreground/30 fill-transparent'
-                      }`}
-                    />
-                  ))}
-                </div>
+                <StarRating value={ratingInfo?.averageRating || 0} starClassName="size-5" />
                 <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                   Based on {ratingInfo?.count || 0} customer reviews
                 </p>
@@ -568,32 +536,15 @@ export default function ProductClient() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm text-foreground">{rev.buyerName}</span>
                       {rev.isVerified && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                          Verified Purchase
-                        </span>
+                        <Badge variant="success">Verified Purchase</Badge>
                       )}
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {new Date(rev.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {formatDate(rev.createdAt)}
                     </p>
                   </div>
 
-                  <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-3.5 w-3.5 ${
-                          star <= rev.rating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-muted-foreground/20 fill-transparent'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  <StarRating value={rev.rating} starClassName="size-3.5" />
                 </div>
 
                 {rev.comment && (

@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { FilterChip } from '@/components/ui/filter-chip';
+import PageHeader from '@/components/dashboard/page-header';
+import StatCard, { StatCardSkeleton } from '@/components/dashboard/stat-card';
+import EmptyState from '@/components/empty-state';
+import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import {
   Star,
   CheckCircle2,
@@ -50,7 +57,7 @@ export default function DashboardReviewsPage() {
   const { data: shop } = useMyShop();
 
   // 2. Lấy danh sách đánh giá để kiểm duyệt
-  const { data: reviews, isLoading } = useQuery<Review[]>({
+  const { data: reviews, isLoading, isPlaceholderData } = useQuery<Review[]>({
     queryKey: ['manage-reviews', shop?.id, ratingFilter, statusFilter],
     queryFn: async () => {
       const params: Record<string, string | number> = {};
@@ -60,6 +67,8 @@ export default function DashboardReviewsPage() {
       return data;
     },
     enabled: !!shop?.id,
+    // Đổi bộ lọc: giữ danh sách cũ (làm mờ) thay vì cả trang quay về skeleton
+    placeholderData: keepPreviousData,
   });
 
   // 3. Lấy thông số điểm đánh giá chung của cửa hàng
@@ -116,19 +125,44 @@ export default function DashboardReviewsPage() {
     },
   });
 
+  const header = (
+    <PageHeader
+      title="Customer Reviews"
+      description="Moderate customer feedback, reply to reviews, and view store ratings."
+    />
+  );
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <div className="grid grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl" />
+      <div className="space-y-6" aria-busy="true">
+        <span className="sr-only" role="status">Loading reviews…</span>
+        {header}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <StatCardSkeleton key={i} />
           ))}
         </div>
-        <Skeleton className="h-[400px] w-full rounded-2xl" />
+        <Skeleton className="h-[66px] w-full rounded-xl" />
+        <div className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="space-y-4 rounded-xl border bg-card p-5 shadow-xs">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                  </div>
+                  <Skeleton className="h-3.5 w-48" />
+                </div>
+                <Skeleton className="h-7 w-12 rounded-xl" />
+              </div>
+              <div className="space-y-2 pl-6">
+                <Skeleton className="h-3.5 w-full" />
+                <Skeleton className="h-3.5 w-4/5" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -137,133 +171,79 @@ export default function DashboardReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Customer Reviews</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          Moderate customer feedback, reply to reviews, and view store ratings.
-        </p>
-      </div>
+      {header}
 
       {/* Các thẻ thống kê đánh giá */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Overall Rating</p>
-              <p className="text-2xl font-extrabold mt-1 flex items-baseline gap-1">
-                {stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating || '0.0'}
-                <span className="text-xs font-normal text-muted-foreground">/ 5.0</span>
-              </p>
-            </div>
-            <div className="h-10 w-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
-              <Star className="h-5 w-5 fill-current" />
-            </div>
-          </div>
-
-          <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Pending Reviews</p>
-              <p className="text-2xl font-extrabold mt-1 text-primary">{pendingCount}</p>
-            </div>
-            <div className="h-10 w-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
-              <Clock className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Product Reviews</p>
-              <p className="text-2xl font-extrabold mt-1">{stats.productCount}</p>
-            </div>
-            <div className="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
-              <ShoppingBag className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="bg-white border border-border/60 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Reviews</p>
-              <p className="text-2xl font-extrabold mt-1">{stats.totalCount}</p>
-            </div>
-            <div className="h-10 w-10 bg-purple-500/10 text-purple-500 rounded-xl flex items-center justify-center">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-          </div>
+          <StatCard
+            label="Overall Rating"
+            value={stats.averageShopRating > 0 ? stats.averageShopRating : stats.averageProductRating || '0.0'}
+            hint="out of 5.0"
+            icon={Star}
+          />
+          <StatCard
+            label="Pending Reviews"
+            value={pendingCount}
+            icon={Clock}
+            tone={pendingCount > 0 ? 'warning' : 'default'}
+          />
+          <StatCard label="Product Reviews" value={stats.productCount} icon={ShoppingBag} />
+          <StatCard label="Total Reviews" value={stats.totalCount} icon={MessageSquare} />
         </div>
       )}
 
       {/* Bộ lọc đánh giá */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-border/60 rounded-2xl p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground mr-1" />
           
-          <button
-            onClick={() => setStatusFilter(null)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              statusFilter === null
-                ? 'bg-[#111111] text-white border-[#111111]'
-                : 'bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
-            }`}
-          >
+          <FilterChip active={statusFilter === null} onClick={() => setStatusFilter(null)}>
             All Reviews
-          </button>
-          <button
-            onClick={() => setStatusFilter('PENDING')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              statusFilter === 'PENDING'
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
-            }`}
-          >
+          </FilterChip>
+          <FilterChip active={statusFilter === 'PENDING'} onClick={() => setStatusFilter('PENDING')}>
             Pending ({pendingCount})
-          </button>
-          <button
-            onClick={() => setStatusFilter('APPROVED')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              statusFilter === 'APPROVED'
-                ? 'bg-emerald-600 text-white border-emerald-600'
-                : 'bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
-            }`}
-          >
+          </FilterChip>
+          <FilterChip active={statusFilter === 'APPROVED'} onClick={() => setStatusFilter('APPROVED')}>
             Approved
-          </button>
+          </FilterChip>
         </div>
 
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-1">Rating:</span>
           {[null, 5, 4, 3, 2, 1].map((stars) => (
-            <button
+            <FilterChip
               key={String(stars)}
+              size="sm"
+              active={ratingFilter === stars}
               onClick={() => setRatingFilter(stars)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                ratingFilter === stars
-                  ? 'bg-[#111111] text-white'
-                  : 'bg-[#f5f5f5] hover:bg-muted text-muted-foreground hover:text-foreground'
-              }`}
+              aria-label={stars === null ? 'All ratings' : `${stars} stars`}
             >
               {stars === null ? 'All' : `${stars} ★`}
-            </button>
+            </FilterChip>
           ))}
         </div>
       </div>
 
       {/* Danh sách các đánh giá */}
       {!reviews || reviews.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 py-20 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground/40 mb-4" />
-          <p className="font-semibold text-muted-foreground">No reviews found</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">
-            Try adjusting your filters or wait for buyers to submit feedback.
-          </p>
-        </div>
+        <EmptyState
+          icon={MessageSquare}
+          title="No reviews found"
+          description="Try adjusting your filters or wait for buyers to submit feedback."
+        />
       ) : (
-        <div className="space-y-4">
+        <div
+          className={cn('space-y-4 transition-opacity', isPlaceholderData && 'opacity-60')}
+          aria-busy={isPlaceholderData}
+        >
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className={`bg-white border rounded-2xl p-5 transition-shadow hover:shadow-sm space-y-4 ${
-                rev.status === 'PENDING' ? 'border-blue-200 bg-blue-50/5' : 'border-border/60'
-              }`}
+              className={cn(
+                'space-y-4 rounded-xl border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm',
+                rev.status === 'PENDING' && 'border-blue-500/30',
+              )}
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-1.5">
@@ -275,30 +255,20 @@ export default function DashboardReviewsPage() {
                     <span className="text-xs text-muted-foreground">({rev.buyerEmail})</span>
                     
                     {rev.isVerified && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                        Verified Purchase
-                      </span>
+                      <Badge variant="success">Verified Purchase</Badge>
                     )}
 
                     {rev.status === 'PENDING' ? (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-blue-500/10 text-blue-700 border border-blue-500/20 px-2 py-0.5 rounded-full animate-pulse">
-                        Pending Moderation
-                      </span>
+                      <Badge variant="info">Pending Moderation</Badge>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wide bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                        Approved & Live
-                      </span>
+                      <Badge variant="success">Approved & Live</Badge>
                     )}
                   </div>
 
                   <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      {new Date(rev.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+                      {formatDate(rev.createdAt)}
                     </span>
                     
                     {rev.product ? (
@@ -322,41 +292,36 @@ export default function DashboardReviewsPage() {
                   </div>
 
                   {rev.status === 'PENDING' && (
-                    <Button
-                      size="sm"
-                      onClick={() => approveMutation.mutate(rev.id)}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl gap-1.5 h-8 px-3"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    <Button size="lg" onClick={() => approveMutation.mutate(rev.id)}>
+                      <CheckCircle2 />
                       Approve
                     </Button>
                   )}
 
                   <Button
-                    size="sm"
-                    variant="ghost"
+                    size="icon"
+                    variant="ghost-destructive"
                     aria-label="Delete review"
                     onClick={() => {
                       if (confirm('Are you sure you want to delete this review?')) {
                         deleteMutation.mutate(rev.id);
                       }
                     }}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl h-8 w-8 p-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 />
                   </Button>
                 </div>
               </div>
 
               {rev.comment && (
-                <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap pl-6 border-l-2 border-muted">
+                <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap pl-6 border-l-2 border-muted">
                   {rev.comment}
                 </p>
               )}
 
               {/* Khu vực nhập câu trả lời của người bán */}
               {replyingId === rev.id ? (
-                <div className="bg-[#fafafa] border rounded-xl p-4 space-y-3 ml-6 animate-in fade-in duration-200">
+                <div className="bg-muted/50 border rounded-xl p-4 space-y-3 ml-6 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       Write response

@@ -42,3 +42,22 @@ export default function StatCard({
     </div>
   );
 }
+
+// Skeleton cùng khung với StatCard (nhãn, giá trị, dòng gợi ý) để chiều cao khớp khi dữ liệu về
+export function StatCardSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-xs">
+      {/* Mỗi hàng giữ đúng line-height của StatCard: nhãn 20px, giá trị 32px, gợi ý 16px */}
+      <div className="flex h-5 items-center justify-between gap-2">
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="size-4" />
+      </div>
+      <div className="mt-1 flex h-8 items-center">
+        <Skeleton className="h-6 w-20" />
+      </div>
+      <div className="mt-1 flex h-4 items-center">
+        <Skeleton className="h-3 w-28" />
+      </div>
+    </div>
+  );
+}

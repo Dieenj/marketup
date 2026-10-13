@@ -23,7 +23,8 @@ export default function ShopLayoutClient({
   const { data: shop } = useQuery(q.shop(slug));
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
-  // Màu do người bán nhập được chèn vào <style> → luôn chuẩn hoá về #rrggbb
+  // Màu do người bán nhập được chèn vào <style> → luôn chuẩn hoá về #rrggbb.
+  // scroll-padding-top = chiều cao header sticky (h-16): khi điều hướng, Next cuộn tới đầu trang mới mà không bị header che
   const primaryColor = normalizeHexColor(shop?.primaryColor);
   const primaryFg = getContrastColor(primaryColor);
 
@@ -31,6 +32,7 @@ export default function ShopLayoutClient({
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <style>{`
         .shop-theme { --shop-primary: ${primaryColor}; --shop-primary-fg: ${primaryFg}; }
+        html { scroll-padding-top: 4rem; }
       `}</style>
 
       <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md shadow-sm">
@@ -46,19 +48,21 @@ export default function ShopLayoutClient({
           </Link>
 
           <div className="flex items-center gap-3">
-            <Link href={`/shop/${slug}/checkout`} aria-label="View cart">
-              <button
-                aria-label="View cart"
-                className="relative flex items-center justify-center h-10 w-10 rounded-xl transition-colors"
-                style={{ backgroundColor: primaryColor, color: primaryFg }}
-              >
-                <ShoppingCart className="h-4.5 w-4.5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4.5 w-4.5 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-bold text-white">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+            <Link
+              href={`/shop/${slug}/checkout`}
+              aria-label={cartCount > 0 ? `View cart (${cartCount} items)` : 'View cart'}
+              className="relative flex items-center justify-center h-10 w-10 rounded-xl transition-colors"
+              style={{ backgroundColor: primaryColor, color: primaryFg }}
+            >
+              <ShoppingCart className="h-4.5 w-4.5" aria-hidden />
+              {cartCount > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute -top-1 -right-1 h-4.5 w-4.5 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-bold text-white"
+                >
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>

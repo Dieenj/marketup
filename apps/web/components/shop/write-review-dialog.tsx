@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-import { Star, Loader2, MessageSquarePlus } from 'lucide-react';
+import { Star, MessageSquarePlus } from 'lucide-react';
 import api, { getErrorMessage } from '@/lib/api-client';
 
 import {
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 
 const reviewSchema = z.object({
@@ -241,7 +242,7 @@ export default function WriteReviewDialog({
                 disabled={mutation.isPending}
                 className="rounded-xl h-10 gap-2 font-bold px-6"
               >
-                {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {mutation.isPending && <Spinner />}
                 Submit Review
               </Button>
             </DialogFooter>

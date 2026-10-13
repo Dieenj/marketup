@@ -18,12 +18,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Store, Loader2, ArrowRight, Link2, ShoppingBag } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Store, ArrowRight, Link2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { ColorPicker } from '@/components/shop/color-picker';
-import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { DEFAULT_SHOP_COLOR, getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { slugify } from '@/lib/slugify';
 
 const setupSchema = z.object({
   name: z.string().min(2, 'Shop name must be at least 2 characters'),
@@ -48,7 +50,7 @@ export default function SetupPage() {
       slug: '',
       description: '',
       contactEmail: user?.email || '',
-      primaryColor: '#111111',
+      primaryColor: DEFAULT_SHOP_COLOR,
     },
   });
 
@@ -68,12 +70,7 @@ export default function SetupPage() {
 
   const handleNameChange = (name: string) => {
     form.setValue('name', name);
-    const slug = name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .slice(0, 30);
-    form.setValue('slug', slug);
+    form.setValue('slug', slugify(name, 30));
   };
 
   const [watchedName, watchedSlug, watchedDescription, watchedPrimaryColor] = useWatch({
@@ -209,17 +206,13 @@ export default function SetupPage() {
                     )}
                   />
 
-                  <Button
-                    type="submit"
-                    className="w-full h-11 bg-[#111111] text-white hover:bg-[#222222] transition-colors font-medium gap-2"
-                    disabled={mutation.isPending}
-                  >
+                  <Button type="submit" size="xl" className="w-full" disabled={mutation.isPending}>
                     {mutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner />
                     ) : (
                       <>
                         Launch My Shop
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight data-icon="inline-end" />
                       </>
                     )}
                   </Button>

@@ -1,7 +1,6 @@
 'use client';
 
 import { Control } from 'react-hook-form';
-import * as z from 'zod';
 import {
   FormControl,
   FormField,
@@ -11,27 +10,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-
-export const productSchema = z.object({
-  name: z.string().min(2, 'Product name is required (min 2 characters)'),
-  description: z.string().optional(),
-  categoryId: z.string().optional(),
-});
-
-interface Category {
-  id: string;
-  name: string;
-}
+import type { Category } from '@/hooks/use-categories';
+import CategorySelectField from '../category-select-field';
+import type { ProductBasicValues } from '../product-form-data';
 
 interface CreateProductStep1Props {
-  control: Control<z.infer<typeof productSchema>>;
+  control: Control<ProductBasicValues>;
   categories?: Category[];
 }
 
@@ -62,33 +46,7 @@ export default function BasicStep({
         )}
       />
 
-      <FormField
-        control={control}
-        name="categoryId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-sm font-medium">Category</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
-              <FormControl>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Choose a category (optional)">
-                    {categories?.find((c) => c.id === field.value)?.name ||
-                      'Choose a category (optional)'}
-                  </SelectValue>
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {categories?.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <CategorySelectField control={control} name="categoryId" categories={categories} />
 
       <FormField
         control={control}

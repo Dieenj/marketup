@@ -23,7 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // data-scroll-behavior: globals.css đặt scroll-behavior: smooth cho anchor trong trang; Next 16 chỉ
+    // tạm tắt smooth khi chuyển trang nếu có thuộc tính này → chuyển trang thì cuộn lên đầu ngay, không trôi
+    <html lang="en" data-scroll-behavior="smooth">
       <body className={inter.className}>
         <QueryProvider>
           {children}

@@ -1,7 +1,8 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { CheckCircle2, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -31,16 +32,12 @@ export default function OrderSuccessPage() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
-        <Link href={`/shop/${slug}`}>
-          <Button variant="outline" className="w-full gap-2 py-6">
-            <ShoppingBag className="h-5 w-5" />
-            Continue Shopping
-          </Button>
+        <Link href={`/shop/${slug}`} className={cn(buttonVariants({ variant: 'outline' }), 'w-full gap-2 py-6')}>
+          <ShoppingBag className="h-5 w-5" />
+          Continue Shopping
         </Link>
-        <Link href="/">
-          <Button className="w-full py-6">
-            View My Orders
-          </Button>
+        <Link href="/" className={cn(buttonVariants(), 'w-full py-6')}>
+          View My Orders
         </Link>
       </div>
     </div>

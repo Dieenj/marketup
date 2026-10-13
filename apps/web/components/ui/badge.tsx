@@ -19,6 +19,10 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Trạng thái dạng "soft" (nền nhạt + chữ đậm màu), dùng cho nhãn review/đơn hàng
+        success:
+          "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+        info: "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-400",
       },
     },
     defaultVariants: {

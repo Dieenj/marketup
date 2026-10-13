@@ -35,7 +35,7 @@ import { toast } from 'sonner';
 import { ORDER_STATUSES, nextStatuses, statusLabels } from '@/lib/order-status';
 import { formatCurrency } from '@/lib/format';
 import PageHeader from '@/components/dashboard/page-header';
-import OrderStatusBadge from '@/components/dashboard/order-status-badge';
+import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
 import RemoteImage from '@/components/remote-image';
 

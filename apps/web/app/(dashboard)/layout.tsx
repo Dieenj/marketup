@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { Menu } from 'lucide-react';
-import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
+import DashboardContentSkeleton from '@/components/dashboard/dashboard-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMyShop } from '@/hooks/use-my-shop';
+import { getErrorStatus } from '@/lib/api-client';
 
 export default function DashboardLayout({
   children,
@@ -27,8 +29,8 @@ export default function DashboardLayout({
     }
   }, [mounted, isAuthenticated, router]);
 
-  const { data: shop, isLoading: shopLoading, error: shopError, refetch: refetchShop, isRefetching } = useMyShop({ enabled: mounted });
-  const shopErrorStatus = isAxiosError(shopError) ? shopError.response?.status : undefined;
+  const { data: shop, error: shopError, refetch: refetchShop, isRefetching } = useMyShop({ enabled: mounted });
+  const shopErrorStatus = getErrorStatus(shopError);
 
   useEffect(() => {
     if (!mounted || !isAuthenticated || !shopError) return;
@@ -42,10 +44,16 @@ export default function DashboardLayout({
     }
   }, [mounted, isAuthenticated, shopError, shopErrorStatus, router, logout]);
 
+  // Khung (sidebar + header) luôn hiện ngay; chỉ vùng nội dung đổi giữa skeleton / lỗi / trang thật
+  const isReady = mounted && isAuthenticated && !!shop;
   // Lỗi khác (mạng, 5xx): cho phép thử lại thay vì chuyển trang
-  if (mounted && isAuthenticated && shopError && shopErrorStatus !== 404 && shopErrorStatus !== 401) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-muted/40 px-4" role="alert">
+  const hasBlockingError =
+    mounted && isAuthenticated && !!shopError && shopErrorStatus !== 404 && shopErrorStatus !== 401;
+
+  let content: React.ReactNode;
+  if (hasBlockingError) {
+    content = (
+      <div className="flex min-h-[400px] items-center justify-center" role="alert">
         <div className="flex max-w-sm flex-col items-center gap-3 text-center">
           <p className="font-semibold">Couldn&apos;t load your shop</p>
           <p className="text-sm text-muted-foreground">
@@ -57,17 +65,10 @@ export default function DashboardLayout({
         </div>
       </div>
     );
-  }
-
-  if (!mounted || !isAuthenticated || shopLoading || !shop) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-muted/40" role="status">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 rounded-full border-2 border-foreground border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading your shop…</p>
-        </div>
-      </div>
-    );
+  } else if (!isReady) {
+    content = <DashboardContentSkeleton />;
+  } else {
+    content = children;
   }
 
   return (
@@ -82,13 +83,16 @@ export default function DashboardLayout({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="ml-2 font-semibold text-sm truncate">{shop.name ?? 'MarketUp'}</span>
+          {shop ? (
+            <span className="ml-2 font-semibold text-sm truncate">{shop.name}</span>
+          ) : (
+            <Skeleton className="ml-2 h-4 w-28" />
+          )}
         </header>
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">{children}</div>
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">{content}</div>
         </main>
       </div>
     </div>
   );
 }
-

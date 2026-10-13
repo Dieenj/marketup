@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, ChevronLeft, CreditCard, Trash2, Minus, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -102,8 +102,8 @@ export default function CheckoutPage() {
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
         <p className="text-muted-foreground mb-8">Add some products before checking out.</p>
-        <Link href={`/shop/${slug}`}>
-          <Button>Back to Shop</Button>
+        <Link href={`/shop/${slug}`} className={buttonVariants()}>
+          Back to Shop
         </Link>
       </div>
     );
@@ -242,26 +242,29 @@ export default function CheckoutPage() {
                          <button
                            type="button"
                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId)}
+                           aria-label={`Decrease quantity of ${item.name}`}
                            className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
                          >
-                           <Minus className="h-3 w-3" />
+                           <Minus className="h-3 w-3" aria-hidden />
                          </button>
                          <span className="text-sm font-medium w-5 text-center">{item.quantity}</span>
                          <button
                            type="button"
                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId)}
+                           aria-label={`Increase quantity of ${item.name}`}
                            className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors"
                          >
-                           <Plus className="h-3 w-3" />
+                           <Plus className="h-3 w-3" aria-hidden />
                          </button>
                        </div>
                      </div>
                      <button
                        type="button"
                        onClick={() => removeItem(item.id, item.variantId)}
+                       aria-label={`Remove ${item.name} from cart`}
                        className="text-muted-foreground hover:text-red-500 transition-colors self-start mt-0.5 p-1"
                      >
-                       <Trash2 className="h-4 w-4" />
+                       <Trash2 className="h-4 w-4" aria-hidden />
                      </button>
                    </div>
                  ))}

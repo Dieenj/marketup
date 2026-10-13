@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/hooks/use-auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMyShop } from '@/hooks/use-my-shop';
+import { useHydrated } from '@/hooks/use-hydrated';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const menuItems = [
   { name: 'Overview', icon: LayoutDashboard, href: '/dashboard' },
@@ -31,8 +33,8 @@ const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 256;
 const STORAGE_KEY = 'sidebar-width';
 
+// Chỉ gọi sau khi hydrate (localStorage không có ở server)
 function readSavedWidth() {
-  if (typeof window === 'undefined') return DEFAULT_WIDTH;
   const parsed = Number(localStorage.getItem(STORAGE_KEY));
   return parsed >= MIN_WIDTH && parsed <= MAX_WIDTH ? parsed : DEFAULT_WIDTH;
 }
@@ -46,9 +48,13 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const { logout, user } = useAuthStore();
-  const [width, setWidth] = useState(readSavedWidth);
+  // Sidebar được render ngay từ server (khung dashboard hiện tức thì), nên dữ liệu chỉ có ở trình duyệt —
+  // độ rộng đã lưu và thông tin người dùng — chỉ dùng sau khi hydrate để không lệch hydration
+  const hydrated = useHydrated();
+  const [resizedWidth, setResizedWidth] = useState<number | null>(null);
+  const width = resizedWidth ?? (hydrated ? readSavedWidth() : DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
-  const widthRef = useRef(width);
+  const widthRef = useRef(DEFAULT_WIDTH);
 
   const { data: shop } = useMyShop();
 
@@ -69,16 +75,19 @@ export default function Sidebar({
   const startResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setIsResizing(true);
+    let moved = false;
 
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, e.clientX));
+      moved = true;
       widthRef.current = newWidth;
-      setWidth(newWidth);
+      setResizedWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
-      localStorage.setItem(STORAGE_KEY, String(widthRef.current));
+      // Chỉ lưu khi thật sự kéo — bấm vào tay nắm mà không kéo không được ghi đè độ rộng đã lưu
+      if (moved) localStorage.setItem(STORAGE_KEY, String(widthRef.current));
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -178,13 +187,25 @@ export default function Sidebar({
       {/* User */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
         <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-sidebar-accent/50">
-          <div className="h-8 w-8 rounded-full bg-sidebar-foreground/15 flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-bold">{initials}</span>
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate leading-tight">{user?.name}</p>
-            <p className="text-[11px] text-sidebar-foreground/50 truncate leading-tight">{user?.email}</p>
-          </div>
+          {hydrated && user ? (
+            <>
+              <div className="h-8 w-8 rounded-full bg-sidebar-foreground/15 flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-bold">{initials}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate leading-tight">{user.name}</p>
+                <p className="text-[11px] text-sidebar-foreground/50 truncate leading-tight">{user.email}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <Skeleton className="size-8 shrink-0 rounded-full bg-sidebar-foreground/10" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-24 bg-sidebar-foreground/10" />
+                <Skeleton className="h-3 w-32 bg-sidebar-foreground/10" />
+              </div>
+            </>
+          )}
         </div>
         <button
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl text-sidebar-foreground/50 hover:bg-red-500/10 hover:text-red-400 transition-all"

@@ -24,7 +24,7 @@ import { useAuthStore } from '@/hooks/use-auth';
 import { formatCurrency } from '@/lib/format';
 import PageHeader from '@/components/dashboard/page-header';
 import StatCard from '@/components/dashboard/stat-card';
-import OrderStatusBadge from '@/components/dashboard/order-status-badge';
+import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
 
 interface RecentOrder {

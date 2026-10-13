@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Store, ShoppingBag, BarChart3, Globe, ArrowRight, CheckCircle2 } from 'lucide-react';
 import DownloadAppButton from '@/components/download-app-button';
 
@@ -37,11 +38,12 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-4 pt-4">
-                <Link href="/register">
-                  <Button size="lg" className="px-8 font-bold text-lg h-14 translate-y-0 hover:-translate-y-1 transition-transform">
-                    Build Your Shop Now
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                <Link
+                  href="/register"
+                  className={cn(buttonVariants({ size: 'lg' }), 'px-8 font-bold text-lg h-14 translate-y-0 hover:-translate-y-1 transition-transform')}
+                >
+                  Build Your Shop Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
                 <DownloadAppButton />
               </div>

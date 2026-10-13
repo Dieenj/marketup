@@ -1,148 +1,82 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import api, { getErrorMessage } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Tag, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plus, Trash2, Tag } from 'lucide-react';
+import PageHeader from '@/components/dashboard/page-header';
+import EmptyState from '@/components/empty-state';
+import CategoryForm from '@/components/dashboard/categories/category-form';
 import { useMyShop } from '@/hooks/use-my-shop';
-
-const categorySchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  slug: z
-    .string()
-    .min(2, 'Slug is required')
-    .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers and hyphens only'),
-});
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { useCategories, useCreateCategory, useDeleteCategory } from '@/hooks/use-categories';
 
 export default function CategoriesPage() {
-  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: shop } = useMyShop();
+  const { data: categories, isLoading } = useCategories(shop?.id);
+  const createMutation = useCreateCategory(shop?.id, { onSuccess: () => setIsDialogOpen(false) });
+  const deleteMutation = useDeleteCategory(shop?.id);
 
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['categories', shop?.id],
-    queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shop!.id}`);
-      return data;
-    },
-    enabled: !!shop?.id,
-  });
-
-  const form = useForm<z.infer<typeof categorySchema>>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: { name: '', slug: '' },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof categorySchema>) => {
-      return api.post(`/categories/${shop!.id}`, values);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
-      toast.success('Category created');
-      setIsDialogOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create category'));
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return api.delete(`/categories/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
-      toast.success('Category deleted');
-    },
-    onError: () => {
-      toast.error('Failed to delete category');
-    },
-  });
-
-  // Tự động tạo slug từ tên danh mục
-  const handleNameChange = (name: string) => {
-    form.setValue('name', name);
-    const slug = name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    form.setValue('slug', slug);
-  };
+  const newCategoryButton = (
+    <Button size="lg" onClick={() => setIsDialogOpen(true)}>
+      <Plus />
+      New Category
+    </Button>
+  );
+  const header = (
+    <PageHeader
+      title="Categories"
+      description="Organise your products into categories."
+      actions={newCategoryButton}
+    />
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="space-y-6" aria-busy="true">
+        <span className="sr-only" role="status">Loading categories…</span>
+        {header}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+              <Skeleton className="size-10 shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+              <Skeleton className="size-8 shrink-0" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
-          <p className="text-muted-foreground">
-            Organise your products into categories.
-          </p>
-        </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Category
-        </Button>
-      </div>
+      {header}
 
       {categories?.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-            <Tag className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-1">No categories yet</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Create your first category to organise your products.
-            </p>
-            <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Category
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Tag}
+          title="No categories yet"
+          description="Create your first category to organise your products."
+          action={newCategoryButton}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories?.map((cat: Category) => (
-            <Card key={cat.id} className="group hover:border-primary/50 transition-colors">
-              <CardContent className="flex items-center justify-between p-4">
+          {categories?.map((cat) => (
+            <Card key={cat.id} className="transition-shadow hover:ring-primary/30">
+              <CardContent className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Tag className="h-5 w-5 text-primary" />
@@ -155,9 +89,10 @@ export default function CategoriesPage() {
                   </div>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="ghost-destructive"
                   size="icon"
-                  className="shrink-0 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-600 hover:bg-red-50 transition-opacity"
+                  aria-label={`Delete category ${cat.name}`}
+                  className="shrink-0"
                   onClick={() => {
                     if (confirm(`Delete category "${cat.name}"?`)) {
                       deleteMutation.mutate(cat.id);
@@ -165,7 +100,7 @@ export default function CategoriesPage() {
                   }}
                   disabled={deleteMutation.isPending}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 />
                 </Button>
               </CardContent>
             </Card>
@@ -178,52 +113,11 @@ export default function CategoriesPage() {
           <DialogHeader>
             <DialogTitle>Create Category</DialogTitle>
           </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((v) => createMutation.mutate(v))}
-              className="space-y-4 pt-2"
-            >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="E.g. Electronics"
-                        {...field}
-                        onChange={(e) => handleNameChange(e.target.value)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
-                    <FormControl>
-                      <Input placeholder="electronics" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending} className="gap-2">
-                  {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Create
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <CategoryForm
+            onSubmit={createMutation.mutateAsync}
+            isPending={createMutation.isPending}
+            onCancel={() => setIsDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

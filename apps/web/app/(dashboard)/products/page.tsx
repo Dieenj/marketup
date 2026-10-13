@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { getErrorMessage } from '@/lib/api-client';
+import api from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import {
   Plus,
@@ -12,19 +12,23 @@ import {
   X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FilterChip, filterChipVariants } from '@/components/ui/filter-chip';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import CreateProductDialog from '@/components/dashboard/products/create-dialog';
 import EditProductDialog from '@/components/dashboard/products/edit-product-dialog';
 import PageHeader from '@/components/dashboard/page-header';
+import { StatCardSkeleton } from '@/components/dashboard/stat-card';
+import EmptyState from '@/components/empty-state';
 import { getMinPrice } from '@/lib/price';
 
 // Subcomponents
 import ProductStats from '@/components/dashboard/products/product-stats';
 import ProductToolbar from '@/components/dashboard/products/product-toolbar';
-import ProductCard, { Product } from '@/components/dashboard/products/product-card';
-import ManageCategoryDialog, { Category } from '@/components/dashboard/products/manage-category-dialog';
+import ProductCard, { Product, ProductCardSkeleton } from '@/components/dashboard/products/product-card';
+import ManageCategoryDialog from '@/components/dashboard/products/manage-category-dialog';
 import { useMyShop } from '@/hooks/use-my-shop';
+import { useCategories, useDeleteCategory } from '@/hooks/use-categories';
 
 export default function ProductsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -50,14 +54,7 @@ export default function ProductsPage() {
     enabled: !!shop?.id,
   });
 
-  const { data: categories } = useQuery({
-    queryKey: ['categories', shop?.id],
-    queryFn: async () => {
-      const { data } = await api.get(`/categories/shop/${shop!.id}`);
-      return data as Category[];
-    },
-    enabled: !!shop?.id,
-  });
+  const { data: categories } = useCategories(shop?.id);
 
   const toggleVisibilityMutation = useMutation({
     mutationFn: async ({ id, isVisible }: { id: string; isVisible: boolean }) => {
@@ -75,37 +72,10 @@ export default function ProductsPage() {
     },
   });
 
-  const createCategoryMutation = useMutation({
-    mutationFn: async (values: { name: string; slug: string }) => {
-      return api.post(`/categories/${shop!.id}`, values);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
-      toast.success('Category created');
-      setIsCategoryDialogOpen(false);
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, 'Failed to create category'));
-    },
-  });
-
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return api.delete(`/categories/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories', shop?.id] });
-      if (selectedCategoryId) setSelectedCategoryId(null);
-      toast.success('Category deleted');
-    },
-    onError: () => {
-      toast.error('Failed to delete category');
-    },
-  });
-
-  const handleCreateCategory = async (values: { name: string; slug: string }) => {
-    await createCategoryMutation.mutateAsync(values);
-  };
+  // Bỏ chọn bộ lọc nếu danh mục đang chọn vừa bị xoá
+  const clearDeletedSelection = (id: string) =>
+    setSelectedCategoryId((current) => (current === id ? null : current));
+  const deleteCategoryMutation = useDeleteCategory(shop?.id, { onSuccess: clearDeletedSelection });
 
   // Tính toán số liệu thống kê chung (Stat Cards)
   const totalProductsCount = products?.length ?? 0;
@@ -113,6 +83,8 @@ export default function ProductsPage() {
   const lowStockCount = products?.filter((p: Product) => p.totalStock > 0 && p.totalStock <= 10).length ?? 0;
   const outOfStockCount = products?.filter((p: Product) => p.totalStock === 0).length ?? 0;
   const stockAlertsCount = lowStockCount + outOfStockCount;
+
+  const hasActiveFilters = !!searchQuery || stockFilter !== 'all' || !!selectedCategoryId;
 
   // Lọc và Sắp xếp sản phẩm liên kết chặt chẽ
   const filteredProducts = products
@@ -165,29 +137,49 @@ export default function ProductsPage() {
         })
     : [];
 
+  // Tiêu đề và thanh công cụ không phụ thuộc dữ liệu → hiện thật cả khi đang tải
+  const header = (
+    <PageHeader
+      title="Products"
+      description="Manage your store inventory, details, and visibility status."
+      actions={
+        <Button size="lg" onClick={() => setIsCreateOpen(true)}>
+          <Plus />
+          Add product
+        </Button>
+      }
+    />
+  );
+  const toolbar = (
+    <ProductToolbar
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      stockFilter={stockFilter}
+      setStockFilter={setStockFilter}
+      sortBy={sortBy}
+      setSortBy={setSortBy}
+    />
+  );
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-9 w-32 mb-2" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+      <div className="space-y-6" aria-busy="true">
+        <span className="sr-only" role="status">Loading products…</span>
+        {header}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <StatCardSkeleton key={i} />
           ))}
         </div>
-        <Skeleton className="h-12 w-full rounded-2xl" />
-        <div className="border rounded-2xl overflow-hidden">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 border-b">
-              <Skeleton className="h-10 w-10 rounded" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-20 ml-auto" />
-            </div>
+        {toolbar}
+        <div className="flex flex-wrap gap-2">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-8 w-28 rounded-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <ProductCardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -196,17 +188,7 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Tiêu đề trang */}
-      <PageHeader
-        title="Products"
-        description="Manage your store inventory, details, and visibility status."
-        actions={
-          <Button size="lg" onClick={() => setIsCreateOpen(true)}>
-            <Plus />
-            Add product
-          </Button>
-        }
-      />
+      {header}
 
       {/* Thống kê nhanh dạng thẻ cao cấp */}
       <ProductStats
@@ -217,44 +199,23 @@ export default function ProductsPage() {
       />
 
       {/* Thanh bộ lọc tìm kiếm, trạng thái kho & sắp xếp */}
-      <ProductToolbar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        stockFilter={stockFilter}
-        setStockFilter={setStockFilter}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
+      {toolbar}
 
       {/* Các tab lọc theo danh mục sản phẩm */}
       <div className="flex items-center gap-2 flex-wrap pb-1">
-        <button
-          onClick={() => setSelectedCategoryId(null)}
-          aria-pressed={selectedCategoryId === null}
-          className={cn(
-            'h-8 px-3 rounded-full text-sm font-medium transition-colors border cursor-pointer',
-            selectedCategoryId === null
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted',
-          )}
-        >
+        <FilterChip active={selectedCategoryId === null} onClick={() => setSelectedCategoryId(null)}>
           All Products
-          <span className="ml-1.5 text-xs font-normal">({products?.length ?? 0})</span>
-        </button>
+          <span className="text-xs font-normal">({products?.length ?? 0})</span>
+        </FilterChip>
 
-        {categories?.map((cat: Category) => {
+        {categories?.map((cat) => {
           const count = products?.filter((p: Product) => p.categoryId === cat.id).length ?? 0;
           const isActive = selectedCategoryId === cat.id;
           return (
             // Hai nút anh em (chọn / xoá) trong cùng một pill — không lồng button trong button
             <div
               key={cat.id}
-              className={cn(
-                'flex items-center h-8 rounded-full text-sm font-medium transition-colors border',
-                isActive
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground hover:text-foreground hover:bg-muted',
-              )}
+              className={cn(filterChipVariants({ active: isActive }), 'cursor-default gap-0 px-0')}
             >
               <button
                 type="button"
@@ -301,34 +262,33 @@ export default function ProductsPage() {
 
       {/* Lưới hiển thị danh sách sản phẩm hoặc trạng thái trống */}
       {filteredProducts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-card py-20 text-center px-4">
-          <div className="p-3 bg-muted rounded-xl mb-4">
-            <PackageOpen className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <p className="font-semibold text-foreground">No products found</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            {searchQuery || stockFilter !== 'all' || selectedCategoryId
+        <EmptyState
+          icon={PackageOpen}
+          title="No products found"
+          description={
+            hasActiveFilters
               ? 'Try modifying your search query, clearing filters, or choosing a different category.'
-              : 'Start by adding your first product to display it in your inventory.'}
-          </p>
-          {(searchQuery || stockFilter !== 'all' || selectedCategoryId) ? (
-            <Button
-              variant="outline"
-              className="mt-5"
-              onClick={() => {
-                setSearchQuery('');
-                setStockFilter('all');
-                setSelectedCategoryId(null);
-              }}
-            >
-              Reset Filters
-            </Button>
-          ) : (
-            <Button className="mt-5" size="lg" onClick={() => setIsCreateOpen(true)}>
-              <Plus /> Add product
-            </Button>
-          )}
-        </div>
+              : 'Start by adding your first product to display it in your inventory.'
+          }
+          action={
+            hasActiveFilters ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStockFilter('all');
+                  setSelectedCategoryId(null);
+                }}
+              >
+                Reset Filters
+              </Button>
+            ) : (
+              <Button size="lg" onClick={() => setIsCreateOpen(true)}>
+                <Plus /> Add product
+              </Button>
+            )
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product: Product) => (
@@ -356,19 +316,14 @@ export default function ProductsPage() {
             product={editProduct as Parameters<typeof EditProductDialog>[0]['product']}
             shopId={shop.id}
           />
+          <ManageCategoryDialog
+            open={isCategoryDialogOpen}
+            onOpenChange={setIsCategoryDialogOpen}
+            shopId={shop.id}
+            onDeleted={clearDeletedSelection}
+          />
         </>
       )}
-
-      {/* Hộp thoại quản lý các danh mục */}
-      <ManageCategoryDialog
-        open={isCategoryDialogOpen}
-        onOpenChange={setIsCategoryDialogOpen}
-        categories={categories || []}
-        onCreateCategory={handleCreateCategory}
-        onDeleteCategory={(id) => deleteCategoryMutation.mutate(id)}
-        isCreatePending={createCategoryMutation.isPending}
-        isDeletePending={deleteCategoryMutation.isPending}
-      />
     </div>
   );
 }

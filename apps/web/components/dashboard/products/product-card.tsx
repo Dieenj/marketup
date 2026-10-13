@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { formatPriceRange, getPriceRange } from '@/lib/price';
 import RemoteImage from '@/components/remote-image';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface Product {
   id: string;
@@ -152,6 +153,26 @@ export default function ProductCard({
             />
             {product.totalStock === 0 ? 'Out of stock' : `${product.totalStock} in stock`}
           </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Skeleton cùng khung với ProductCard (ảnh 4:3, tên 2 dòng, giá + tồn kho)
+export function ProductCardSkeleton() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs">
+      <Skeleton className="aspect-4/3 rounded-none" />
+      <div className="flex flex-1 flex-col gap-3.5 p-5">
+        <Skeleton className="h-5 w-20" />
+        <div className="min-h-[40px] space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        <div className="mt-auto flex items-center justify-between border-t border-border/40 pt-3">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-20 rounded-full" />
         </div>
       </div>
     </div>

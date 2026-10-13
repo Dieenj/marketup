@@ -1,170 +1,134 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { ImageIcon, Link2, Upload, X, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ImageUp, Upload, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import api from '@/lib/api-client';
+import api, { getErrorMessage } from '@/lib/api-client';
 import RemoteImage from '@/components/remote-image';
+
+// Giới hạn hiển thị cho người dùng; API cũng phải chặn cùng mức (xem backlog BE)
+const MAX_BANNER_BYTES = 10 * 1024 * 1024;
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 interface BannerImageInputProps {
   value: string;
   onChange: (url: string) => void;
 }
 
-type Mode = 'upload' | 'url';
-
+// Banner chỉ nhận ảnh upload (lưu trên Cloudinary) để luôn được tối ưu qua CDN và không phụ thuộc link ngoài
 export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
-  const [mode, setMode] = useState<Mode>('upload');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error('Please choose an image file (PNG, JPG or WebP).');
+      return;
+    }
+    if (file.size > MAX_BANNER_BYTES) {
+      toast.error('Image is too large — maximum size is 10MB.');
+      return;
+    }
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const { data } = await api.post('/upload/image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await api.post<{ url: string }>('/upload/image', formData);
       onChange(data.url);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to upload image. Please try again.'));
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  };
+  const openPicker = () => fileInputRef.current?.click();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    e.target.value = '';
+  const dropHandlers = {
+    onDragOver: (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(true);
+    },
+    onDragLeave: () => setDragOver(false),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    },
   };
 
   return (
-    <div className="space-y-3">
-      {/* Mode tabs */}
-      <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
-        {([['upload', Upload, 'Upload file'], ['url', Link2, 'Enter URL']] as const).map(
-          ([m, Icon, label]) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all',
-                mode === m
-                  ? 'bg-white text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ),
-        )}
-      </div>
+    <div className="space-y-2">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_TYPES.join(',')}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = '';
+        }}
+      />
 
-      {mode === 'upload' ? (
-        <div className="space-y-2">
-          {/* Drop zone */}
-          <div
-            className={cn(
-              'relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors cursor-pointer',
-              dragOver ? 'border-foreground bg-muted/60' : 'border-border hover:border-foreground/40 hover:bg-muted/30',
-              uploading && 'pointer-events-none opacity-60',
-              'h-28',
-            )}
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-          >
-            {uploading ? (
-              <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
-            ) : (
-              <>
-                <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center">
-                  <Upload className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  <span className="font-medium text-foreground">Click to upload</span> or drag & drop
-                  <br />
-                  PNG, JPG, WebP — max 10MB
-                </p>
-              </>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleInputChange}
-            />
-          </div>
-
-          {/* Preview */}
-          {value && (
-            <div className="relative group rounded-xl overflow-hidden border border-border h-32">
-              <RemoteImage src={value} alt="Banner preview" fill sizes="(min-width: 768px) 600px, 100vw" className="object-cover" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => onChange('')}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 bg-white/90 hover:bg-white text-foreground text-xs font-medium px-3 py-1.5 rounded-full"
-                >
-                  <X className="h-3 w-3" />
-                  Remove
-                </button>
-              </div>
+      {value ? (
+        // Đã có banner: xem trước + nút Thay ảnh / Xoá luôn hiện (dùng được trên cảm ứng)
+        <div
+          className={cn(
+            'relative h-36 overflow-hidden rounded-xl border',
+            dragOver && 'ring-2 ring-ring',
+          )}
+          {...dropHandlers}
+        >
+          <RemoteImage src={value} alt="Banner preview" fill sizes="(min-width: 768px) 600px, 100vw" className="object-cover" />
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+              <Spinner className="size-5" />
             </div>
           )}
+          <div className="absolute right-2 bottom-2 flex gap-2">
+            <Button type="button" size="sm" variant="secondary" onClick={openPicker} disabled={uploading}>
+              <ImageUp />
+              Replace
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => onChange('')} disabled={uploading}>
+              <X />
+              Remove
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Input
-              placeholder="https://example.com/banner.jpg"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-            />
-            {value && (
-              <button
-                type="button"
-                onClick={() => onChange('')}
-                className="shrink-0 h-10 w-10 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
-          {value && (
-            <div className="relative rounded-xl overflow-hidden border border-border h-32">
-              <RemoteImage
-                src={value}
-                alt="Banner preview"
-                fill
-                sizes="(min-width: 768px) 600px, 100vw"
-                className="object-cover"
-              />
-            </div>
+        <button
+          type="button"
+          onClick={openPicker}
+          disabled={uploading}
+          className={cn(
+            'flex h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+            dragOver ? 'border-foreground bg-muted/60' : 'border-border hover:border-foreground/40 hover:bg-muted/30',
+            uploading && 'opacity-60',
           )}
-          {!value && (
-            <div className="flex items-center justify-center h-20 rounded-xl border border-dashed border-border bg-muted/30">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <ImageIcon className="h-4 w-4" />
-                Preview will appear here
-              </div>
-            </div>
+          {...dropHandlers}
+        >
+          {uploading ? (
+            <Spinner className="size-5 text-muted-foreground" />
+          ) : (
+            <>
+              <span className="flex size-9 items-center justify-center rounded-xl bg-muted">
+                <Upload className="size-4 text-muted-foreground" />
+              </span>
+              <span className="text-center text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Click to upload</span> or drag & drop
+                <br />
+                PNG, JPG, WebP — max 10MB
+              </span>
+            </>
           )}
-        </div>
+        </button>
       )}
     </div>
   );

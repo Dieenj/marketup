@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
-import api from '@/lib/api-client';
+import api, { getErrorStatus } from '@/lib/api-client';
 import { useAuthStore } from '@/hooks/use-auth';
 
 export interface Shop {
@@ -32,7 +31,7 @@ export function useMyShop({ enabled = true }: { enabled?: boolean } = {}) {
     enabled: enabled && !!user,
     // Lỗi 4xx (404 = chưa có shop, 401 = hết phiên) không thử lại; lỗi mạng/5xx thử tối đa 2 lần
     retry: (failureCount, error) => {
-      const status = isAxiosError(error) ? error.response?.status : undefined;
+      const status = getErrorStatus(error);
       if (status !== undefined && status < 500) return false;
       return failureCount < 2;
     },
