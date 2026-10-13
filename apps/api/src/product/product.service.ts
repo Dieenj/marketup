@@ -4,6 +4,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryProvider } from '../upload/cloudinary.provider';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -11,7 +13,66 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import {
   CreateVariantDto,
   CreateAttributeDto,
+  MAX_ATTRIBUTES,
+  MAX_VARIANTS,
 } from './dto/product-variant.dto';
+
+// attributes/variants đến dưới dạng chuỗi JSON trong multipart → ValidationPipe không kiểm tra được bên trong.
+// Parse + validate từng phần tử bằng class-validator; undefined = client không gửi trường này.
+function parseJsonArray<T extends object>(
+  raw: string | undefined,
+  cls: new () => T,
+  field: string,
+  maxItems: number,
+): T[] | undefined {
+  if (raw === undefined) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new BadRequestException(`Invalid ${field} format`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new BadRequestException(`${field} must be an array`);
+  }
+  if (parsed.length > maxItems) {
+    throw new BadRequestException(
+      `${field} must contain at most ${maxItems} items`,
+    );
+  }
+  return parsed.map((item: unknown, index) => {
+    if (typeof item !== 'object' || item === null) {
+      throw new BadRequestException(`${field}[${index}] is invalid`);
+    }
+    const instance = plainToInstance(cls, item);
+    const errors = validateSync(instance, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
+    if (errors.length > 0) {
+      // Ưu tiên báo sai kiểu dữ liệu ("must be a number") trước lỗi giới hạn
+      const constraints = errors[0].constraints ?? {};
+      const detail =
+        constraints.isNumber ??
+        constraints.isInt ??
+        constraints.isString ??
+        constraints.isNotEmpty ??
+        Object.values(constraints)[0] ??
+        'is invalid';
+      throw new BadRequestException(`${field}[${index}]: ${detail}`);
+    }
+    // options của biến thể: {"Size": "M"} — chỉ chấp nhận giá trị chuỗi
+    if (
+      instance instanceof CreateVariantDto &&
+      !Object.values(instance.options).every((o) => typeof o === 'string')
+    ) {
+      throw new BadRequestException(
+        `${field}[${index}]: options must be strings`,
+      );
+    }
+    return instance;
+  });
+}
 
 @Injectable()
 export class ProductService {
@@ -33,91 +94,48 @@ export class ProductService {
       throw new ForbiddenException('You do not own this shop');
     }
 
-    // Upload nhiều hình ảnh sản phẩm lên Cloudinary
-    let imageUrls: string[] = [];
-    if (images && images.length > 0) {
-      imageUrls = await Promise.all(
-        images.map((img) => this.cloudinary.uploadImage(img)),
-      );
-    }
-
-    const {
-      attributes: _attrField,
-      variants: _varField,
-      images: _images,
-      ...productData
-    } = dto as any;
-    const rawAttr = attributesRaw ?? _attrField;
-    const rawVar = variantsRaw ?? _varField;
-
-    let attributes: CreateAttributeDto[] = [];
-    let variants: CreateVariantDto[] = [];
-
-    try {
-      attributes = rawAttr ? JSON.parse(rawAttr) : [];
-    } catch (error) {
-      throw new BadRequestException('Invalid attributes format');
-    }
-
-    try {
-      variants = rawVar ? JSON.parse(rawVar) : [];
-    } catch (error) {
-      throw new BadRequestException('Invalid variants format');
-    }
-
-    // Kiểm tra hợp lệ: Sản phẩm phải có ít nhất một biến thể (variant)
-    if (!Array.isArray(variants) || variants.length === 0) {
+    const { attributes: attrField, variants: varField, ...productData } = dto;
+    const attributes =
+      parseJsonArray(
+        attributesRaw ?? attrField,
+        CreateAttributeDto,
+        'attributes',
+        MAX_ATTRIBUTES,
+      ) ?? [];
+    const variants = parseJsonArray(
+      variantsRaw ?? varField,
+      CreateVariantDto,
+      'variants',
+      MAX_VARIANTS,
+    );
+    // Sản phẩm phải có ít nhất một biến thể (variant)
+    if (!variants || variants.length === 0) {
       throw new BadRequestException('Product must have at least one variant');
     }
+    await this.assertCategoryInShop(productData.categoryId, shopId);
 
-    const normalizedVariants = variants.map((v) => ({
-      ...v,
-      price:
-        v.price !== undefined && v.price !== null ? Number(v.price) : undefined,
-      stock: Number(v.stock ?? 0),
-    }));
-
-    if (
-      normalizedVariants.some(
-        (v) => v.price === undefined || Number.isNaN(v.price),
-      )
-    ) {
-      throw new BadRequestException('Each variant must have a valid price');
-    }
-
-    if (normalizedVariants.some((v) => Number.isNaN(v.stock))) {
-      throw new BadRequestException(
-        'Each variant must have a valid stock quantity',
-      );
-    }
+    // Chỉ upload sau khi dữ liệu hợp lệ → không để lại ảnh mồ côi trên Cloudinary
+    const imageUrls = await this.uploadImages(images);
 
     const product = await this.prisma.product.create({
       data: {
         ...productData,
+        categoryId: productData.categoryId || null,
         shopId,
         imageUrl: imageUrls[0] || null, // Lấy ảnh đầu tiên làm ảnh đại diện chính
         images: imageUrls,
-        attributes:
-          attributes.length > 0
-            ? {
-                create: attributes.map((a) => ({
-                  name: a.name,
-                  options: a.options,
-                })),
-              }
-            : undefined,
-        variants:
-          normalizedVariants.length > 0
-            ? {
-                create: normalizedVariants.map((v) => ({
-                  label: v.label,
-                  options: v.options,
-                  price: v.price as number,
-                  stock: v.stock,
-                  sku: v.sku ?? null,
-                })),
-              }
-            : undefined,
+        attributes: {
+          create: attributes.map((a) => ({ name: a.name, options: a.options })),
+        },
+        variants: {
+          create: variants.map((v) => ({
+            label: v.label,
+            options: v.options,
+            price: v.price,
+            stock: v.stock,
+            sku: v.sku ?? null,
+          })),
+        },
       },
       include: { attributes: true, variants: true, category: true },
     });
@@ -167,120 +185,100 @@ export class ProductService {
   ) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { shop: true },
+      include: { shop: true, variants: { select: { id: true } } },
     });
     if (!product || product.shop.ownerId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    // Tải lên các hình ảnh mới nếu được cung cấp
-    let imageUrls = product.images;
-    let imageUrl = product.imageUrl;
-    if (images && images.length > 0) {
-      imageUrls = await Promise.all(
-        images.map((img) => this.cloudinary.uploadImage(img)),
-      );
-      imageUrl = imageUrls[0] || null;
+    const { attributes: attrField, variants: varField, ...productData } = dto;
+    const attributes = parseJsonArray(
+      attributesRaw ?? attrField,
+      CreateAttributeDto,
+      'attributes',
+      MAX_ATTRIBUTES,
+    );
+    const variants = parseJsonArray(
+      variantsRaw ?? varField,
+      CreateVariantDto,
+      'variants',
+      MAX_VARIANTS,
+    );
+    if (variants && variants.length === 0) {
+      throw new BadRequestException('Product must have at least one variant');
     }
 
-    const {
-      attributes: _attrField,
-      variants: _varField,
-      images: _images,
-      ...productData
-    } = dto as any;
-    const rawAttr = attributesRaw ?? _attrField;
-    const rawVar = variantsRaw ?? _varField;
-
-    // Thay thế các thuộc tính và biến thể sản phẩm nếu được cung cấp
-    if (rawAttr !== undefined) {
-      const attributes: CreateAttributeDto[] = JSON.parse(rawAttr);
-      await this.prisma.productAttribute.deleteMany({
-        where: { productId: id },
-      });
-      if (attributes.length > 0) {
-        await this.prisma.productAttribute.createMany({
-          data: attributes.map((a) => ({
-            name: a.name,
-            options: a.options,
-            productId: id,
-          })),
-        });
-      }
+    // Chỉ được sửa biến thể của chính sản phẩm này — id do client gửi lên, trước đây không kiểm tra
+    // nên người bán này sửa được giá/tồn kho biến thể của shop khác
+    const existingIds = new Set(product.variants.map((v) => v.id));
+    if (variants?.some((v) => v.id && !existingIds.has(v.id))) {
+      throw new BadRequestException('Variant does not belong to this product');
     }
+    await this.assertCategoryInShop(productData.categoryId, product.shopId);
 
-    if (rawVar !== undefined) {
-      const incomingVariants: (CreateVariantDto & { id?: string })[] =
-        JSON.parse(rawVar);
+    // Ảnh mới (nếu có) thay toàn bộ ảnh cũ; upload sau khi dữ liệu hợp lệ
+    const newImageUrls = await this.uploadImages(images);
+    const imageData =
+      newImageUrls.length > 0
+        ? { images: newImageUrls, imageUrl: newImageUrls[0] }
+        : {};
 
-      // Kiểm tra hợp lệ: Sản phẩm phải có ít nhất một biến thể (variant)
-      if (incomingVariants.length === 0) {
-        throw new BadRequestException('Product must have at least one variant');
-      }
-
-      // Lấy tất cả các biến thể hiện có của sản phẩm này
-      const existingVariants = await this.prisma.productVariant.findMany({
-        where: { productId: id },
-      });
-
-      const incomingIds = incomingVariants
-        .map((v) => v.id)
-        .filter(Boolean) as string[];
-
-      // Các biến thể cần xóa là các biến thể có trong DB nhưng không có trong danh sách gửi lên
-      const idsToDelete = existingVariants
-        .map((v) => v.id)
-        .filter((dbId) => !incomingIds.includes(dbId));
-
-      if (idsToDelete.length > 0) {
-        await this.prisma.productVariant.deleteMany({
-          where: { id: { in: idsToDelete } },
-        });
-      }
-
-      // Cập nhật hoặc tạo mới các biến thể được gửi lên
-      for (const v of incomingVariants) {
-        const price =
-          v.price !== undefined && v.price !== null
-            ? Number(v.price)
-            : undefined;
-        if (price === undefined || Number.isNaN(price)) {
-          throw new BadRequestException('Each variant must have a valid price');
-        }
-
-        const variantData = {
-          label: v.label,
-          options: v.options as any,
-          price: price,
-          stock: Number(v.stock ?? 0),
-          sku: v.sku ?? null,
-        };
-
-        if (v.id) {
-          // Cập nhật biến thể hiện có
-          await this.prisma.productVariant.update({
-            where: { id: v.id },
-            data: variantData,
-          });
-        } else {
-          // Tạo biến thể mới
-          await this.prisma.productVariant.create({
-            data: {
-              ...variantData,
+    // Một transaction: lỗi giữa chừng không để lại sản phẩm nửa cũ nửa mới
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (attributes) {
+        await tx.productAttribute.deleteMany({ where: { productId: id } });
+        if (attributes.length > 0) {
+          await tx.productAttribute.createMany({
+            data: attributes.map((a) => ({
+              name: a.name,
+              options: a.options,
               productId: id,
-            },
+            })),
           });
         }
       }
-    }
 
-    return this.prisma.product
-      .update({
+      if (variants) {
+        // Biến thể có trong DB nhưng không còn trong danh sách gửi lên → xoá
+        // (OrderItem giữ snapshot nhãn/giá; variantId tự về null)
+        const keptIds = variants
+          .map((v) => v.id)
+          .filter((v): v is string => !!v);
+        await tx.productVariant.deleteMany({
+          where: { productId: id, id: { notIn: keptIds } },
+        });
+        for (const v of variants) {
+          const data = {
+            label: v.label,
+            options: v.options,
+            price: v.price,
+            stock: v.stock,
+            sku: v.sku ?? null,
+          };
+          if (v.id) {
+            await tx.productVariant.update({ where: { id: v.id }, data });
+          } else {
+            await tx.productVariant.create({
+              data: { ...data, productId: id },
+            });
+          }
+        }
+      }
+
+      return tx.product.update({
         where: { id },
-        data: { ...productData, imageUrl, images: imageUrls },
+        data: {
+          ...productData,
+          ...(productData.categoryId !== undefined && {
+            categoryId: productData.categoryId || null,
+          }),
+          ...imageData,
+        },
         include: { attributes: true, variants: true, category: true },
-      })
-      .then((p) => this.addTotalStock(p));
+      });
+    });
+
+    return this.addTotalStock(updated);
   }
 
   async remove(userId: string, id: string) {
@@ -309,12 +307,29 @@ export class ProductService {
     return this.prisma.product.delete({ where: { id } });
   }
 
-  private addTotalStock(product: any) {
-    const totalStock =
-      product.variants?.reduce(
-        (sum: number, v: any) => sum + (v.stock || 0),
-        0,
-      ) || 0;
+  // categoryId rỗng = không có danh mục; có giá trị thì phải là danh mục của chính shop này
+  private async assertCategoryInShop(
+    categoryId: string | undefined,
+    shopId: string,
+  ) {
+    if (!categoryId) return;
+    const category = await this.prisma.category.findFirst({
+      where: { id: categoryId, shopId },
+      select: { id: true },
+    });
+    if (!category)
+      throw new BadRequestException('Category not found in this shop');
+  }
+
+  private async uploadImages(images?: Express.Multer.File[]) {
+    if (!images?.length) return [];
+    return Promise.all(images.map((img) => this.cloudinary.uploadImage(img)));
+  }
+
+  private addTotalStock<T extends { variants: { stock: number }[] }>(
+    product: T,
+  ) {
+    const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
     return { ...product, totalStock };
   }
 }

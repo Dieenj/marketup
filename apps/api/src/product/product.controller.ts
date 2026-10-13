@@ -11,12 +11,14 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { imageUploadOptions } from '../common/image-upload';
+
+const MAX_PRODUCT_IMAGES = 10;
 
 @Controller('products')
 export class ProductController {
@@ -25,9 +27,11 @@ export class ProductController {
   @Post(':shopId')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      storage: memoryStorage(),
-    }),
+    FilesInterceptor(
+      'images',
+      MAX_PRODUCT_IMAGES,
+      imageUploadOptions(MAX_PRODUCT_IMAGES),
+    ),
   )
   create(
     @GetUser('id') userId: string,
@@ -35,7 +39,7 @@ export class ProductController {
     @Body() dto: CreateProductDto,
     @Body('attributes') attributesRaw?: string,
     @Body('variants') variantsRaw?: string,
-    @UploadedFiles() images?: any[],
+    @UploadedFiles() images?: Express.Multer.File[],
   ) {
     return this.productService.create(
       userId,
@@ -66,9 +70,11 @@ export class ProductController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FilesInterceptor('images', 10, {
-      storage: memoryStorage(),
-    }),
+    FilesInterceptor(
+      'images',
+      MAX_PRODUCT_IMAGES,
+      imageUploadOptions(MAX_PRODUCT_IMAGES),
+    ),
   )
   update(
     @GetUser('id') userId: string,
@@ -76,7 +82,7 @@ export class ProductController {
     @Body() dto: UpdateProductDto,
     @Body('attributes') attributesRaw?: string,
     @Body('variants') variantsRaw?: string,
-    @UploadedFiles() images?: any[],
+    @UploadedFiles() images?: Express.Multer.File[],
   ) {
     return this.productService.update(
       userId,

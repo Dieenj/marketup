@@ -1,9 +1,15 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Lỗi ràng buộc dữ liệu (trùng slug/email, bản ghi không tồn tại) → 409/404/400 thay vì 500
+  app.useGlobalFilters(
+    new PrismaExceptionFilter(app.get(HttpAdapterHost).httpAdapter),
+  );
 
   // Pipe kiểm thử dữ liệu toàn cục (Global validation pipe)
   app.useGlobalPipes(

@@ -1,8 +1,15 @@
-import { Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import { CloudinaryProvider } from './cloudinary.provider';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { imageUploadOptions } from '../common/image-upload';
 
 @Controller('upload')
 export class UploadController {
@@ -10,8 +17,9 @@ export class UploadController {
 
   @Post('image')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  @UseInterceptors(FileInterceptor('file', imageUploadOptions()))
+  async uploadImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No image file provided');
     const url = await this.cloudinary.uploadImage(file);
     return { url };
   }

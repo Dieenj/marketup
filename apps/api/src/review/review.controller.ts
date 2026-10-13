@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   Body,
@@ -61,11 +62,25 @@ export class ReviewController {
   findForModeration(
     @GetUser('id') userId: string,
     @Param('shopId') shopId: string,
-    @Query('rating') rating?: number,
+    @Query('rating') rating?: string,
     @Query('status') status?: string,
   ) {
+    const ratingNumber = rating ? Number(rating) : undefined;
+    if (
+      ratingNumber !== undefined &&
+      !(
+        Number.isInteger(ratingNumber) &&
+        ratingNumber >= 1 &&
+        ratingNumber <= 5
+      )
+    ) {
+      throw new BadRequestException('rating must be an integer from 1 to 5');
+    }
+    if (status && !['PENDING', 'APPROVED'].includes(status)) {
+      throw new BadRequestException('status must be PENDING or APPROVED');
+    }
     return this.reviewService.findForModeration(userId, shopId, {
-      rating,
+      rating: ratingNumber,
       status,
     });
   }

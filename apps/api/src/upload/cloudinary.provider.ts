@@ -17,7 +17,7 @@ export class CloudinaryProvider {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder: 'marketup' },
         (error, result) => {
-          if (error) return reject(error);
+          if (error) return reject(new Error(error.message));
           resolve(result!.secure_url);
         },
       );
