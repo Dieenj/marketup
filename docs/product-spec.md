@@ -97,8 +97,10 @@ Người bán chỉ **xem và trả lời** đánh giá; không duyệt, ẩn ha
 
 ### 3.1 Storefront
 
-- `/shop/<slug>`: banner, logo, màu chủ đạo của shop, danh sách sản phẩm, tìm theo tên/mô tả và lọc theo danh mục (trong shop đó, xử lý trên trình duyệt), điểm đánh giá của shop và các đánh giá mới nhất.
-- `/shop/<slug>/products/<id>`: thư viện ảnh, chọn biến thể (giá và tồn kho đổi theo), phân bố số sao, danh sách đánh giá.
+- `/shop/<slug>`: banner, logo, màu chủ đạo của shop, danh sách sản phẩm, điểm đánh giá của shop và các đánh giá mới nhất.
+  - Tìm theo tên/mô tả, **không dấu** và không phân biệt hoa thường ("ao" khớp "Áo"); lọc theo danh mục. Xử lý trên trình duyệt với toàn bộ sản phẩm của shop.
+  - Sắp xếp: "Newest" (mặc định, mới nhất trước); giá thấp → cao theo **giá thấp nhất** của sản phẩm; giá cao → thấp theo **giá cao nhất** (mỗi chiều khớp với đầu khoảng giá người mua đang nhìn). Dashboard dùng cùng quy tắc (`apps/web/lib/price.ts`).
+- `/shop/<slug>/products/<id>`: ảnh chính (khoảng 450 px trên desktop) và dải ảnh nhỏ khi có nhiều ảnh, chọn biến thể (giá và tồn kho đổi theo), phân bố số sao, danh sách đánh giá. Trên điện thoại, giá và nút thêm vào giỏ nằm ở thanh dính đáy màn hình.
 - Storefront được render phía server (SSR) để link chia sẻ có tiêu đề, mô tả và ảnh xem trước.
 - Shop không tồn tại hoặc ngừng hoạt động → trang 404 thật.
 

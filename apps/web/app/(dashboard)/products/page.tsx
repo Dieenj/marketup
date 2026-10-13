@@ -14,7 +14,8 @@ import EditProductDialog from '@/components/dashboard/products/edit-product-dial
 import PageHeader from '@/components/dashboard/page-header';
 import { StatCardSkeleton } from '@/components/dashboard/stat-card';
 import EmptyState from '@/components/empty-state';
-import { getMinPrice } from '@/lib/price';
+import { compareByPrice } from '@/lib/price';
+import { matchesSearch } from '@/lib/search';
 
 // Subcomponents
 import ProductStats from '@/components/dashboard/products/product-stats';
@@ -93,7 +94,7 @@ export default function ProductsPage() {
             return false;
           }
           // Lọc theo từ khóa tìm kiếm
-          if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          if (!matchesSearch(searchQuery, product.name)) {
             return false;
           }
           // Lọc theo trạng thái kho hàng
@@ -117,10 +118,10 @@ export default function ProductsPage() {
           }
 
           if (sortBy === 'price-asc') {
-            return getMinPrice(a.variants) - getMinPrice(b.variants);
+            return compareByPrice(a.variants, b.variants, 'asc');
           }
           if (sortBy === 'price-desc') {
-            return getMinPrice(b.variants) - getMinPrice(a.variants);
+            return compareByPrice(a.variants, b.variants, 'desc');
           }
           if (sortBy === 'stock-asc') {
             return a.totalStock - b.totalStock;

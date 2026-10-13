@@ -9,7 +9,8 @@ import { ImageIcon, ShoppingBag, Search, ArrowRight, Filter } from 'lucide-react
 import Link from 'next/link';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import { storefrontQueries, type StorefrontCategory } from '@/lib/storefront-queries';
-import { getMinPrice, getPriceRange } from '@/lib/price';
+import { compareByPrice, getPriceRange } from '@/lib/price';
+import { matchesSearch } from '@/lib/search';
 import { formatCurrency, formatDate } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
 import StarRating from '@/components/star-rating';
@@ -52,7 +53,7 @@ interface Review {
 }
 
 const SORT_OPTIONS = [
-  { value: 'default', label: 'Default' },
+  { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
 ];
@@ -64,7 +65,7 @@ export default function StorefrontClient() {
   const slug = params.slug as string;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState('default');
+  const [sortBy, setSortBy] = useState('newest');
 
   const {
     data: shop,
@@ -97,25 +98,17 @@ export default function StorefrontClient() {
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    let list = products.filter((p: Product) => {
-      const matchesSearch =
-        !searchQuery ||
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesCategory = !selectedCategory || p.category?.id === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
+    // API trả sản phẩm mới nhất trước ("Newest")
+    const list = products.filter(
+      (p: Product) =>
+        matchesSearch(searchQuery, p.name, p.description) &&
+        (!selectedCategory || p.category?.id === selectedCategory),
+    );
 
-    if (sortBy === 'price-asc') {
-      list = [...list].sort(
-        (a: Product, b: Product) => getMinPrice(a.variants) - getMinPrice(b.variants),
-      );
-    } else if (sortBy === 'price-desc') {
-      list = [...list].sort(
-        (a: Product, b: Product) => getMinPrice(b.variants) - getMinPrice(a.variants),
-      );
+    if (sortBy === 'price-asc' || sortBy === 'price-desc') {
+      const direction = sortBy === 'price-asc' ? 'asc' : 'desc';
+      return [...list].sort((a, b) => compareByPrice(a.variants, b.variants, direction));
     }
-
     return list;
   }, [products, searchQuery, selectedCategory, sortBy]);
 
