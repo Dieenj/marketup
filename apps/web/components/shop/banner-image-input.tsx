@@ -8,10 +8,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import api, { getErrorMessage } from '@/lib/api-client';
 import RemoteImage from '@/components/remote-image';
+import { ACCEPTED_IMAGE_TYPES, imageFileError } from '@/lib/image-upload';
 
-// Giới hạn hiển thị cho người dùng; API cũng phải chặn cùng mức (xem backlog BE)
-const MAX_BANNER_BYTES = 10 * 1024 * 1024;
-const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 interface BannerImageInputProps {
   value: string;
@@ -25,12 +23,9 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error('Please choose an image file (PNG, JPG or WebP).');
-      return;
-    }
-    if (file.size > MAX_BANNER_BYTES) {
-      toast.error('Image is too large — maximum size is 10MB.');
+    const fileError = imageFileError(file);
+    if (fileError) {
+      toast.error(fileError);
       return;
     }
     setUploading(true);
@@ -67,7 +62,7 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept={ACCEPTED_TYPES.join(',')}
+        accept={ACCEPTED_IMAGE_TYPES.join(',')}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

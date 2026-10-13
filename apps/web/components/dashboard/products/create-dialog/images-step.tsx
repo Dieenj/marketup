@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Upload, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FilePreviewImage from '@/components/file-preview-image';
+import { ACCEPTED_IMAGE_TYPES, MAX_PRODUCT_IMAGES, pickImageFiles } from '@/lib/image-upload';
 
 interface CreateProductStep3Props {
   images: File[];
@@ -22,8 +23,8 @@ export default function ImagesStep({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = (files: File[]) => {
-    const imgFiles = files.filter((f) => f.type.startsWith('image/'));
-    onAddImages(imgFiles);
+    const picked = pickImageFiles(files, MAX_PRODUCT_IMAGES - images.length);
+    if (picked.length > 0) onAddImages(picked);
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -74,7 +75,7 @@ export default function ImagesStep({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={ACCEPTED_IMAGE_TYPES.join(',')}
           multiple
           className="sr-only"
           onClick={(e) => e.stopPropagation()}

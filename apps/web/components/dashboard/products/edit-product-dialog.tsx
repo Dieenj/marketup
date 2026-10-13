@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
+import { ACCEPTED_IMAGE_TYPES, pickImageFiles } from '@/lib/image-upload';
 
 // Shared Subcomponent & Types
 import VariantsEditor, { AttributeDef, VariantDef } from './variants-editor';
@@ -272,12 +273,13 @@ export default function EditProductDialog({
               )}
               <input
                 type="file"
-                accept="image/*"
+                accept={ACCEPTED_IMAGE_TYPES.join(',')}
                 multiple
                 className="h-10 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm text-foreground transition-colors outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 onChange={(e) => {
-                  const files = Array.from(e.target.files || []);
+                  const files = pickImageFiles(Array.from(e.target.files || []));
                   setImages(files);
+                  if (files.length === 0) e.target.value = '';
                 }}
               />
               <p className="text-xs text-muted-foreground">

@@ -33,7 +33,8 @@ const setupSchema = z.object({
     .string()
     .min(3, 'URL must be at least 3 characters')
     .max(30, 'URL must be at most 30 characters')
-    .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens allowed'),
+    // Cùng quy tắc với API: chữ thường/số, nối bằng một dấu gạch ngang
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters and numbers, separated by single hyphens'),
   description: z.string().optional(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   primaryColor: z.string(),
@@ -134,18 +135,19 @@ export default function SetupPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium">Shop URL</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center border border-border/80 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-foreground focus-within:border-foreground h-11">
-                            <span className="bg-[#f5f5f5] px-3 text-sm text-muted-foreground border-r h-full flex items-center whitespace-nowrap">
-                              /shop/
-                            </span>
+                        {/* FormControl bọc trực tiếp ô nhập để label/aria-invalid/thông báo lỗi gắn đúng vào input */}
+                        <div className="flex items-center border border-border/80 rounded-lg overflow-hidden focus-within:ring-1 focus-within:ring-foreground focus-within:border-foreground h-11">
+                          <span className="bg-[#f5f5f5] px-3 text-sm text-muted-foreground border-r h-full flex items-center whitespace-nowrap">
+                            /shop/
+                          </span>
+                          <FormControl>
                             <Input
                               className="border-0 rounded-none h-full focus-visible:ring-0 focus-visible:ring-offset-0 bg-[#fafafa]"
                               placeholder="my-awesome-store"
                               {...field}
                             />
-                          </div>
-                        </FormControl>
+                          </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
