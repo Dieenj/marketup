@@ -5,11 +5,13 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { SellerOrdersQueryDto } from './dto/list-orders.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { RateLimit } from '../common/rate-limit';
@@ -26,8 +28,12 @@ export class OrderController {
 
   @Get('shop/:shopId')
   @UseGuards(JwtAuthGuard)
-  findAll(@GetUser('id') userId: string, @Param('shopId') shopId: string) {
-    return this.orderService.findAllByShop(userId, shopId);
+  findAll(
+    @GetUser('id') userId: string,
+    @Param('shopId') shopId: string,
+    @Query() query: SellerOrdersQueryDto,
+  ) {
+    return this.orderService.findForSeller(userId, shopId, query);
   }
 
   // Chi tiết đầy đủ (có thông tin liên hệ người mua) → chỉ chủ shop

@@ -65,7 +65,7 @@ Ký hiệu cột **Quyền**:
 | Method | Path                   | Quyền  | Mô tả                                                                                      |
 | ------ | ---------------------- | ------ | ------------------------------------------------------------------------------------------ |
 | POST   | `/orders`              | —      | Đặt hàng (xem bên dưới) → đơn + `accessToken` (link token của đơn)                         |
-| GET    | `/orders/shop/:shopId` | seller | Mọi đơn của shop                                                                           |
+| GET    | `/orders/shop/:shopId` | seller | Đơn của shop theo trang: `?status=&q=&cursor=` (xem bên dưới)                              |
 | GET    | `/orders/:id`          | seller | Chi tiết đơn                                                                               |
 | PATCH  | `/orders/:id/status`   | seller | `{ status, cancelReason?, cancelNote? }`; `cancelReason` bắt buộc khi `status = CANCELLED` |
 
@@ -93,11 +93,27 @@ Giá luôn do server tính từ DB, client không gửi giá. Luật kiểm tra 
 | ------ | ----------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
 | POST   | `/buyer/auth/request-code`          | —            | `{ email, shopSlug? }` → `{ resendInSeconds }`; trả cùng kiểu phản hồi với mọi email |
 | POST   | `/buyer/auth/verify`                | —            | `{ email, code }` → `{ email, token }` (phiên 30 ngày)                               |
-| GET    | `/buyer/orders?shop=<slug>`         | buyer        | Đơn của email đó tại shop (tối đa 100, mới nhất trước)                               |
+| GET    | `/buyer/orders?shop=<slug>`         | buyer        | Đơn của email đó tại shop theo trang: `&status=&cursor=` (xem bên dưới)              |
 | GET    | `/buyer/orders/:orderNumber`        | buyer\|order | Chi tiết đơn, kèm `reviewableUntil` và đánh giá của từng món                         |
 | POST   | `/buyer/orders/:orderNumber/cancel` | buyer\|order | `{ reason, note? }`; chỉ khi `PENDING`                                               |
 
 Dữ liệu đơn trả cho người mua không có id nội bộ của đơn, thông tin chủ shop, email hay số điện thoại.
+
+### Danh sách đơn (phân trang)
+
+`GET /orders/shop/:shopId` và `GET /buyer/orders` trả từng trang 20 đơn, **mới nhất trước** (`apps/api/src/order/order-list.ts`):
+
+```json
+{
+  "items": [ … ],
+  "nextCursor": "…",
+  "counts": { "ALL": 62, "PENDING": 51, "CONFIRMED": 1, "PROCESSING": 1, "SHIPPING": 1, "DELIVERED": 7, "CANCELLED": 1 }
+}
+```
+
+- Trang sau: gửi lại `cursor=<nextCursor>`; `nextCursor = null` là hết. Con trỏ là id đơn (người bán) hoặc mã đơn (người mua).
+- `status=<OrderStatus>` lọc theo tab; `counts` là số đơn mỗi tab trên toàn bộ đơn (không theo từ khoá tìm).
+- Người bán: `q=` tìm theo mã đơn, tên, email, số điện thoại (chứa chuỗi, không phân biệt hoa thường). Người mua: `shop=<slug>` bắt buộc.
 
 ## Đánh giá
 

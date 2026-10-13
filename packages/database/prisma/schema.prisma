@@ -176,6 +176,8 @@ model Order {
 
   // Người mua đăng nhập bằng email → liệt kê đơn theo email trong từng shop
   @@index([buyerEmail, shopId])
+  // Danh sách đơn của shop ở dashboard: mới nhất trước, từng trang
+  @@index([shopId, createdAt])
   @@map("orders")
 }
 

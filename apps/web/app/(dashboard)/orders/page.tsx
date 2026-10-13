@@ -1,7 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
 import {
   Table,
@@ -23,17 +28,17 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MoreVertical, Eye, ShoppingCart, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
-  ORDER_STATUSES,
   cancelReasonLabels,
   nextStatuses,
   sellerCancelReasons,
   statusLabels,
   type CancelReason,
+  type OrderPage,
+  type OrderTab,
 } from '@/lib/order-status';
 import { formatCurrency } from '@/lib/format';
 import PageHeader from '@/components/dashboard/page-header';
@@ -41,6 +46,9 @@ import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
 import RemoteImage from '@/components/remote-image';
 import CancelOrderDialog, { type CancelOrderInput } from '@/components/cancel-order-dialog';
+import OrderStatusTabs from '@/components/order-status-tabs';
+import LoadMore from '@/components/load-more';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 interface OrderItem {
   id: string;
@@ -77,8 +85,10 @@ function actionLabel(order: Order, status: string) {
 export default function OrdersPage() {
   const queryClient = useQueryClient();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<OrderTab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  // Tìm ở API (đơn được tải từng trang) → chỉ gọi khi ngừng gõ
+  const search = useDebouncedValue(searchQuery.trim());
   // Đơn đang chờ chọn lý do huỷ (+ callback cập nhật dialog chi tiết khi thành công)
   const [cancelTarget, setCancelTarget] = useState<{
     order: Order;
@@ -87,19 +97,37 @@ export default function OrdersPage() {
 
   const { data: shop } = useMyShop();
 
+  // Mới nhất trước, 20 đơn mỗi lần; cuộn tới cuối thì tải tiếp (giống Shopee)
   const {
-    data: orders,
+    data,
     isLoading,
     isError,
     refetch,
-  } = useQuery({
-    queryKey: ['orders', shop?.id],
-    queryFn: async () => {
-      const { data } = await api.get(`/orders/shop/${shop!.id}`);
-      return data;
-    },
+    isPlaceholderData,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['orders', shop?.id, statusFilter, search],
+    queryFn: async ({ pageParam }) =>
+      (
+        await api.get<OrderPage<Order>>(`/orders/shop/${shop!.id}`, {
+          params: {
+            status: statusFilter === 'ALL' ? undefined : statusFilter,
+            q: search || undefined,
+            cursor: pageParam,
+          },
+        })
+      ).data,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!shop?.id,
+    // Đổi tab / từ khoá: giữ danh sách cũ (mờ đi) và số đếm trên tab tới khi có kết quả mới
+    placeholderData: keepPreviousData,
   });
+  const orders = data?.pages.flatMap((page) => page.items) ?? [];
+  const counts = data?.pages[0]?.counts;
+  const loadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({
@@ -137,21 +165,7 @@ export default function OrdersPage() {
     updateStatusMutation.mutate({ orderId: order.id, status }, { onSuccess });
   };
 
-  const allOrders: Order[] = orders ?? [];
-  const statusCounts = allOrders.reduce<Record<string, number>>((acc, order) => {
-    acc[order.status] = (acc[order.status] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  const normalizedSearch = searchQuery.trim().toLowerCase();
-  const filteredOrders = allOrders.filter((order) => {
-    if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
-    if (!normalizedSearch) return true;
-    return [order.orderNumber, order.buyerName, order.buyerEmail].some((field) =>
-      field?.toLowerCase().includes(normalizedSearch),
-    );
-  });
-  const isFiltered = statusFilter !== 'ALL' || !!normalizedSearch;
+  const isFiltered = statusFilter !== 'ALL' || !!search;
 
   return (
     <div className="space-y-6">
@@ -160,33 +174,12 @@ export default function OrdersPage() {
       <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
         {/* Bộ lọc trạng thái & tìm kiếm */}
         <div className="flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
-          <Tabs
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(String(value))}
-            className="min-w-0"
-          >
-            <TabsList className="max-w-full justify-start overflow-x-auto">
-              <TabsTrigger value="ALL" className="flex-none px-2.5">
-                All
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {allOrders.length}
-                </span>
-              </TabsTrigger>
-              {ORDER_STATUSES.map((status) => (
-                <TabsTrigger key={status} value={status} className="flex-none px-2.5">
-                  {statusLabels[status]}
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {statusCounts[status] ?? 0}
-                  </span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <OrderStatusTabs value={statusFilter} onChange={setStatusFilter} counts={counts} />
           <div className="relative w-full lg:w-64">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search order, name, email…"
+              placeholder="Search order, name, email, phone…"
               aria-label="Search orders"
               value={searchQuery}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
@@ -195,7 +188,7 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <Table>
+        <Table className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
               <TableHead className="hidden sm:table-cell pl-4">Order</TableHead>
@@ -241,7 +234,7 @@ export default function OrdersPage() {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredOrders.length === 0 ? (
+            ) : orders.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={6} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -270,7 +263,7 @@ export default function OrdersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredOrders.map((order) => (
+              orders.map((order) => (
                 <TableRow
                   key={order.id}
                   className="cursor-pointer"
@@ -341,6 +334,9 @@ export default function OrdersPage() {
             )}
           </TableBody>
         </Table>
+        {!isPlaceholderData && (
+          <LoadMore hasMore={!!hasNextPage} isLoading={isFetchingNextPage} onLoadMore={loadMore} />
+        )}
       </div>
 
       {/* Hộp thoại chi tiết đơn hàng */}

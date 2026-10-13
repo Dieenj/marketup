@@ -48,6 +48,8 @@ Danh mục thuộc từng shop, slug danh mục là duy nhất trong shop. Xoá 
 
 ### 2.4 Xử lý đơn hàng
 
+Trang Orders ở dashboard hiện đơn **mới nhất trước**, không có lựa chọn sắp xếp (giống Shopee). Có tab theo trạng thái kèm số đơn, ô tìm theo mã đơn / tên / email / số điện thoại; mỗi lần tải 20 đơn, cuộn tới cuối thì tải tiếp. Lọc và tìm đều do API xử lý.
+
 Người bán chuyển trạng thái đơn theo đúng thứ tự (định nghĩa trong `apps/api/src/order/order-status.ts`):
 
 ```mermaid
@@ -140,6 +142,8 @@ Luật mã đăng nhập (`apps/api/src/buyer-auth/buyer-auth.service.ts`):
 - API luôn trả cùng một kiểu phản hồi dù email đã từng mua hay chưa, nên không dò được ai là khách của shop.
 - Đơn không tồn tại và đơn của người khác trả cùng một lỗi 404.
 
+Danh sách "My orders" giống trang Orders của người bán: mới nhất trước, tab theo trạng thái kèm số đơn, cuộn tới đâu tải tới đó (20 đơn mỗi lần).
+
 Trang đơn hiển thị tiến trình trạng thái, thông tin giao hàng, sản phẩm, tổng tiền, ai huỷ và lý do (nếu có). Các trang đơn được đánh dấu `noindex`.
 
 ### 3.4 Đánh giá sản phẩm
@@ -172,7 +176,7 @@ Nếu chưa cấu hình SMTP, API chạy ở chế độ mock: email được in
 
 ### Hạn chế đã biết
 
-- Tìm kiếm sản phẩm chạy trên trình duyệt với toàn bộ sản phẩm của shop; cần chuyển sang server (kèm phân trang) khi shop có nhiều sản phẩm. Lúc đó checkout cũng cần một API tra biến thể theo id thay vì tải toàn bộ sản phẩm. Các danh sách khác có giới hạn cứng: 100 đơn trong "My orders", 200 đánh giá ở dashboard.
+- Tìm kiếm sản phẩm chạy trên trình duyệt với toàn bộ sản phẩm của shop; cần chuyển sang server (kèm phân trang) khi shop có nhiều sản phẩm. Lúc đó checkout cũng cần một API tra biến thể theo id thay vì tải toàn bộ sản phẩm. Danh sách đánh giá ở dashboard có giới hạn cứng 200 đánh giá mới nhất.
 
 ### Ngoài phạm vi hiện tại
 

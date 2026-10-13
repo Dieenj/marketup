@@ -1,6 +1,6 @@
-import { queryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import api, { getErrorStatus } from '@/lib/api-client';
-import type { CancelReason } from '@/lib/order-status';
+import type { CancelReason, OrderPage, OrderTab } from '@/lib/order-status';
 
 // Đơn hàng phía người mua — đúng các trường API /buyer/orders trả về (không có email/sđt hay id nội bộ)
 // Đánh giá của chính người mua cho một sản phẩm trong đơn
@@ -110,16 +110,23 @@ export async function saveReview(
   return data;
 }
 
-export function myOrdersQuery(shopSlug: string, token: string) {
-  return queryOptions({
-    queryKey: ['buyer-orders', shopSlug, token],
-    queryFn: async () =>
+// Đơn của người mua trong shop, theo tab trạng thái; mới nhất trước, từng trang 20 đơn
+export function myOrdersQuery(shopSlug: string, token: string, tab: OrderTab) {
+  return infiniteQueryOptions({
+    queryKey: ['buyer-orders', shopSlug, token, tab],
+    queryFn: async ({ pageParam }) =>
       (
-        await api.get<BuyerOrder[]>('/buyer/orders', {
-          params: { shop: shopSlug },
+        await api.get<OrderPage<BuyerOrder>>('/buyer/orders', {
+          params: {
+            shop: shopSlug,
+            status: tab === 'ALL' ? undefined : tab,
+            cursor: pageParam,
+          },
           ...withToken(token),
         })
       ).data,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     retry: retryUnlessDenied,
   });
 }

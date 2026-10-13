@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import OrderStatusBadge from '@/components/order-status-badge';
+import OrderStatusTabs from '@/components/order-status-tabs';
+import LoadMore from '@/components/load-more';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getErrorStatus } from '@/lib/api-client';
+import { statusLabels, type OrderTab } from '@/lib/order-status';
 import { myOrdersQuery, type BuyerOrder } from '@/lib/buyer-api';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { useBuyerSession } from '@/hooks/use-buyer-session';
@@ -47,13 +50,22 @@ export default function OrdersClient({ slug }: { slug: string }) {
 
 function SignedInOrders({ slug, token, email }: { slug: string; token: string; email: string }) {
   const signOut = useBuyerSession((s) => s.signOut);
-  const query = useQuery(myOrdersQuery(slug, token));
+  const [tab, setTab] = useState<OrderTab>('ALL');
+  // Đổi tab: giữ danh sách cũ (mờ đi) và số đếm trên tab tới khi có kết quả mới
+  const query = useInfiniteQuery({
+    ...myOrdersQuery(slug, token, tab),
+    placeholderData: keepPreviousData,
+  });
+  const { fetchNextPage } = query;
+  const loadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
   const expired = query.isError && getErrorStatus(query.error) === 401;
 
   // Phiên hết hạn (30 ngày) → quay về màn đăng nhập
   useEffect(() => {
     if (expired) signOut();
   }, [expired, signOut]);
+
+  const orders = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   if (query.isError && !expired) {
     return <StorefrontUnavailable onRetry={() => query.refetch()} isRetrying={query.isFetching} />;
@@ -72,28 +84,53 @@ function SignedInOrders({ slug, token, email }: { slug: string; token: string; e
         </p>
       }
     >
+      <OrderStatusTabs
+        value={tab}
+        onChange={setTab}
+        counts={query.data?.pages[0]?.counts}
+        className="mb-4"
+      />
       {!query.isSuccess ? (
         <OrderRowsSkeleton count={2} />
-      ) : query.data.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title="No orders yet"
-          description={`Orders you place with ${email} will show up here.`}
-          action={
-            <Link href={`/shop/${slug}`} className={buttonVariants({ variant: 'outline' })}>
-              Start shopping
-            </Link>
-          }
-          className="py-16"
-        />
+      ) : orders.length === 0 ? (
+        tab === 'ALL' ? (
+          <EmptyState
+            icon={Package}
+            title="No orders yet"
+            description={`Orders you place with ${email} will show up here.`}
+            action={
+              <Link href={`/shop/${slug}`} className={buttonVariants({ variant: 'outline' })}>
+                Start shopping
+              </Link>
+            }
+            className="py-16"
+          />
+        ) : (
+          <EmptyState
+            icon={Package}
+            title={`No ${statusLabels[tab].toLowerCase()} orders`}
+            className="py-16"
+          />
+        )
       ) : (
-        <ul className="space-y-3">
-          {query.data.map((order) => (
-            <li key={order.orderNumber}>
-              <OrderRow slug={slug} order={order} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul
+            className={`space-y-3 ${query.isPlaceholderData ? 'opacity-60 transition-opacity' : ''}`}
+          >
+            {orders.map((order) => (
+              <li key={order.orderNumber}>
+                <OrderRow slug={slug} order={order} />
+              </li>
+            ))}
+          </ul>
+          {!query.isPlaceholderData && (
+            <LoadMore
+              hasMore={query.hasNextPage}
+              isLoading={query.isFetchingNextPage}
+              onLoadMore={loadMore}
+            />
+          )}
+        </>
       )}
     </OrdersShell>
   );

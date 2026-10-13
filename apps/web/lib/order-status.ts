@@ -9,6 +9,18 @@ export const ORDER_STATUSES = [
   'CANCELLED',
 ] as const;
 
+// Danh sách đơn kiểu Shopee: tab "All" + từng trạng thái, mới nhất trước, tải từng trang
+export const ORDER_TABS = ['ALL', ...ORDER_STATUSES] as const;
+export type OrderTab = (typeof ORDER_TABS)[number];
+export type OrderStatusCounts = Record<OrderTab, number>;
+
+// Một trang danh sách đơn từ API; nextCursor = null khi hết; counts = số đơn mỗi tab
+export interface OrderPage<T> {
+  items: T[];
+  nextCursor: string | null;
+  counts: OrderStatusCounts;
+}
+
 export const statusLabels: Record<string, string> = {
   PENDING: 'Pending',
   CONFIRMED: 'Confirmed',

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -10,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { BuyerOrdersQueryDto } from './dto/list-orders.dto';
 import { OrderService } from './order.service';
 import {
   BuyerEmail,
@@ -26,9 +26,8 @@ export class BuyerOrderController {
 
   @Get()
   @UseGuards(BuyerSessionGuard)
-  findMine(@BuyerEmail() email: string, @Query('shop') shopSlug?: string) {
-    if (!shopSlug) throw new BadRequestException('shop is required');
-    return this.orderService.findForBuyer(email, shopSlug);
+  findMine(@BuyerEmail() email: string, @Query() query: BuyerOrdersQueryDto) {
+    return this.orderService.findForBuyer(email, query);
   }
 
   @Get(':orderNumber')

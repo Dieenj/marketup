@@ -30,6 +30,11 @@ import type { BuyerAccess } from '../auth/guards/buyer-access.guard';
 import { buyerOrderWhere } from './buyer-order-access';
 import { BUYER_REVIEW_SELECT } from '../review/review-select';
 import { reviewDeadline } from '../review/review-rules';
+import { pageArgs, toPage, toStatusCounts } from './order-list';
+import {
+  BuyerOrdersQueryDto,
+  SellerOrdersQueryDto,
+} from './dto/list-orders.dto';
 
 // Những gì người mua được thấy: không có id nội bộ, thông tin chủ shop hay email/sđt
 const PUBLIC_ORDER_SELECT = {
@@ -79,9 +84,6 @@ interface Cancellation {
   reason: CancelReason;
   note?: string;
 }
-
-// Trang "My orders" chưa phân trang; đủ cho người mua lẻ của một shop
-const MAX_BUYER_ORDERS = 100;
 
 @Injectable()
 export class OrderService {
@@ -189,20 +191,53 @@ export class OrderService {
     return { ...order, accessToken: this.tokens.signOrder(order.id) };
   }
 
-  async findAllByShop(userId: string, shopId: string) {
+  // Dashboard: từng trang đơn theo tab trạng thái, tìm theo mã đơn / tên / email / số điện thoại.
+  // Số đơn mỗi tab tính trên toàn shop (không theo từ khoá tìm), giống Shopee.
+  async findForSeller(
+    userId: string,
+    shopId: string,
+    { status, q, cursor }: SellerOrdersQueryDto,
+  ) {
     const shop = await this.prisma.shop.findUnique({
       where: { id: shopId },
+      select: { ownerId: true },
     });
-
     if (!shop || shop.ownerId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.prisma.order.findMany({
-      where: { shopId },
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
+    const contains = (value: string) => ({
+      contains: value,
+      mode: 'insensitive' as const,
     });
+    const [rows, groups] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          shopId,
+          ...(status && { status }),
+          ...(q && {
+            OR: [
+              { orderNumber: contains(q) },
+              { buyerName: contains(q) },
+              { buyerEmail: contains(q) },
+              { buyerPhone: contains(q) },
+            ],
+          }),
+        },
+        include: { items: true },
+        ...pageArgs(cursor ? { id: cursor } : undefined),
+      }),
+      this.prisma.order.groupBy({
+        by: ['status'],
+        where: { shopId },
+        _count: { _all: true },
+      }),
+    ]);
+
+    return {
+      ...toPage(rows, (order) => order.id),
+      counts: toStatusCounts(groups),
+    };
   }
 
   async updateStatus(
@@ -376,15 +411,31 @@ export class OrderService {
     return order;
   }
 
-  // Người mua đã đăng nhập: mọi đơn của email này tại shop đang xem
-  async findForBuyer(email: string, shopSlug: string) {
-    const orders = await this.prisma.order.findMany({
-      where: { buyerEmail: email, shop: { slug: shopSlug } },
-      select: PUBLIC_ORDER_SELECT,
-      orderBy: { createdAt: 'desc' },
-      take: MAX_BUYER_ORDERS,
-    });
-    return orders.map(withReviewDeadline);
+  // Người mua đã đăng nhập: đơn của email này tại shop đang xem, từng trang theo tab trạng thái
+  async findForBuyer(
+    email: string,
+    { shop, status, cursor }: BuyerOrdersQueryDto,
+  ) {
+    const where = { buyerEmail: email, shop: { slug: shop } };
+    const [rows, groups] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { ...where, ...(status && { status }) },
+        select: PUBLIC_ORDER_SELECT,
+        ...pageArgs(cursor ? { orderNumber: cursor } : undefined),
+      }),
+      this.prisma.order.groupBy({
+        by: ['status'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    const page = toPage(rows, (order) => order.orderNumber);
+    return {
+      ...page,
+      items: page.items.map(withReviewDeadline),
+      counts: toStatusCounts(groups),
+    };
   }
 
   async findOneForBuyer(orderNumber: string, access: BuyerAccess) {

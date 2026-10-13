@@ -68,7 +68,7 @@ Unique `(shopId, slug)`. Xoá danh mục thì `products.categoryId` thành `NULL
 | Trạng thái | `status` (`OrderStatus`), `deliveredAt`                                                     |
 | Huỷ        | `cancelledAt`, `cancelledBy` (`CancelActor`), `cancelReason` (`CancelReason`), `cancelNote` |
 
-- Index `(buyerEmail, shopId)` phục vụ danh sách "My orders".
+- Index `(buyerEmail, shopId)` phục vụ danh sách "My orders"; index `(shopId, createdAt)` phục vụ trang Orders của người bán (mới nhất trước, phân trang).
 - `shopId` là `onDelete: Restrict`: không xoá được shop đã có đơn.
 
 ### `order_items`: snapshot lúc mua
