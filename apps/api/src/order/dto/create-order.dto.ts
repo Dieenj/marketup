@@ -37,11 +37,6 @@ class OrderItemDto {
   @IsString()
   @IsNotEmpty()
   variantId: string;
-
-  // FE gửi kèm để hiển thị; server luôn lấy nhãn từ DB nên bỏ qua giá trị này
-  @IsString()
-  @IsOptional()
-  variantLabel?: string;
 }
 
 export class CreateOrderDto {
