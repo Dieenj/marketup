@@ -11,6 +11,8 @@ export const PUBLIC_REVIEW_SELECT = {
   sellerRepliedAt: true,
   createdAt: true,
   product: { select: { id: true, name: true } },
+  // Phân loại hàng đã mua (vd. "M / Sand"), hiện cạnh ngày như Shopee
+  orderItem: { select: { variantLabel: true } },
 } satisfies Prisma.ReviewSelect;
 
 // Đánh giá của chính người mua, hiển thị cạnh sản phẩm trong trang đơn
