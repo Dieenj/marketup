@@ -172,16 +172,17 @@ export default function OrdersPage() {
     <div className="space-y-6">
       <PageHeader title="Orders" description="Track and manage your customer orders." />
 
-      <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
-        {/* Bộ lọc trạng thái & tìm kiếm */}
-        <div className="flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="@container rounded-xl border bg-card shadow-xs overflow-hidden">
+        {/* Bộ lọc trạng thái & tìm kiếm: chỉ đứng cạnh nhau khi khung đủ chỗ cho cả 7 tab
+            (theo độ rộng khung, vì sidebar kéo rộng/hẹp được) */}
+        <div className="flex flex-col gap-3 border-b p-3 @5xl:flex-row @5xl:items-center @5xl:justify-between">
           <OrderStatusTabs value={statusFilter} onChange={setStatusFilter} counts={counts} />
           <SearchInput
             label="Search orders"
             placeholder="Search order, name, email, phone…"
             value={searchQuery}
             onChange={setSearchQuery}
-            className="w-full lg:w-72"
+            className="w-full @5xl:w-72"
           />
         </div>
 
