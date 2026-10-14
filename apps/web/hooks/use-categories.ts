@@ -13,7 +13,7 @@ export interface CategoryInput {
   slug: string;
 }
 
-export const categoriesQueryKey = (shopId: string | undefined) => ['categories', shopId] as const;
+const categoriesQueryKey = (shopId: string | undefined) => ['categories', shopId] as const;
 
 // Danh mục của shop — dùng chung cho trang Categories, trang Products và các dialog sản phẩm
 export function useCategories(

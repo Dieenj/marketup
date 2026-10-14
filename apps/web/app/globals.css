@@ -145,15 +145,3 @@
     background: oklch(0.55 0 0);
   }
 }
-
-@layer utilities {
-  .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/30;
-  }
-  .glass-dark {
-    @apply bg-black/40 backdrop-blur-xl border border-white/10;
-  }
-  .text-balance {
-    text-wrap: balance;
-  }
-}

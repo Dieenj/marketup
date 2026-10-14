@@ -1,6 +1,6 @@
 // Các hằng số dùng chung cho trạng thái đơn hàng
 
-export const ORDER_STATUSES = [
+const ORDER_STATUSES = [
   'PENDING',
   'CONFIRMED',
   'PROCESSING',

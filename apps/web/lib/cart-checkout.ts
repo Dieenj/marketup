@@ -8,7 +8,7 @@ export interface CatalogProduct {
   variants?: { id: string; label: string; price: number | string; stock: number }[];
 }
 
-export interface CheckoutLine extends CartLine {
+interface CheckoutLine extends CartLine {
   stock: number;
   addedPrice: number; // giá lúc thêm vào giỏ
   priceChanged: boolean;

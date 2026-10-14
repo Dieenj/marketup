@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import api, { getErrorStatus } from '@/lib/api-client';
 import { useAuthStore } from '@/hooks/use-auth';
 
-export interface Shop {
+interface Shop {
   id: string;
   name: string;
   slug: string;

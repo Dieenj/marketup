@@ -4,7 +4,7 @@ import { memoryStorage } from 'multer';
 
 // Khớp với FE (banner-image-input): ảnh PNG/JPEG/WebP, tối đa 10MB.
 // Ảnh giữ trong RAM trước khi đẩy lên Cloudinary → giới hạn để file lớn không làm cạn RAM của Render.
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 export function imageUploadOptions(maxFiles = 1): MulterOptions {

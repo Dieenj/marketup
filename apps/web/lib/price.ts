@@ -4,7 +4,7 @@ interface PricedVariant {
   price?: number | string | null;
 }
 
-export interface PriceRange {
+interface PriceRange {
   min: number;
   max: number;
 }
@@ -16,7 +16,7 @@ export function getPriceRange(variants: PricedVariant[] | null | undefined): Pri
   return { min: Math.min(...prices), max: Math.max(...prices) };
 }
 
-export type PriceSortDirection = 'asc' | 'desc';
+type PriceSortDirection = 'asc' | 'desc';
 
 // Sắp xếp theo giá cho sản phẩm có khoảng giá (nhiều biến thể khác giá):
 // thấp → cao theo giá thấp nhất, cao → thấp theo giá cao nhất — mỗi chiều khớp với đầu khoảng giá

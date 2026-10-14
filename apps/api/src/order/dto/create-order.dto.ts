@@ -17,8 +17,8 @@ import { Transform, Type } from 'class-transformer';
 import { normalizeEmail } from '../../common/email';
 
 // Giới hạn an toàn; giới hạn thật của số lượng là tồn kho của biến thể
-export const MAX_QUANTITY_PER_LINE = 999;
-export const MAX_LINES_PER_ORDER = 50;
+const MAX_QUANTITY_PER_LINE = 999;
+const MAX_LINES_PER_ORDER = 50;
 
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;

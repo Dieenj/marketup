@@ -9,7 +9,7 @@ import type { Fetcher, StorefrontShop } from '@/lib/storefront-queries';
 // Client Component sẽ tự fetch như trước — không để trang storefront bị treo.
 const SERVER_FETCH_TIMEOUT_MS = 3000;
 
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(
     public status: number,
     path: string,
@@ -28,7 +28,7 @@ export const serverFetcher: Fetcher = async <T>(path: string) => {
   return (await res.json()) as T;
 };
 
-export type ServerResult<T> =
+type ServerResult<T> =
   | { status: 'ok'; data: T }
   | { status: 'not-found' }
   | { status: 'unavailable' };
@@ -47,7 +47,7 @@ export const getStorefrontShop = cache((slug: string) =>
   load<StorefrontShop>(`/shops/${encodeURIComponent(slug)}`),
 );
 
-export interface StorefrontProductMeta {
+interface StorefrontProductMeta {
   id: string;
   shopId?: string;
   name: string;

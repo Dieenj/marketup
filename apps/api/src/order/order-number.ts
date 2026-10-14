@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 
 // Bỏ các ký tự dễ nhầm (0/O, 1/I/L) vì người mua có thể phải đọc hoặc gõ lại mã đơn
-export const ORDER_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const ORDER_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
 // VD: ORD-251013-7K3QX9 — ngày đặt (giờ VN) + 6 ký tự ngẫu nhiên (~887 triệu tổ hợp mỗi ngày):
 // không trùng khi nhiều đơn đặt cùng lúc và không đoán được từ thời điểm đặt

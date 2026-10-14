@@ -31,7 +31,7 @@ interface MailOrderItem {
 }
 
 // Các trường email dùng — khớp với đơn trả về từ OrderService (create / updateStatus)
-export interface MailOrder {
+interface MailOrder {
   id: string;
   orderNumber: string;
   buyerName: string;

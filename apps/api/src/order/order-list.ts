@@ -11,7 +11,7 @@ export const pageArgs = (cursor?: Prisma.OrderWhereUniqueInput) =>
 export const toPage = <T>(rows: T[], cursorOf: (row: T) => string) =>
   toCursorPage(ORDER_PAGE_SIZE, rows, cursorOf);
 
-export type StatusCounts = Record<'ALL' | OrderStatus, number>;
+type StatusCounts = Record<'ALL' | OrderStatus, number>;
 
 // Số đơn mỗi tab, kể cả tab không có đơn nào (= 0)
 export function toStatusCounts(

@@ -14,8 +14,8 @@ import {
 } from 'class-validator';
 
 // Giới hạn khớp với cột DB: price Decimal(12,2)
-export const MAX_PRICE = 9_999_999_999.99;
-export const MAX_STOCK = 1_000_000;
+const MAX_PRICE = 9_999_999_999.99;
+const MAX_STOCK = 1_000_000;
 export const MAX_VARIANTS = 100;
 export const MAX_ATTRIBUTES = 10;
 

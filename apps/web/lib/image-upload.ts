@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 
 // Cùng quy tắc với API (apps/api/src/common/image-upload.ts) — kiểm tra ngay khi chọn ảnh
 // để người dùng không phải điền xong cả form rồi mới bị từ chối
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 export const MAX_PRODUCT_IMAGES = 10;
 

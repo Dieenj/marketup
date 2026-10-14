@@ -9,7 +9,7 @@ export const reviewPageArgs = (cursor?: string) =>
 export const toReviewPage = <T extends { id: string }>(rows: T[]) =>
   toCursorPage(REVIEW_PAGE_SIZE, rows, (row) => row.id);
 
-export type RatingCounts = Record<1 | 2 | 3 | 4 | 5, number>;
+type RatingCounts = Record<1 | 2 | 3 | 4 | 5, number>;
 
 // Số đánh giá mỗi mức sao (nút lọc), kể cả mức chưa có đánh giá nào (= 0)
 export function toRatingCounts(
