@@ -23,6 +23,7 @@ export interface StorefrontShop {
   bannerUrl?: string | null;
   bannerFocusX?: number; // vị trí ảnh banner trong khung, % (50 = giữa)
   bannerFocusY?: number;
+  bannerZoom?: number; // phóng to ảnh banner, % (100 = vừa khung)
   primaryColor?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;

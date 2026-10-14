@@ -7,6 +7,7 @@ import ShopHero from '@/components/shop/shop-hero';
 import RemoteImage from '@/components/remote-image';
 import { cn } from '@/lib/utils';
 import { brandThemeStyle } from '@/components/shop/brand-theme';
+import { bannerImageStyle } from '@/components/shop/banner-style';
 import { buttonVariants } from '@/components/ui/button';
 import { filterChipVariants } from '@/components/ui/filter-chip';
 import { storefrontQueries, type StorefrontShop } from '@/lib/storefront-queries';
@@ -100,7 +101,7 @@ function BannerCrop({
           fill
           sizes="240px"
           className="object-cover"
-          style={{ objectPosition: `${shop.bannerFocusX ?? 50}% ${shop.bannerFocusY ?? 50}%` }}
+          style={bannerImageStyle(shop)}
         />
       </div>
       <figcaption className="text-[11px] text-muted-foreground">{label}</figcaption>

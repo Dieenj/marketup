@@ -3,6 +3,7 @@ import RemoteImage from '@/components/remote-image';
 import { cn } from '@/lib/utils';
 import { DEFAULT_SHOP_COLOR, normalizeHexColor } from '@/lib/color-utils';
 import type { StorefrontShop } from '@/lib/storefront-queries';
+import { bannerImageStyle } from '@/components/shop/banner-style';
 
 // Hero trang chủ shop. Phải nằm trong phần tử có brandThemeStyle (màu thương hiệu).
 // Dùng cả khi đang tải (loading.tsx) vì thông tin shop đã có sẵn từ layout —
@@ -38,7 +39,7 @@ export default function ShopHero({
     <section className="@container relative overflow-hidden bg-primary text-primary-foreground">
       {shop.bannerUrl && (
         // Nằm trên khối chữ (khối chữ rộng cả khung nhưng chữ chỉ ở nửa trái) để kéo chỉnh được ảnh
-        <div className="relative z-10 aspect-video md:absolute md:inset-y-0 md:right-0 md:aspect-auto md:w-1/2 lg:w-7/12">
+        <div className="relative z-10 aspect-video overflow-hidden md:absolute md:inset-y-0 md:right-0 md:aspect-auto md:w-1/2 lg:w-7/12">
           {/* Ảnh lớn nhất trang (LCP): tải sớm, qua CDN Cloudinary để được nén + resize */}
           <RemoteImage
             src={shop.bannerUrl}
@@ -47,8 +48,8 @@ export default function ShopHero({
             sizes={preview ? '640px' : '(min-width: 768px) 50vw, 100vw'}
             {...(!preview && { preload: true, loading: 'eager', fetchPriority: 'high' })}
             className="object-cover"
-            // Phần ảnh người bán chọn giữ lại khi ảnh bị cắt vừa khung (Settings → Storefront appearance)
-            style={{ objectPosition: `${shop.bannerFocusX ?? 50}% ${shop.bannerFocusY ?? 50}%` }}
+            // Vị trí + mức phóng người bán chọn (Settings → Storefront appearance)
+            style={bannerImageStyle(shop)}
           />
           {bannerOverlay}
         </div>

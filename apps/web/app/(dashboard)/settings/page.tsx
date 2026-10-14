@@ -23,6 +23,8 @@ import { useEffect } from 'react';
 import { ColorPicker } from '@/components/shop/color-picker';
 import { BannerImageInput } from '@/components/shop/banner-image-input';
 import StorefrontPreview, { type BannerFocus } from '@/components/shop/storefront-preview';
+import { BANNER_ZOOM_MAX, BANNER_ZOOM_MIN } from '@/components/shop/banner-style';
+import { Slider } from '@/components/ui/slider';
 import { useMyShop, MY_SHOP_QUERY_KEY } from '@/hooks/use-my-shop';
 import { DEFAULT_SHOP_COLOR } from '@/lib/color-utils';
 import PageHeader from '@/components/dashboard/page-header';
@@ -33,6 +35,7 @@ const shopSchema = z.object({
   bannerUrl: z.string().optional(),
   bannerFocusX: z.number().int().min(0).max(100),
   bannerFocusY: z.number().int().min(0).max(100),
+  bannerZoom: z.number().int().min(BANNER_ZOOM_MIN).max(BANNER_ZOOM_MAX),
   primaryColor: z.string(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
@@ -73,6 +76,7 @@ export default function SettingsPage() {
       bannerUrl: '',
       bannerFocusX: 50,
       bannerFocusY: 50,
+      bannerZoom: BANNER_ZOOM_MIN,
       primaryColor: DEFAULT_SHOP_COLOR,
       contactEmail: '',
       contactPhone: '',
@@ -88,6 +92,7 @@ export default function SettingsPage() {
         bannerUrl: shop.bannerUrl || '',
         bannerFocusX: shop.bannerFocusX ?? 50,
         bannerFocusY: shop.bannerFocusY ?? 50,
+        bannerZoom: shop.bannerZoom ?? BANNER_ZOOM_MIN,
         primaryColor: shop.primaryColor || DEFAULT_SHOP_COLOR,
         contactEmail: shop.contactEmail || '',
         contactPhone: shop.contactPhone || '',
@@ -102,6 +107,14 @@ export default function SettingsPage() {
     form.setValue('bannerFocusX', x, { shouldDirty: true });
     form.setValue('bannerFocusY', y, { shouldDirty: true });
   };
+  const setBannerZoom = (zoom: number) => form.setValue('bannerZoom', zoom, { shouldDirty: true });
+  // Về giữa ảnh, không phóng to
+  const resetBanner = () => {
+    setBannerFocus({ x: 50, y: 50 });
+    setBannerZoom(BANNER_ZOOM_MIN);
+  };
+  const bannerAdjusted =
+    draft.bannerFocusX !== 50 || draft.bannerFocusY !== 50 || draft.bannerZoom !== BANNER_ZOOM_MIN;
 
   const mutation = useMutation({
     mutationFn: async (values: ShopForm) => {
@@ -256,15 +269,16 @@ export default function SettingsPage() {
                           value={field.value ?? ''}
                           onChange={(url) => {
                             field.onChange(url);
-                            // Ảnh mới: bắt đầu lại từ giữa ảnh
-                            setBannerFocus({ x: 50, y: 50 });
+                            // Ảnh mới: bắt đầu lại từ giữa ảnh, không phóng to
+                            resetBanner();
                           }}
                         />
                       </FormControl>
                       <FormDescription>
                         Shown beside your shop details at the top of your storefront (above them on
-                        a phone). Drag it in the preview to choose which part shows. Without a
-                        banner, your brand colour fills the whole area.
+                        a phone). Drag it in the preview to choose which part shows; zoom in to move
+                        it in any direction. Without a banner, your brand colour fills the whole
+                        area.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -275,17 +289,31 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">Preview</p>
-                  {draft.bannerUrl && (draft.bannerFocusX !== 50 || draft.bannerFocusY !== 50) && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setBannerFocus({ x: 50, y: 50 })}
-                    >
+                  {draft.bannerUrl && bannerAdjusted && (
+                    <Button type="button" variant="ghost" size="sm" onClick={resetBanner}>
                       Reset position
                     </Button>
                   )}
                 </div>
+                {draft.bannerUrl && (
+                  <div className="flex max-w-sm items-center gap-3 pb-1">
+                    <span className="text-sm text-muted-foreground">Zoom</span>
+                    <Slider
+                      thumbLabel="Banner zoom"
+                      min={BANNER_ZOOM_MIN}
+                      max={BANNER_ZOOM_MAX}
+                      step={5}
+                      // Mảng một giá trị = một núm kéo (số đơn lẻ thì Slider vẽ thành chọn khoảng 2 núm)
+                      value={[draft.bannerZoom ?? BANNER_ZOOM_MIN]}
+                      onValueChange={(value) =>
+                        setBannerZoom(Array.isArray(value) ? value[0] : value)
+                      }
+                    />
+                    <span className="w-11 text-right text-sm tabular-nums">
+                      {draft.bannerZoom ?? BANNER_ZOOM_MIN}%
+                    </span>
+                  </div>
+                )}
                 {shop && (
                   <StorefrontPreview
                     shop={{
@@ -297,6 +325,7 @@ export default function SettingsPage() {
                       bannerUrl: draft.bannerUrl,
                       bannerFocusX: draft.bannerFocusX,
                       bannerFocusY: draft.bannerFocusY,
+                      bannerZoom: draft.bannerZoom,
                       primaryColor: draft.primaryColor,
                     }}
                     onBannerFocusChange={setBannerFocus}

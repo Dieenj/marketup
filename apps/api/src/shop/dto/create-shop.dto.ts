@@ -73,6 +73,13 @@ export class CreateShopDto {
   @Max(100)
   bannerFocusY?: number;
 
+  // Phóng to ảnh banner (%, 100 = vừa khung)
+  @IsOptional()
+  @IsInt()
+  @Min(100)
+  @Max(200)
+  bannerZoom?: number;
+
   @Transform(normalizeHexColor)
   @IsOptional()
   @Matches(/^#[0-9a-f]{6}$/, {

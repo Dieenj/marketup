@@ -11,6 +11,7 @@ interface Shop {
   bannerUrl?: string | null;
   bannerFocusX?: number;
   bannerFocusY?: number;
+  bannerZoom?: number;
   primaryColor?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;

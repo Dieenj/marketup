@@ -79,6 +79,8 @@ model Shop {
   // Điểm giữ lại khi ảnh banner bị cắt vừa khung (object-position, % ngang / dọc; 50 = giữa)
   bannerFocusX Int      @default(50)
   bannerFocusY Int      @default(50)
+  // Phóng to ảnh banner quanh điểm trên (%, 100 = vừa khung): phóng to thì kéo được cả 4 phía
+  bannerZoom   Int      @default(100)
   primaryColor String?  @default("#111111")
   contactEmail String?
   contactPhone String?

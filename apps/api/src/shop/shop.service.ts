@@ -22,6 +22,7 @@ const PUBLIC_SHOP_SELECT = {
   bannerUrl: true,
   bannerFocusX: true,
   bannerFocusY: true,
+  bannerZoom: true,
   primaryColor: true,
   contactEmail: true,
   contactPhone: true,

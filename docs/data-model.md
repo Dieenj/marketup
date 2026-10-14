@@ -41,6 +41,7 @@ erDiagram
 | `ownerId`                                 | Unique, nên mỗi người bán có đúng một shop                                |
 | `logoUrl`, `bannerUrl`                    | Chỉ ảnh Cloudinary của MarketUp hoặc rỗng                                 |
 | `bannerFocusX`, `bannerFocusY`            | Phần ảnh banner giữ lại khi bị cắt vừa khung (0–100%, mặc định 50 = giữa) |
+| `bannerZoom`                              | Phóng to ảnh banner quanh điểm trên (100–200%, mặc định 100 = vừa khung)  |
 | `primaryColor`                            | Mã màu hex, mặc định `#111111`                                            |
 | `contactEmail`, `contactPhone`, `address` | Hiển thị trên storefront                                                  |
 | `isActive`                                | `false` thì storefront trả 404 và không đặt hàng được                     |
