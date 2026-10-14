@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import type { StorefrontShop } from '@/lib/storefront-queries';
-import ShopHero from './shop-hero';
+import ShopHero from '@/components/shop/shop-hero';
 
 // Skeleton của storefront — dùng chung cho loading.tsx (server, khi chờ điều hướng)
 // và nhánh đang tải ở client component, nên giữ đúng bố cục trang thật để không giật.

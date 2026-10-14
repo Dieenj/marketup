@@ -16,7 +16,7 @@ import RemoteImage from '@/components/remote-image';
 import StarRating from '@/components/star-rating';
 import { getErrorStatus } from '@/lib/api-client';
 import StorefrontUnavailable from './storefront-unavailable';
-import ShopHero from './shop-hero';
+import ShopHero from '@/components/shop/shop-hero';
 import { StorefrontSkeleton } from './skeletons';
 import ShopNotFoundView from '@/components/shop/shop-not-found';
 

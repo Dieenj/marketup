@@ -4,8 +4,11 @@ import {
   IsOptional,
   IsEmail,
   IsPhoneNumber,
+  IsInt,
   Matches,
+  Max,
   MaxLength,
+  Min,
   ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -56,6 +59,19 @@ export class CreateShopDto {
   @IsOptional()
   @MaxLength(500)
   bannerUrl?: string;
+
+  // Vị trí ảnh banner trong khung (0–100%)
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  bannerFocusX?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  bannerFocusY?: number;
 
   @Transform(normalizeHexColor)
   @IsOptional()

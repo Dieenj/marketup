@@ -31,6 +31,9 @@ Mỗi tài khoản người bán sở hữu đúng một shop. Enum `Role` có g
 - Sau khi đăng ký, người bán vào `/setup` để tạo shop: tên, slug, mô tả, màu chủ đạo, thông tin liên hệ.
 - **Slug không đổi được sau khi tạo**, vì nó là địa chỉ storefront: đổi slug sẽ làm hỏng link đã chia sẻ và link trong email đơn hàng.
 - Slug trùng → 409. Một người tạo shop thứ hai → 409.
+- **Giao diện storefront** (Settings → Storefront appearance), có khung xem trước cập nhật ngay khi chỉnh:
+  - **Màu thương hiệu**: nút, danh mục đang chọn, nút giỏ hàng; khi không có banner thì cũng là nền phần đầu storefront.
+  - **Ảnh banner**: nền phần đầu storefront, phủ tối để chữ dễ đọc. Người bán kéo ảnh trong khung xem trước (hoặc dùng phím mũi tên) để chọn phần ảnh hiện ra; hai khung nhỏ cho thấy phần ảnh thật sự hiện trên máy tính (tỉ lệ ≈ 11:3) và điện thoại (≈ 10:9).
 - Logo và banner phải là ảnh đã upload lên Cloudinary của MarketUp (`https://res.cloudinary.com/<CLOUDINARY_CLOUD_NAME>/image/upload/…`) hoặc để trống. URL ngoài bị từ chối với lỗi 400.
 
 ### 2.2 Sản phẩm

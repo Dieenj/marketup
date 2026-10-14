@@ -76,6 +76,9 @@ model Shop {
   description String?
   logoUrl      String?
   bannerUrl    String?
+  // Điểm giữ lại khi ảnh banner bị cắt vừa khung (object-position, % ngang / dọc; 50 = giữa)
+  bannerFocusX Int      @default(50)
+  bannerFocusY Int      @default(50)
   primaryColor String?  @default("#111111")
   contactEmail String?
   contactPhone String?

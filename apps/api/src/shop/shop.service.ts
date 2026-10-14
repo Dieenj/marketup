@@ -20,6 +20,8 @@ const PUBLIC_SHOP_SELECT = {
   description: true,
   logoUrl: true,
   bannerUrl: true,
+  bannerFocusX: true,
+  bannerFocusY: true,
   primaryColor: true,
   contactEmail: true,
   contactPhone: true,
