@@ -1,32 +1,15 @@
 import { OrderStatus, Prisma } from '@prisma/client';
+import { cursorPageArgs, toCursorPage } from '../common/cursor-page';
 
 // Danh sách đơn kiểu Shopee: mới nhất trước, tab theo trạng thái, cuộn tới đâu tải tới đó
 export const ORDER_PAGE_SIZE = 20;
 
-// Thứ tự cố định để con trỏ luôn chỉ đúng vị trí, kể cả khi nhiều đơn trùng createdAt
-const ORDER_LIST_ORDER_BY = [
-  { createdAt: 'desc' },
-  { id: 'desc' },
-] satisfies Prisma.OrderOrderByWithRelationInput[];
+// Người bán: con trỏ là id; người mua: mã đơn (API người mua không lộ id)
+export const pageArgs = (cursor?: Prisma.OrderWhereUniqueInput) =>
+  cursorPageArgs(ORDER_PAGE_SIZE, cursor);
 
-// Con trỏ = đơn cuối của trang trước (người bán: id; người mua: mã đơn — API người mua không lộ id).
-// Lấy dư một dòng để biết còn trang sau không.
-export function pageArgs(cursor?: Prisma.OrderWhereUniqueInput) {
-  return {
-    orderBy: ORDER_LIST_ORDER_BY,
-    take: ORDER_PAGE_SIZE + 1,
-    ...(cursor && { cursor, skip: 1 }),
-  };
-}
-
-export function toPage<T>(rows: T[], cursorOf: (row: T) => string) {
-  const items = rows.slice(0, ORDER_PAGE_SIZE);
-  return {
-    items,
-    nextCursor:
-      rows.length > ORDER_PAGE_SIZE ? cursorOf(items[items.length - 1]) : null,
-  };
-}
+export const toPage = <T>(rows: T[], cursorOf: (row: T) => string) =>
+  toCursorPage(ORDER_PAGE_SIZE, rows, cursorOf);
 
 export type StatusCounts = Record<'ALL' | OrderStatus, number>;
 

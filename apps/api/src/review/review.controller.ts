@@ -12,6 +12,7 @@ import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { ReplyReviewDto } from './dto/reply-review.dto';
+import { ShopReviewsQueryDto } from './dto/shop-reviews-query.dto';
 
 const MAX_PUBLIC_REVIEWS = 50;
 
@@ -41,8 +42,11 @@ export class ReviewController {
   }
 
   @Get('shop/:shopId')
-  findByShop(@Param('shopId') shopId: string, @Query('limit') limit?: string) {
-    return this.reviewService.findByShop(shopId, parseLimit(limit));
+  findByShop(
+    @Param('shopId') shopId: string,
+    @Query() query: ShopReviewsQueryDto,
+  ) {
+    return this.reviewService.findByShop(shopId, query);
   }
 
   @Get('shop/:shopId/stats')

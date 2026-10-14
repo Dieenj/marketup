@@ -16,6 +16,8 @@ import {
   REVIEW_WINDOW_DAYS,
 } from './review-rules';
 import { BUYER_REVIEW_SELECT, PUBLIC_REVIEW_SELECT } from './review-select';
+import { reviewPageArgs, toRatingCounts, toReviewPage } from './review-list';
+import { ShopReviewsQueryDto } from './dto/shop-reviews-query.dto';
 
 // Sản phẩm bị ẩn → đánh giá của nó cũng không hiện công khai
 const VISIBLE_PRODUCT: Prisma.ReviewWhereInput = {
@@ -134,24 +136,31 @@ export class ReviewService {
     });
   }
 
-  findByShop(shopId: string, take: number) {
-    return this.prisma.review.findMany({
-      where: { shopId, ...VISIBLE_PRODUCT },
+  async findByShop(shopId: string, { rating, cursor }: ShopReviewsQueryDto) {
+    const rows = await this.prisma.review.findMany({
+      where: { shopId, ...VISIBLE_PRODUCT, ...(rating && { rating }) },
       select: PUBLIC_REVIEW_SELECT,
-      orderBy: { createdAt: 'desc' },
-      take,
+      ...reviewPageArgs(cursor),
     });
+    return toReviewPage(rows);
   }
 
-  // Điểm shop = trung bình mọi đánh giá sản phẩm của shop (giống Shopee)
+  // Điểm shop = trung bình mọi đánh giá sản phẩm của shop (giống Shopee), kèm số đánh giá mỗi mức sao
   async getShopStats(shopId: string) {
-    return toRating(
-      await this.prisma.review.aggregate({
-        where: { shopId, ...VISIBLE_PRODUCT },
+    const where = { shopId, ...VISIBLE_PRODUCT };
+    const [all, groups] = await Promise.all([
+      this.prisma.review.aggregate({
+        where,
         _avg: { rating: true },
         _count: true,
       }),
-    );
+      this.prisma.review.groupBy({
+        by: ['rating'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+    return { ...toRating(all), ratingCounts: toRatingCounts(groups) };
   }
 
   async getProductRating(productId: string) {

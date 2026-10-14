@@ -101,7 +101,7 @@ Dữ liệu đơn trả cho người mua không có id nội bộ của đơn, t
 
 ### Danh sách đơn (phân trang)
 
-`GET /orders/shop/:shopId` và `GET /buyer/orders` trả từng trang 20 đơn, **mới nhất trước** (`apps/api/src/order/order-list.ts`):
+`GET /orders/shop/:shopId` và `GET /buyer/orders` trả từng trang 20 đơn, **mới nhất trước** (`apps/api/src/order/order-list.ts`, cách phân trang dùng chung ở `apps/api/src/common/cursor-page.ts`):
 
 ```json
 {
@@ -121,13 +121,19 @@ Dữ liệu đơn trả cho người mua không có id nội bộ của đơn, t
 | ------ | ------------------------------------------------- | ------------ | ----------------------------------------------------------------- |
 | GET    | `/reviews/product/:productId?limit=`              | —            | Đánh giá mới nhất của sản phẩm (`limit` ≤ 50)                     |
 | GET    | `/reviews/product/:productId/rating`              | —            | `{ averageRating, count }`                                        |
-| GET    | `/reviews/shop/:shopId?limit=`                    | —            | Đánh giá mới nhất của shop (`limit` ≤ 50)                         |
-| GET    | `/reviews/shop/:shopId/stats`                     | —            | Điểm shop `{ averageRating, count }`                              |
+| GET    | `/reviews/shop/:shopId?rating=&cursor=`           | —            | Đánh giá của shop, từng trang 10, mới nhất trước (xem dưới)       |
+| GET    | `/reviews/shop/:shopId/stats`                     | —            | Điểm shop `{ averageRating, count, ratingCounts }`                |
 | POST   | `/buyer/orders/:orderNumber/items/:itemId/review` | buyer\|order | `{ rating, comment? }`; đơn đã giao, trong 30 ngày; trùng thì 409 |
 | PATCH  | `/buyer/orders/:orderNumber/items/:itemId/review` | buyer\|order | Sửa một lần, trong 30 ngày                                        |
 | GET    | `/reviews/manage/:shopId?rating=&unreplied=true`  | seller       | Đánh giá của shop (tối đa 200), lọc theo sao / chưa trả lời       |
 | GET    | `/reviews/manage/:shopId/stats`                   | seller       | `{ averageRating, count, unrepliedCount }`                        |
 | PATCH  | `/reviews/:id/reply`                              | seller       | `{ replyText }` (≤ 1000 ký tự)                                    |
+
+Tab Reviews của storefront (`apps/api/src/review/review-list.ts`):
+
+- `GET /reviews/shop/:shopId` trả `{ items, nextCursor }` giống danh sách đơn: trang sau gửi `cursor=<nextCursor>`, con trỏ là id đánh giá. `rating=1..5` lọc theo số sao; giá trị khác → 400.
+- `ratingCounts` trong `/stats` là số đánh giá mỗi mức sao, ví dụ `{ "1": 0, "2": 1, "3": 1, "4": 2, "5": 3 }` (mức chưa có đánh giá = 0), dùng cho nút lọc.
+- Đánh giá của sản phẩm đang ẩn không được tính và không hiện.
 
 Đánh giá công khai chỉ chứa tên đã che, không có email; đánh giá của sản phẩm đang ẩn bị loại khỏi danh sách và điểm.
 
