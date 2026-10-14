@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 
 // Các query công khai của storefront, dùng chung cho Server Component (prefetch) và Client Component.
@@ -30,6 +30,32 @@ export interface StorefrontShop {
   categories?: StorefrontCategory[];
 }
 
+// Đánh giá công khai (tên người mua đã che)
+export interface PublicReview {
+  id: string;
+  buyerName: string;
+  rating: number;
+  comment?: string | null;
+  editedAt?: string | null;
+  sellerReply?: string | null;
+  createdAt: string;
+  product?: { id: string; name: string } | null;
+}
+
+export type RatingCounts = Record<1 | 2 | 3 | 4 | 5, number>;
+
+// Điểm shop = trung bình mọi đánh giá sản phẩm, kèm số đánh giá mỗi mức sao
+export interface ShopStats {
+  averageRating: number;
+  count: number;
+  ratingCounts?: RatingCounts;
+}
+
+export interface ReviewPage {
+  items: PublicReview[];
+  nextCursor: string | null;
+}
+
 export function storefrontQueries(fetcher: Fetcher = clientFetcher) {
   return {
     shop: (slug: string) =>
@@ -42,15 +68,24 @@ export function storefrontQueries(fetcher: Fetcher = clientFetcher) {
         queryKey: ['storefront-products', shopId],
         queryFn: () => fetcher<T[]>(`/products/shop/${shopId}`),
       }),
-    shopStats: <T = unknown>(shopId: string) =>
+    shopStats: (shopId: string) =>
       queryOptions({
         queryKey: ['shop-stats', shopId],
-        queryFn: () => fetcher<T>(`/reviews/shop/${shopId}/stats`),
+        queryFn: () => fetcher<ShopStats>(`/reviews/shop/${shopId}/stats`),
       }),
-    shopReviews: <T = unknown>(shopId: string) =>
-      queryOptions({
-        queryKey: ['shop-reviews', shopId],
-        queryFn: () => fetcher<T[]>(`/reviews/shop/${shopId}?limit=3`),
+    // Tab Reviews: mới nhất trước, từng trang 10 đánh giá; `rating` lọc theo số sao
+    shopReviews: (shopId: string, rating?: number) =>
+      infiniteQueryOptions({
+        queryKey: ['shop-reviews', shopId, rating ?? 'all'],
+        queryFn: ({ pageParam }) => {
+          const params = new URLSearchParams();
+          if (rating) params.set('rating', String(rating));
+          if (pageParam) params.set('cursor', pageParam);
+          const query = params.size ? `?${params}` : '';
+          return fetcher<ReviewPage>(`/reviews/shop/${shopId}${query}`);
+        },
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       }),
     product: <T = unknown>(productId: string) =>
       queryOptions({

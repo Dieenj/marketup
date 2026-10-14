@@ -14,28 +14,19 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { storefrontQueries } from '@/lib/storefront-queries';
+import { storefrontQueries, type PublicReview } from '@/lib/storefront-queries';
+import ReviewCard from '@/components/shop/review-card';
 import { formatPriceRange, getPriceRange } from '@/lib/price';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useCartStore, useShopCart } from '@/hooks/use-cart';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
 import StarRating from '@/components/star-rating';
 import { getErrorStatus } from '@/lib/api-client';
 import StorefrontUnavailable from './storefront-unavailable';
 import { ProductDetailSkeleton } from './skeletons';
-
-interface ProductReview {
-  id: string;
-  buyerName: string;
-  rating: number;
-  comment?: string | null;
-  editedAt?: string | null;
-  sellerReply?: string | null;
-  createdAt: string;
-}
 
 interface ProductDetail {
   id: string;
@@ -85,7 +76,7 @@ export default function ProductClient() {
   const cartLines = useShopCart(product?.shopId);
 
   const { data: reviews } = useQuery({
-    ...q.productReviews<ProductReview>(productId),
+    ...q.productReviews<PublicReview>(productId),
     enabled: !!productId,
   });
 
@@ -550,44 +541,8 @@ export default function ProductClient() {
           </div>
         ) : (
           <div className="space-y-6">
-            {reviews.map((rev: ProductReview) => (
-              <div
-                key={rev.id}
-                className="bg-white border border-border/50 rounded-2xl p-5 shadow-sm space-y-3 transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-foreground">{rev.buyerName}</span>
-                      {/* Mọi đánh giá đều từ đơn đã giao */}
-                      <Badge variant="success">Verified Purchase</Badge>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {formatDate(rev.createdAt)}
-                      {rev.editedAt && ' · Edited'}
-                    </p>
-                  </div>
-
-                  <StarRating value={rev.rating} starClassName="size-3.5" />
-                </div>
-
-                {rev.comment && (
-                  <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-                    {rev.comment}
-                  </p>
-                )}
-
-                {rev.sellerReply && (
-                  <div className="ml-6 bg-primary/5 border-l-2 border-primary rounded-r-xl p-4 mt-2.5 space-y-1">
-                    <p className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      <span>Shop Owner Response</span>
-                    </p>
-                    <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                      {rev.sellerReply}
-                    </p>
-                  </div>
-                )}
-              </div>
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
             ))}
           </div>
         )}

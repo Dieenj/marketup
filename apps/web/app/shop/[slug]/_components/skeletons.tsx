@@ -74,13 +74,20 @@ export function StorefrontSkeleton({ shop }: { shop?: StorefrontShop }) {
         </section>
       )}
 
-      <div className="container mx-auto px-4 py-10">
+      {/* Thanh tab Products / Reviews (h-12) */}
+      <div className="border-b border-border">
+        <div className="container mx-auto flex h-12 items-center gap-6 px-4">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-20" />
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
         <section className="space-y-5">
-          <div className="space-y-2">
-            <Skeleton className="h-7 w-40" />
-            <Skeleton className="h-4 w-24" />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Skeleton className="h-11 w-full max-w-md rounded-xl" />
+            <Skeleton className="h-8 w-48 rounded-xl" />
           </div>
-          <Skeleton className="h-11 max-w-md rounded-xl" />
           <div className="flex flex-wrap gap-2">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-9 w-24 rounded-xl" />

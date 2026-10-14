@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageIcon, ShoppingBag, Search, ArrowRight, Filter } from 'lucide-react';
@@ -11,22 +11,17 @@ import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
 import { storefrontQueries, type StorefrontCategory } from '@/lib/storefront-queries';
 import { compareByPrice, getPriceRange } from '@/lib/price';
 import { matchesSearch } from '@/lib/search';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import RemoteImage from '@/components/remote-image';
-import StarRating from '@/components/star-rating';
 import { getErrorStatus } from '@/lib/api-client';
 import StorefrontUnavailable from './storefront-unavailable';
 import ShopHero from '@/components/shop/shop-hero';
 import { StorefrontSkeleton } from './skeletons';
 import ShopNotFoundView from '@/components/shop/shop-not-found';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ShopReviews from './shop-reviews';
 
 type Category = StorefrontCategory;
-
-// Điểm shop = trung bình mọi đánh giá sản phẩm (API)
-interface ShopStats {
-  averageRating: number;
-  count: number;
-}
 
 interface Product {
   id: string;
@@ -43,15 +38,6 @@ interface Product {
   category?: { id: string; name: string };
 }
 
-interface Review {
-  id: string;
-  buyerName: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-  product?: { name: string };
-}
-
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: Low to High' },
@@ -60,9 +46,23 @@ const SORT_OPTIONS = [
 
 const q = storefrontQueries();
 
+type StorefrontTab = 'products' | 'reviews';
+// Cao bằng thanh tab; vạch dưới tab đang chọn nằm đè lên đường viền của thanh
+const TAB_CLASS = 'h-full flex-none px-0 text-base group-data-horizontal/tabs:after:-bottom-px';
+
 export default function StorefrontClient() {
   const params = useParams();
   const slug = params.slug as string;
+  const pathname = usePathname();
+  // Tab nằm trên URL (?tab=reviews) để tải lại / chia sẻ link vẫn đúng tab.
+  // Đổi tab bằng history.replaceState: chỉ đổi URL, không gọi lại server (SPA)
+  const tab: StorefrontTab = useSearchParams().get('tab') === 'reviews' ? 'reviews' : 'products';
+  const setTab = (next: StorefrontTab) =>
+    window.history.replaceState(
+      null,
+      '',
+      next === 'reviews' ? `${pathname}?tab=reviews` : pathname,
+    );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('newest');
@@ -82,12 +82,7 @@ export default function StorefrontClient() {
   });
 
   const { data: stats } = useQuery({
-    ...q.shopStats<ShopStats>(shopId),
-    enabled: !!shop?.id,
-  });
-
-  const { data: reviews } = useQuery({
-    ...q.shopReviews<Review>(shopId),
+    ...q.shopStats(shopId),
     enabled: !!shop?.id,
   });
 
@@ -112,7 +107,6 @@ export default function StorefrontClient() {
     return list;
   }, [products, searchQuery, selectedCategory, sortBy]);
 
-  const reviewCount = stats?.count ?? 0;
   const overallRating = stats?.averageRating ?? 0;
 
   if (shopLoading || productsLoading) return <StorefrontSkeleton shop={shop} />;
@@ -128,119 +122,76 @@ export default function StorefrontClient() {
     <div className="min-h-screen">
       <ShopHero shop={shop} rating={overallRating} />
 
-      <div className="container mx-auto px-4 py-10 space-y-14">
-        {/* Reviews section */}
-        {reviewCount > 0 && (
-          <section>
-            <div className="flex items-end justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Customer Reviews</h2>
-                <p className="text-muted-foreground text-sm mt-0.5">{reviewCount} reviews</p>
-              </div>
-              {overallRating > 0 && (
-                <div className="flex items-center gap-2">
-                  <StarRating value={overallRating} />
-                  <span className="font-semibold text-foreground">{overallRating}</span>
-                </div>
-              )}
-            </div>
-
-            {reviews && reviews.length > 0 && (
-              <div className="grid sm:grid-cols-3 gap-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="bg-card rounded-2xl border border-border p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{review.buyerName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(review.createdAt)}
-                        </p>
-                      </div>
-                      <StarRating
-                        value={review.rating}
-                        className="shrink-0"
-                        starClassName="size-3"
-                      />
-                    </div>
-                    {review.comment && (
-                      <p className="text-sm text-foreground/80 leading-relaxed mb-3 line-clamp-3">
-                        {review.comment}
-                      </p>
-                    )}
-                    {review.product?.name && (
-                      <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded-full">
-                        {review.product.name}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Products section */}
-        <section className="space-y-5">
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Our Products</h2>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                {filteredProducts.length} products
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                aria-label="Sort products"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
-              >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <Tabs value={tab} onValueChange={(value) => setTab(value as StorefrontTab)} className="gap-0">
+        {/* Dính dưới header của shop khi cuộn */}
+        <div className="sticky top-16 z-30 border-b border-border bg-background/95 backdrop-blur">
+          <div className="container mx-auto px-4">
+            <TabsList variant="line" className="gap-6 p-0 group-data-horizontal/tabs:h-12">
+              <TabsTrigger value="products" className={TAB_CLASS}>
+                Products
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {products?.length ?? 0}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className={TAB_CLASS}>
+                Reviews
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {stats?.count ?? 0}
+                </span>
+              </TabsTrigger>
+            </TabsList>
           </div>
+        </div>
 
-          {/* Search */}
-          <div className="relative max-w-md">
-            <Search
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              aria-label="Search products"
-              placeholder="Search products..."
-              className="pl-10 h-11 bg-white rounded-xl border-border/70"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        <TabsContent value="reviews" className="container mx-auto px-4 py-8">
+          <ShopReviews shopId={shop.id} slug={slug} stats={stats} primaryColor={primaryColor} />
+        </TabsContent>
 
-          {/* Category chips */}
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border"
-                style={
-                  selectedCategory === null
-                    ? { backgroundColor: primaryColor, color: primaryFg, borderColor: primaryColor }
-                    : {}
-                }
-              >
-                All
-              </button>
-              {categories.map((cat) => (
+        <TabsContent value="products" className="container mx-auto px-4 py-8">
+          <section className="space-y-5" aria-label="Products">
+            {/* Tìm + sắp xếp trên một hàng (điện thoại: xuống dòng) */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="relative w-full max-w-md">
+                <Search
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                  aria-hidden
+                />
+                <Input
+                  aria-label="Search products"
+                  placeholder="Search products..."
+                  className="pl-10 h-11 bg-white rounded-xl border-border/70"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                </span>
+                <Filter className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <select
+                  aria-label="Sort products"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Category chips */}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                  onClick={() => setSelectedCategory(null)}
+                  className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border"
                   style={
-                    selectedCategory === cat.id
+                    selectedCategory === null
                       ? {
                           backgroundColor: primaryColor,
                           color: primaryFg,
@@ -249,150 +200,170 @@ export default function StorefrontClient() {
                       : {}
                   }
                 >
-                  {cat.name}
+                  All
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* Product grid */}
-          {filteredProducts.length === 0 ? (
-            <div className="py-24 text-center">
-              <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-muted mb-4">
-                <ShoppingBag className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <p className="font-semibold text-foreground">No products found</p>
-              <p className="text-muted-foreground text-sm mt-1">
-                {searchQuery || selectedCategory
-                  ? 'Try adjusting your filters.'
-                  : 'Check back soon!'}
-              </p>
-              {(searchQuery || selectedCategory) && (
-                <Button
-                  variant="outline"
-                  className="mt-4 rounded-xl"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory(null);
-                  }}
-                >
-                  Clear filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map((product: Product) => {
-                const hasVariants = Boolean(product.variants?.length);
-                const variantStock =
-                  product.variants?.reduce(
-                    (total, variant) => total + Math.max(variant.stock, 0),
-                    0,
-                  ) || 0;
-                const availableStock = hasVariants ? variantStock : Number(product.stock || 0);
-                const isOutOfStock = availableStock <= 0;
-
-                const { min: minPrice, max: maxPrice } = getPriceRange(product.variants) ?? {
-                  min: 0,
-                  max: 0,
-                };
-
-                const comparePrices = (product.variants || [])
-                  .filter((v) => v.comparePrice != null && Number(v.comparePrice) > 0)
-                  .map((v) => Number(v.comparePrice));
-                const maxComparePrice = comparePrices.length > 0 ? Math.max(...comparePrices) : 0;
-                const hasDiscount = maxComparePrice > minPrice;
-                const discountPct = hasDiscount
-                  ? Math.round((1 - minPrice / maxComparePrice) * 100)
-                  : 0;
-
-                // Không prefetch: trang sản phẩm là dữ liệu động, prefetch phải gọi API (shop + sản phẩm) cho
-                // mọi thẻ đang hiện mà không nhanh hơn — bấm vào là loading.tsx hiện skeleton ngay sau 1 lượt request
-                const productHref = `/shop/${slug}/products/${product.id}`;
-
-                return (
-                  <div
-                    key={product.id}
-                    className="group bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                    style={
+                      selectedCategory === cat.id
+                        ? {
+                            backgroundColor: primaryColor,
+                            color: primaryFg,
+                            borderColor: primaryColor,
+                          }
+                        : {}
+                    }
                   >
-                    <Link href={productHref} prefetch={false} className="block relative">
-                      <div className="aspect-4/3 relative bg-secondary overflow-hidden">
-                        {product.imageUrl ? (
-                          <RemoteImage
-                            src={product.imageUrl}
-                            alt={product.name}
-                            fill
-                            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground/20" />
-                          </div>
-                        )}
-                        <div className="absolute top-2.5 left-2.5 flex gap-1.5">
-                          {product.category && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wide bg-black/55 text-white backdrop-blur-sm px-2.5 py-0.5 rounded-full">
-                              {product.category.name}
-                            </span>
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product grid */}
+            {filteredProducts.length === 0 ? (
+              <div className="py-24 text-center">
+                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-muted mb-4">
+                  <ShoppingBag className="h-7 w-7 text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-foreground">No products found</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  {searchQuery || selectedCategory
+                    ? 'Try adjusting your filters.'
+                    : 'Check back soon!'}
+                </p>
+                {(searchQuery || selectedCategory) && (
+                  <Button
+                    variant="outline"
+                    className="mt-4 rounded-xl"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory(null);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredProducts.map((product: Product) => {
+                  const hasVariants = Boolean(product.variants?.length);
+                  const variantStock =
+                    product.variants?.reduce(
+                      (total, variant) => total + Math.max(variant.stock, 0),
+                      0,
+                    ) || 0;
+                  const availableStock = hasVariants ? variantStock : Number(product.stock || 0);
+                  const isOutOfStock = availableStock <= 0;
+
+                  const { min: minPrice, max: maxPrice } = getPriceRange(product.variants) ?? {
+                    min: 0,
+                    max: 0,
+                  };
+
+                  const comparePrices = (product.variants || [])
+                    .filter((v) => v.comparePrice != null && Number(v.comparePrice) > 0)
+                    .map((v) => Number(v.comparePrice));
+                  const maxComparePrice = comparePrices.length > 0 ? Math.max(...comparePrices) : 0;
+                  const hasDiscount = maxComparePrice > minPrice;
+                  const discountPct = hasDiscount
+                    ? Math.round((1 - minPrice / maxComparePrice) * 100)
+                    : 0;
+
+                  // Không prefetch: trang sản phẩm là dữ liệu động, prefetch phải gọi API (shop + sản phẩm) cho
+                  // mọi thẻ đang hiện mà không nhanh hơn — bấm vào là loading.tsx hiện skeleton ngay sau 1 lượt request
+                  const productHref = `/shop/${slug}/products/${product.id}`;
+
+                  return (
+                    <div
+                      key={product.id}
+                      className="group bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                    >
+                      <Link href={productHref} prefetch={false} className="block relative">
+                        <div className="aspect-4/3 relative bg-secondary overflow-hidden">
+                          {product.imageUrl ? (
+                            <RemoteImage
+                              src={product.imageUrl}
+                              alt={product.name}
+                              fill
+                              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <ImageIcon className="h-8 w-8 text-muted-foreground/20" />
+                            </div>
                           )}
-                          {hasDiscount && (
-                            <span className="text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full">
-                              -{discountPct}%
+                          <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+                            {product.category && (
+                              <span className="text-[10px] font-semibold uppercase tracking-wide bg-black/55 text-white backdrop-blur-sm px-2.5 py-0.5 rounded-full">
+                                {product.category.name}
+                              </span>
+                            )}
+                            {hasDiscount && (
+                              <span className="text-[10px] font-bold bg-red-500 text-white px-2.5 py-0.5 rounded-full">
+                                -{discountPct}%
+                              </span>
+                            )}
+                          </div>
+                          {isOutOfStock && (
+                            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-muted-foreground bg-white border border-border px-3 py-1 rounded-full">
+                                Out of stock
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+
+                      <div className="flex flex-col flex-1 p-4 gap-3">
+                        <Link href={productHref} prefetch={false}>
+                          <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors leading-snug">
+                            {product.name}
+                          </h3>
+                        </Link>
+
+                        <div className="flex items-baseline gap-1.5 mt-auto">
+                          {minPrice === maxPrice ? (
+                            <>
+                              <span className="font-bold text-base">
+                                {formatCurrency(minPrice)}
+                              </span>
+                              {hasDiscount && maxComparePrice > 0 && (
+                                <span className="text-xs text-muted-foreground line-through">
+                                  {formatCurrency(maxComparePrice)}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="font-bold text-base">
+                              {formatCurrency(minPrice)} – {formatCurrency(maxPrice)}
                             </span>
                           )}
                         </div>
-                        {isOutOfStock && (
-                          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                            <span className="text-xs font-semibold text-muted-foreground bg-white border border-border px-3 py-1 rounded-full">
-                              Out of stock
-                            </span>
-                          </div>
-                        )}
+
+                        <Link
+                          href={productHref}
+                          prefetch={false}
+                          className="mt-auto w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
+                          style={{ backgroundColor: primaryColor, color: primaryFg }}
+                        >
+                          View details
+                          <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                        </Link>
                       </div>
-                    </Link>
-
-                    <div className="flex flex-col flex-1 p-4 gap-3">
-                      <Link href={productHref} prefetch={false}>
-                        <h3 className="font-semibold text-sm line-clamp-2 hover:text-foreground/70 transition-colors leading-snug">
-                          {product.name}
-                        </h3>
-                      </Link>
-
-                      <div className="flex items-baseline gap-1.5 mt-auto">
-                        {minPrice === maxPrice ? (
-                          <>
-                            <span className="font-bold text-base">{formatCurrency(minPrice)}</span>
-                            {hasDiscount && maxComparePrice > 0 && (
-                              <span className="text-xs text-muted-foreground line-through">
-                                {formatCurrency(maxComparePrice)}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="font-bold text-base">
-                            {formatCurrency(minPrice)} – {formatCurrency(maxPrice)}
-                          </span>
-                        )}
-                      </div>
-
-                      <Link
-                        href={productHref}
-                        prefetch={false}
-                        className="mt-auto w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
-                        style={{ backgroundColor: primaryColor, color: primaryFg }}
-                      >
-                        View details
-                        <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
-                      </Link>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

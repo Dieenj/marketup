@@ -17,7 +17,7 @@ export default async function StorefrontPage({ params }: { params: Promise<{ slu
     await Promise.all([
       queryClient.prefetchQuery(q.products(shop.id)),
       queryClient.prefetchQuery(q.shopStats(shop.id)),
-      queryClient.prefetchQuery(q.shopReviews(shop.id)),
+      queryClient.prefetchInfiniteQuery(q.shopReviews(shop.id)),
     ]);
   }
 

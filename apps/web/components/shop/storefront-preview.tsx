@@ -32,7 +32,7 @@ export default function StorefrontPreview({
   const fg = getContrastColor(primary);
   const editable = !!shop.bannerUrl && !!onBannerFocusChange;
   // Điểm đánh giá thật của shop (cùng query với storefront)
-  const { data: stats } = useQuery(q.shopStats<{ averageRating: number }>(shop.id));
+  const { data: stats } = useQuery(q.shopStats(shop.id));
 
   return (
     <div className="space-y-3">

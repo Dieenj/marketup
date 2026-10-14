@@ -104,7 +104,10 @@ Người bán chỉ **xem và trả lời** đánh giá; không duyệt, ẩn ha
 
 ### 3.1 Storefront
 
-- `/shop/<slug>`: banner, logo, màu chủ đạo của shop, danh sách sản phẩm, điểm đánh giá của shop và các đánh giá mới nhất.
+- `/shop/<slug>`: phần đầu trang (thông tin shop + banner), dưới là 2 tab dính dưới header khi cuộn:
+  - **Products** (mặc định): tìm, sắp xếp, lọc danh mục, lưới sản phẩm.
+  - **Reviews**: điểm trung bình, lọc theo số sao (kèm số đánh giá mỗi mức), danh sách đánh giá kèm trả lời của shop và tên sản phẩm (bấm để mở sản phẩm); tải từng trang 10 đánh giá khi cuộn.
+  - Đổi tab không tải lại trang (SPA). Tab đang mở nằm trên URL (`?tab=reviews`) để tải lại hoặc chia sẻ link vẫn đúng tab; đổi tab không thêm bước vào lịch sử trình duyệt.
   - Tìm theo tên/mô tả, **không dấu** và không phân biệt hoa thường ("ao" khớp "Áo"); lọc theo danh mục. Xử lý trên trình duyệt với toàn bộ sản phẩm của shop.
   - Sắp xếp: "Newest" (mặc định, mới nhất trước); giá thấp → cao theo **giá thấp nhất** của sản phẩm; giá cao → thấp theo **giá cao nhất** (mỗi chiều khớp với đầu khoảng giá người mua đang nhìn). Dashboard dùng cùng quy tắc (`apps/web/lib/price.ts`).
 - `/shop/<slug>/products/<id>`: ảnh chính (khoảng 450 px trên desktop) và dải ảnh nhỏ khi có nhiều ảnh, chọn biến thể (giá và tồn kho đổi theo), phân bố số sao, danh sách đánh giá. Trên điện thoại, giá và nút thêm vào giỏ nằm ở thanh dính đáy màn hình.
