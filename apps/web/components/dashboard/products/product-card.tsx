@@ -59,20 +59,18 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Nhãn hiển thị/ẩn sản phẩm - Glassmorphism */}
+        {/* Nhãn hiển thị/ẩn: nền đặc để đọc được trên mọi ảnh */}
         <div className="absolute top-3 left-3 z-10">
           <span
             className={cn(
-              'text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md border flex items-center gap-1.5 shadow-sm',
-              product.isVisible
-                ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
-                : 'bg-zinc-800/80 text-zinc-200 border-zinc-700/50',
+              'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium shadow-xs',
+              product.isVisible ? 'bg-background text-foreground' : 'bg-foreground text-background',
             )}
           >
             <span
               className={cn(
                 'h-1.5 w-1.5 rounded-full',
-                product.isVisible ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400',
+                product.isVisible ? 'bg-emerald-500' : 'bg-muted-foreground',
               )}
             />
             {product.isVisible ? 'Visible' : 'Hidden'}
@@ -151,7 +149,7 @@ export default function ProductCard({
                   ? 'bg-red-500'
                   : product.totalStock <= 10
                     ? 'bg-amber-500'
-                    : 'bg-zinc-400',
+                    : 'bg-muted-foreground',
               )}
             />
             {product.totalStock === 0 ? 'Out of stock' : `${product.totalStock} in stock`}

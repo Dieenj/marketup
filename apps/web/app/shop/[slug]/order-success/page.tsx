@@ -22,7 +22,7 @@ export default function OrderSuccessPage() {
         </div>
       </div>
 
-      <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Order Received!</h1>
+      <h1 className="mb-4 text-3xl font-bold tracking-tight">Order Received!</h1>
       <p className="text-xl text-muted-foreground mb-2">Thank you for shopping with us.</p>
       <p className="text-sm text-muted-foreground mb-10">
         {orderNumber ? (

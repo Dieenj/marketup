@@ -18,18 +18,19 @@ export default function AuthShell({
 }) {
   return (
     <div className="min-h-screen flex">
-      {/* Panel thương hiệu luôn tối, không phụ thuộc theme */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[560px] flex-col bg-neutral-950 text-white p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.06)_0%,transparent_60%)]" />
-        <div className="relative z-10 flex flex-col h-full">
+      {/* Panel thương hiệu tối, cùng màu với sidebar của dashboard */}
+      <div className="hidden flex-col bg-sidebar p-12 text-sidebar-foreground lg:flex lg:w-[480px] xl:w-[560px]">
+        <div className="flex h-full flex-col">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-white flex items-center justify-center">
-              <Store className="h-5 w-5 text-neutral-950" />
+            <div className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <Store className="size-5" aria-hidden />
             </div>
             <span className="font-bold text-xl tracking-tight">MarketUp</span>
           </div>
           <div className="flex-1 flex flex-col justify-center">{aside}</div>
-          <p className="text-white/20 text-sm">© {new Date().getFullYear()} MarketUp</p>
+          <p className="text-sm text-sidebar-foreground/40">
+            © {new Date().getFullYear()} MarketUp
+          </p>
         </div>
       </div>
 
@@ -48,7 +49,7 @@ export default function AuthShell({
             </div>
             <span className="font-bold text-lg">MarketUp</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-1">{title}</h1>
+          <h1 className="mb-1 text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-muted-foreground mb-8 text-sm">{subtitle}</p>
           {children}
           <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>

@@ -57,12 +57,12 @@ export default function LoginPage() {
     <AuthShell
       aside={
         <>
-          <h2 className="text-4xl font-bold leading-snug text-white">
+          <h2 className="text-4xl font-bold leading-snug">
             Welcome back to
             <br />
             your storefront.
           </h2>
-          <p className="mt-4 text-white/50 text-lg leading-relaxed max-w-sm">
+          <p className="mt-4 text-sidebar-foreground/60 text-lg leading-relaxed max-w-sm">
             Manage your products, track orders, and grow your business — all in one place.
           </p>
         </>

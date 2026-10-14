@@ -1,10 +1,11 @@
 import { Mail, MapPin, Phone, Star } from 'lucide-react';
 import RemoteImage from '@/components/remote-image';
 import { cn } from '@/lib/utils';
-import { DEFAULT_SHOP_COLOR, getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { DEFAULT_SHOP_COLOR, normalizeHexColor } from '@/lib/color-utils';
 import type { StorefrontShop } from '@/lib/storefront-queries';
 
-// Hero trang chủ shop. Dùng cả khi đang tải (loading.tsx) vì thông tin shop đã có sẵn từ layout —
+// Hero trang chủ shop. Phải nằm trong phần tử có brandThemeStyle (màu thương hiệu).
+// Dùng cả khi đang tải (loading.tsx) vì thông tin shop đã có sẵn từ layout —
 // chỉ phần sản phẩm/review bên dưới mới cần skeleton.
 // Chia đôi: bên trái nền màu thương hiệu với thông tin shop, bên phải ảnh banner — màn lớn ảnh rộng hơn (7/12)
 // (điện thoại: ảnh ở trên, thông tin ở dưới). Không có banner thì màu thương hiệu phủ cả khung.
@@ -23,9 +24,9 @@ export default function ShopHero({
   bannerOverlay?: React.ReactNode;
 }) {
   const Heading = preview ? 'p' : 'h1';
-  const primaryColor = normalizeHexColor(shop.primaryColor);
-  const fg = getContrastColor(primaryColor);
-  const iconColor = primaryColor === DEFAULT_SHOP_COLOR ? '#34d399' : undefined;
+  // Nền đen mặc định: icon liên hệ màu xanh cho nổi; màu khác thì icon cùng màu chữ
+  const iconColor =
+    normalizeHexColor(shop.primaryColor) === DEFAULT_SHOP_COLOR ? '#34d399' : undefined;
   const contacts = [
     { key: 'address', icon: MapPin, value: shop.address },
     { key: 'phone', icon: Phone, value: shop.contactPhone },
@@ -33,10 +34,8 @@ export default function ShopHero({
   ].filter((c) => c.value);
 
   return (
-    <section
-      className="@container relative overflow-hidden"
-      style={{ backgroundColor: primaryColor, color: fg }}
-    >
+    // Màu nền/chữ lấy từ màu thương hiệu (brandThemeStyle ở layout storefront hoặc khung xem trước)
+    <section className="@container relative overflow-hidden bg-primary text-primary-foreground">
       {shop.bannerUrl && (
         // Nằm trên khối chữ (khối chữ rộng cả khung nhưng chữ chỉ ở nửa trái) để kéo chỉnh được ảnh
         <div className="relative z-10 aspect-video md:absolute md:inset-y-0 md:right-0 md:aspect-auto md:w-1/2 lg:w-7/12">

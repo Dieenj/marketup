@@ -41,6 +41,14 @@ marketup/
 
 Next.js 16 (App Router, `output: 'standalone'`), React 19, Tailwind CSS 4, shadcn/ui, TanStack Query 5 (server state), Zustand (client state), React Hook Form + Zod (form), Recharts (biểu đồ), Axios, Capacitor 8.
 
+Quy ước giao diện:
+
+- Component từ shadcn/ui (`components/ui`, style `base-nova` trên Base UI). Thêm component bằng `npx shadcn add`, hoặc lấy từ registry `https://ui.shadcn.com/r/styles/base-nova/<tên>.json` nếu máy không có pnpm.
+- Dùng màu của theme (`bg-card`, `text-muted-foreground`, `bg-primary`…), không viết cứng màu (`bg-white`, `text-gray-*`). Riêng lớp phủ tối trên ảnh được dùng `bg-black/60`.
+- Storefront: `brandThemeStyle()` (`components/shop/brand-theme.ts`) đặt màu thương hiệu thành `--primary` ở layout của shop và ở khung xem trước, nên mọi `Button`/`FilterChip`/`bg-primary` bên trong tự theo màu shop.
+- Bo góc: nút/ô nhập `rounded-lg`, thẻ/khung `rounded-xl`, nhãn/nút lọc `rounded-full`.
+- Dùng chung: `SearchInput`, `EmptyState`, `FilterChip`, `ReviewItem`/`ReviewSummary`, `StorefrontPreview`.
+
 ### 3.2 Nhóm route
 
 | Nhóm          | Đường dẫn                                                                    | Render                                                                             |

@@ -11,9 +11,10 @@ import { FilterChip } from '@/components/ui/filter-chip';
 import PageHeader from '@/components/dashboard/page-header';
 import StatCard, { StatCardSkeleton } from '@/components/dashboard/stat-card';
 import EmptyState from '@/components/empty-state';
-import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { Star, MessageSquare, Reply, Filter, Calendar, User, ShoppingBag } from 'lucide-react';
+import { Star, MessageSquare, Reply, Filter, ShoppingBag } from 'lucide-react';
+import ReviewItem from '@/components/shop/review-item';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import { useMyShop } from '@/hooks/use-my-shop';
 
@@ -119,7 +120,7 @@ export default function DashboardReviewsPage() {
                   </div>
                   <Skeleton className="h-3.5 w-48" />
                 </div>
-                <Skeleton className="h-7 w-12 rounded-xl" />
+                <Skeleton className="h-7 w-12 rounded-full" />
               </div>
               <div className="space-y-2 pl-6">
                 <Skeleton className="h-3.5 w-full" />
@@ -200,126 +201,79 @@ export default function DashboardReviewsPage() {
         />
       ) : (
         <div
-          className={cn('space-y-4 transition-opacity', isPlaceholderData && 'opacity-60')}
+          className={cn(
+            'divide-y rounded-xl border bg-card px-5 transition-opacity',
+            isPlaceholderData && 'opacity-60',
+          )}
           aria-busy={isPlaceholderData}
         >
-          {reviews.map((rev) => (
-            <div
-              key={rev.id}
-              className="space-y-4 rounded-xl border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-bold text-base text-foreground flex items-center gap-1.5">
-                      <User className="h-4 w-4 text-muted-foreground/60" aria-hidden />
-                      {rev.buyerName}
-                    </span>
-                    {!rev.sellerReply && <Badge variant="info">Needs reply</Badge>}
-                    {rev.editedAt && <Badge variant="outline">Edited</Badge>}
+          {reviews.map((rev) => {
+            const editing = replyingId === rev.id;
+            const startReply = () => {
+              setReplyingId(rev.id);
+              setReplyText(rev.sellerReply || '');
+            };
+            return (
+              <ReviewItem
+                key={rev.id}
+                review={{ ...rev, variantLabel: rev.orderItem.variantLabel }}
+                badge={!rev.sellerReply && <Badge variant="info">Needs reply</Badge>}
+                meta={<span className="font-mono"> · {rev.orderItem.order.orderNumber}</span>}
+                product={
+                  <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    <ShoppingBag className="size-3.5 shrink-0" aria-hidden />
+                    {rev.product.name}
+                  </span>
+                }
+                replyLabel="Your reply"
+                replyAction={
+                  <Button variant="ghost" size="xs" onClick={startReply}>
+                    Edit
+                  </Button>
+                }
+              >
+                {editing ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      aria-label="Your reply"
+                      placeholder="Thank the customer, answer their question, or explain how you'll fix the problem…"
+                      className="resize-none"
+                      rows={3}
+                      maxLength={MAX_REPLY}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      autoFocus
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReplyingId(null);
+                          setReplyText('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!replyText.trim() || replyMutation.isPending}
+                        onClick={() => replyMutation.mutate({ reviewId: rev.id, text: replyText })}
+                      >
+                        {replyMutation.isPending && <Spinner />}
+                        Post reply
+                      </Button>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" aria-hidden />
-                      {formatDate(rev.createdAt)}
-                    </span>
-                    <span className="flex items-center gap-1 text-primary font-medium">
-                      <ShoppingBag className="h-3.5 w-3.5" aria-hidden />
-                      {rev.product.name}
-                      {rev.orderItem.variantLabel && ` · ${rev.orderItem.variantLabel}`}
-                    </span>
-                    <span className="font-mono">{rev.orderItem.order.orderNumber}</span>
-                  </div>
-                </div>
-
-                <div
-                  className="flex items-center bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-xl gap-1"
-                  aria-label={`${rev.rating} out of 5 stars`}
-                >
-                  <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
-                  <span className="text-xs font-bold">{rev.rating}</span>
-                </div>
-              </div>
-
-              {rev.comment && (
-                <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap pl-6 border-l-2 border-muted">
-                  {rev.comment}
-                </p>
-              )}
-
-              {/* Khu vực nhập câu trả lời của người bán */}
-              {replyingId === rev.id ? (
-                <div className="bg-muted/50 border rounded-xl p-4 space-y-3 ml-6 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      Write response
-                    </span>
-                    <button
-                      onClick={() => {
-                        setReplyingId(null);
-                        setReplyText('');
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  <Textarea
-                    aria-label="Your response"
-                    placeholder="Thank the customer for their review, answer questions, or address complaints..."
-                    className="resize-none rounded-xl"
-                    rows={3}
-                    maxLength={MAX_REPLY}
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      size="sm"
-                      disabled={!replyText.trim() || replyMutation.isPending}
-                      onClick={() => replyMutation.mutate({ reviewId: rev.id, text: replyText })}
-                      className="rounded-xl h-8 font-bold gap-1.5 px-4"
-                    >
-                      <Reply className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      Publish Response
-                    </Button>
-                  </div>
-                </div>
-              ) : rev.sellerReply ? (
-                <div className="ml-6 bg-primary/5 border-l-2 border-primary rounded-r-xl p-4 mt-2.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-primary">Your Response</p>
-                    <button
-                      onClick={() => {
-                        setReplyingId(rev.id);
-                        setReplyText(rev.sellerReply || '');
-                      }}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-                    >
-                      <Reply className="h-3 w-3" aria-hidden /> Edit
-                    </button>
-                  </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                    {rev.sellerReply}
-                  </p>
-                </div>
-              ) : (
-                <div className="pl-6">
-                  <button
-                    onClick={() => {
-                      setReplyingId(rev.id);
-                      setReplyText('');
-                    }}
-                    className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5 font-bold"
-                  >
-                    <Reply className="h-3.5 w-3.5" aria-hidden />
-                    Respond to this review
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                ) : !rev.sellerReply ? (
+                  <Button variant="outline" size="sm" onClick={startReply}>
+                    <Reply aria-hidden />
+                    Reply
+                  </Button>
+                ) : undefined}
+              </ReviewItem>
+            );
+          })}
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ import {
 import api from '@/lib/api-client';
 import { useAuthStore } from '@/hooks/use-auth';
 import { formatCurrency } from '@/lib/format';
+import EmptyState from '@/components/empty-state';
 import PageHeader from '@/components/dashboard/page-header';
 import StatCard from '@/components/dashboard/stat-card';
 import OrderStatusBadge from '@/components/order-status-badge';
@@ -170,15 +171,12 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : !stats?.recentOrders?.length ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                <ShoppingBag className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">No orders yet</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Share your shop link to get your first order.
-              </p>
-            </div>
+            <EmptyState
+              icon={ShoppingBag}
+              title="No orders yet"
+              description="Share your shop link to get your first order."
+              className="border-0 bg-transparent py-10"
+            />
           ) : (
             <ul className="divide-y">
               {stats.recentOrders.map((order: RecentOrder) => (

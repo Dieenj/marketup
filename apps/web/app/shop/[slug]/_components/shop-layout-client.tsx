@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Package, ShoppingCart, Store } from 'lucide-react';
 import { useShopCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
-import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { brandThemeStyle } from '@/components/shop/brand-theme';
 import { storefrontQueries } from '@/lib/storefront-queries';
 
 const q = storefrontQueries();
@@ -19,26 +19,20 @@ export default function ShopLayoutClient({ children }: { children: React.ReactNo
 
   const cartLines = useShopCart(shop?.id);
   const cartCount = cartLines.reduce((acc, line) => acc + line.quantity, 0);
-  // Màu do người bán nhập được chèn vào <style> → luôn chuẩn hoá về #rrggbb.
+  // Cả storefront dùng màu thương hiệu làm màu chính (nút, tab, nút lọc…)
   // scroll-padding-top = chiều cao header sticky (h-16): khi điều hướng, Next cuộn tới đầu trang mới mà không bị header che
-  const primaryColor = normalizeHexColor(shop?.primaryColor);
-  const primaryFg = getContrastColor(primaryColor);
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#fafafa]">
-      <style>{`
-        .shop-theme { --shop-primary: ${primaryColor}; --shop-primary-fg: ${primaryFg}; }
-        html { scroll-padding-top: 4rem; }
-      `}</style>
+    <div
+      className="flex min-h-screen flex-col bg-background"
+      style={brandThemeStyle(shop?.primaryColor)}
+    >
+      <style>{'html { scroll-padding-top: 4rem; }'}</style>
 
-      <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md shadow-sm">
+      <header className="sticky top-0 z-50 border-b bg-background/90 shadow-xs backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href={`/shop/${slug}`} className="flex items-center gap-2.5 group">
-            <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform"
-              style={{ backgroundColor: primaryColor }}
-            >
-              <Store className="h-4 w-4" style={{ color: primaryFg }} />
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:scale-105">
+              <Store className="size-4" aria-hidden />
             </div>
             <span className="font-bold text-[17px] tracking-tight">
               {shop?.name || slug.toUpperCase()}
@@ -48,7 +42,7 @@ export default function ShopLayoutClient({ children }: { children: React.ReactNo
           <div className="flex items-center gap-2">
             <Link
               href={`/shop/${slug}/orders`}
-              className="flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Package className="h-4.5 w-4.5" aria-hidden />
               <span className="sr-only sm:not-sr-only">My orders</span>
@@ -56,14 +50,13 @@ export default function ShopLayoutClient({ children }: { children: React.ReactNo
             <Link
               href={`/shop/${slug}/checkout`}
               aria-label={cartCount > 0 ? `View cart (${cartCount} items)` : 'View cart'}
-              className="relative flex items-center justify-center h-10 w-10 rounded-xl transition-colors"
-              style={{ backgroundColor: primaryColor, color: primaryFg }}
+              className="relative flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <ShoppingCart className="h-4.5 w-4.5" aria-hidden />
               {cartCount > 0 && (
                 <span
                   aria-hidden
-                  className="absolute -top-1 -right-1 h-4.5 w-4.5 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-bold text-white"
+                  className="absolute -top-1 -right-1 flex size-4.5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white"
                 >
                   {cartCount}
                 </span>
@@ -73,18 +66,15 @@ export default function ShopLayoutClient({ children }: { children: React.ReactNo
         </div>
       </header>
 
-      <main className="flex-1 shop-theme">{children}</main>
+      <main className="flex-1">{children}</main>
 
-      <footer className="border-t bg-white">
+      <footer className="border-t bg-card">
         <div className="container mx-auto px-4 py-10">
-          <div className="grid sm:grid-cols-3 gap-8">
+          <div className="grid gap-8 sm:grid-cols-2">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div
-                  className="h-7 w-7 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  <Store className="h-3.5 w-3.5" style={{ color: primaryFg }} />
+                <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Store className="size-3.5" aria-hidden />
                 </div>
                 <span className="font-bold text-sm">{shop?.name || slug.toUpperCase()}</span>
               </div>
@@ -103,15 +93,6 @@ export default function ShopLayoutClient({ children }: { children: React.ReactNo
                 </div>
               </div>
             )}
-
-            <div>
-              <h3 className="font-semibold text-sm mb-3">Policies</h3>
-              <div className="space-y-1.5 text-sm text-muted-foreground">
-                {['Return Policy', 'Shipping Policy', 'Customer Support'].map((item) => (
-                  <p key={item}>{item}</p>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="border-t mt-8 pt-6 text-center text-xs text-muted-foreground">

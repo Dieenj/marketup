@@ -8,7 +8,7 @@ export default function ShopNotFoundView() {
   return (
     <div className="container mx-auto px-4 py-20 text-center">
       <Store className="mx-auto mb-4 h-16 w-16 text-muted-foreground" aria-hidden />
-      <h1 className="text-4xl font-bold mb-4">Shop Not Found</h1>
+      <h1 className="mb-4 text-3xl font-bold tracking-tight">Shop Not Found</h1>
       <p className="text-muted-foreground mb-8">The store you are looking for does not exist.</p>
       <Link href="/" className={buttonVariants({ size: 'lg' })}>
         Go to MarketUp

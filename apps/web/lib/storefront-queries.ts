@@ -40,6 +40,7 @@ export interface PublicReview {
   sellerReply?: string | null;
   createdAt: string;
   product?: { id: string; name: string } | null;
+  orderItem?: { variantLabel?: string | null } | null;
 }
 
 export type RatingCounts = Record<1 | 2 | 3 | 4 | 5, number>;
@@ -51,7 +52,7 @@ export interface ShopStats {
   ratingCounts?: RatingCounts;
 }
 
-export interface ReviewPage {
+interface ReviewPage {
   items: PublicReview[];
   nextCursor: string | null;
 }

@@ -14,7 +14,7 @@ export default function StorefrontUnavailable({
   return (
     <div className="container mx-auto px-4 py-20 text-center" role="alert">
       <CloudOff className="mx-auto mb-4 h-12 w-12 text-muted-foreground" aria-hidden />
-      <h1 className="mb-2 text-2xl font-bold">We couldn&apos;t load this page</h1>
+      <h1 className="mb-2 text-2xl font-bold tracking-tight">We couldn&apos;t load this page</h1>
       <p className="mb-6 text-muted-foreground">
         The store is temporarily unavailable. Please try again in a moment.
       </p>

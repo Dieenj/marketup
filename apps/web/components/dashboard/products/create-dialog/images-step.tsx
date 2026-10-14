@@ -5,6 +5,7 @@ import { Upload, X, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FilePreviewImage from '@/components/file-preview-image';
 import { ACCEPTED_IMAGE_TYPES, MAX_PRODUCT_IMAGES, pickImageFiles } from '@/lib/image-upload';
+import { Button } from '@/components/ui/button';
 
 interface CreateProductStep3Props {
   images: File[];
@@ -60,7 +61,7 @@ export default function ImagesStep({
       >
         <div
           className={cn(
-            'flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-200',
+            'flex h-12 w-12 items-center justify-center rounded-lg transition-colors duration-200',
             isDragging ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
           )}
         >
@@ -90,13 +91,9 @@ export default function ImagesStep({
             <p className="text-xs text-muted-foreground font-medium">
               {images.length} image{images.length !== 1 ? 's' : ''} selected
             </p>
-            <button
-              type="button"
-              onClick={onClearAll}
-              className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-            >
+            <Button variant="ghost-destructive" size="xs" onClick={onClearAll}>
               Clear all
-            </button>
+            </Button>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {images.map((img, idx) => (

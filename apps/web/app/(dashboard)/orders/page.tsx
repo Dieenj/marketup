@@ -26,9 +26,10 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MoreVertical, Eye, ShoppingCart, Search } from 'lucide-react';
+import { MoreVertical, Eye, ShoppingCart } from 'lucide-react';
+import SearchInput from '@/components/search-input';
+import EmptyState from '@/components/empty-state';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
@@ -175,17 +176,13 @@ export default function OrdersPage() {
         {/* Bộ lọc trạng thái & tìm kiếm */}
         <div className="flex flex-col gap-3 border-b p-3 lg:flex-row lg:items-center lg:justify-between">
           <OrderStatusTabs value={statusFilter} onChange={setStatusFilter} counts={counts} />
-          <div className="relative w-full lg:w-64">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search order, name, email, phone…"
-              aria-label="Search orders"
-              value={searchQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
-          </div>
+          <SearchInput
+            label="Search orders"
+            placeholder="Search order, name, email, phone…"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full lg:w-72"
+          />
         </div>
 
         <Table className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
@@ -237,11 +234,12 @@ export default function OrdersPage() {
             ) : orders.length === 0 ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={6} className="h-48 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                    <ShoppingCart className="h-8 w-8 mb-1" />
-                    {isFiltered ? (
-                      <>
-                        <p className="font-medium text-foreground">No matching orders</p>
+                  <EmptyState
+                    icon={ShoppingCart}
+                    title={isFiltered ? 'No matching orders' : 'No orders yet'}
+                    description={!isFiltered && 'Share your shop link to start getting orders.'}
+                    action={
+                      isFiltered && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -252,14 +250,10 @@ export default function OrdersPage() {
                         >
                           Clear filters
                         </Button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-medium text-foreground">No orders yet</p>
-                        <p className="text-sm">Share your shop link to start getting orders.</p>
-                      </>
-                    )}
-                  </div>
+                      )
+                    }
+                    className="border-0 bg-transparent py-10"
+                  />
                 </TableCell>
               </TableRow>
             ) : (

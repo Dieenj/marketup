@@ -25,11 +25,8 @@ import { cn } from '@/lib/utils';
 // Step Subcomponents & Types
 import BasicStep from './basic-step';
 import { buildProductFormData, productSchema, type ProductBasicValues } from '../product-form-data';
-import VariantsEditor, { AttributeDef, VariantDef, cartesian } from '../variants-editor';
+import VariantsEditor, { AttributeDef, VariantDef } from '../variants-editor';
 import ImagesStep from './images-step';
-
-export type { AttributeDef, VariantDef };
-export { cartesian };
 
 interface CreateProductDialogProps {
   open: boolean;
@@ -117,11 +114,11 @@ export default function CreateProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="p-0 gap-0 max-w-2xl w-full overflow-hidden rounded-2xl border-border">
+      <DialogContent className="p-0 gap-0 max-w-2xl w-full overflow-hidden rounded-xl border-border">
         {/* ── Phần đầu (Header) ── */}
         <DialogHeader className="px-6 pt-6 pb-0">
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
               <Package className="h-4 w-4" />
             </div>
             <div>

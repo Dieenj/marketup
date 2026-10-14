@@ -132,7 +132,7 @@ export function BannerImageInput({ value, onChange }: BannerImageInputProps) {
             <Spinner className="size-5 text-muted-foreground" />
           ) : (
             <>
-              <span className="flex size-9 items-center justify-center rounded-xl bg-muted">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-muted">
                 <Upload className="size-4 text-muted-foreground" />
               </span>
               <span className="text-center text-xs text-muted-foreground">

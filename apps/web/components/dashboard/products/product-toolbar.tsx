@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Search, ArrowUpDown } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import SearchInput from '@/components/search-input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 
 interface ProductToolbarProps {
   searchQuery: string;
@@ -23,60 +23,37 @@ export default function ProductToolbar({
 }: ProductToolbarProps) {
   return (
     <div className="bg-card border rounded-xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-        <Input
-          aria-label="Search products"
-          placeholder="Search products by name..."
-          value={searchQuery}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-12 h-9 w-full"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground text-[10px] font-semibold bg-muted/50 hover:bg-muted px-1.5 py-0.5 rounded-md transition-colors"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      <SearchInput
+        label="Search products"
+        placeholder="Search products by name..."
+        value={searchQuery}
+        onChange={setSearchQuery}
+        className="max-w-md flex-1"
+      />
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* Lọc theo kho */}
-        <div className="flex items-center gap-1.5 bg-muted/30 border border-border/60 rounded-xl px-3 py-1.5">
-          <span className="text-xs text-muted-foreground font-semibold">Stock:</span>
-          <select
-            value={stockFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStockFilter(e.target.value)}
-            aria-label="Filter by stock status"
-            className="bg-transparent border-0 text-xs font-bold focus:ring-0 cursor-pointer pr-1 outline-none text-foreground"
-          >
-            <option value="all">All Status</option>
-            <option value="instock">In Stock</option>
-            <option value="lowstock">Low Stock (≤10)</option>
-            <option value="outofstock">Out of Stock</option>
-          </select>
-        </div>
-
-        {/* Sắp xếp */}
-        <div className="flex items-center gap-1.5 bg-muted/30 border border-border/60 rounded-xl px-3 py-1.5">
-          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground font-semibold">Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
-            aria-label="Sort products"
-            className="bg-transparent border-0 text-xs font-bold focus:ring-0 cursor-pointer pr-1 outline-none text-foreground"
-          >
-            <option value="name-asc">Name: A to Z</option>
-            <option value="name-desc">Name: Z to A</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="stock-asc">Stock: Low to High</option>
-            <option value="stock-desc">Stock: High to Low</option>
-          </select>
-        </div>
+        <NativeSelect
+          aria-label="Filter by stock status"
+          value={stockFilter}
+          onChange={(e) => setStockFilter(e.target.value)}
+        >
+          <NativeSelectOption value="all">All stock</NativeSelectOption>
+          <NativeSelectOption value="instock">In stock</NativeSelectOption>
+          <NativeSelectOption value="lowstock">Low stock (≤10)</NativeSelectOption>
+          <NativeSelectOption value="outofstock">Out of stock</NativeSelectOption>
+        </NativeSelect>
+        <NativeSelect
+          aria-label="Sort products"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <NativeSelectOption value="name-asc">Name: A to Z</NativeSelectOption>
+          <NativeSelectOption value="name-desc">Name: Z to A</NativeSelectOption>
+          <NativeSelectOption value="price-asc">Price: Low to High</NativeSelectOption>
+          <NativeSelectOption value="price-desc">Price: High to Low</NativeSelectOption>
+          <NativeSelectOption value="stock-asc">Stock: Low to High</NativeSelectOption>
+          <NativeSelectOption value="stock-desc">Stock: High to Low</NativeSelectOption>
+        </NativeSelect>
       </div>
     </div>
   );

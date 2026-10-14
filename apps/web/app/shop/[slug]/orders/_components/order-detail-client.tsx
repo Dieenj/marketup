@@ -205,7 +205,7 @@ function OrderDetail({
       <OrderProgress order={order} />
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
-        <section aria-labelledby="order-items" className="rounded-2xl border bg-card lg:col-span-2">
+        <section aria-labelledby="order-items" className="rounded-xl border bg-card lg:col-span-2">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b px-5 py-4">
             <h2 id="order-items" className="font-semibold">
               Items <span className="font-normal text-muted-foreground">({itemCount})</span>
@@ -249,7 +249,7 @@ function OrderDetail({
         </section>
 
         <div className="space-y-6">
-          <section aria-labelledby="order-summary" className="rounded-2xl border bg-card p-5">
+          <section aria-labelledby="order-summary" className="rounded-xl border bg-card p-5">
             <h2 id="order-summary" className="mb-4 font-semibold">
               Summary
             </h2>
@@ -282,7 +282,7 @@ function OrderDetail({
 
           <section
             aria-labelledby="order-delivery"
-            className="rounded-2xl border bg-card p-5 text-sm"
+            className="rounded-xl border bg-card p-5 text-sm"
           >
             <h2 id="order-delivery" className="mb-3 font-semibold">
               Delivery
@@ -298,10 +298,7 @@ function OrderDetail({
           </section>
 
           {(shop?.contactEmail || shop?.contactPhone) && (
-            <section
-              aria-labelledby="order-help"
-              className="rounded-2xl border bg-card p-5 text-sm"
-            >
+            <section aria-labelledby="order-help" className="rounded-xl border bg-card p-5 text-sm">
               <h2 id="order-help" className="mb-3 font-semibold">
                 Need help?
               </h2>
@@ -428,9 +425,9 @@ function OrderDetailSkeleton() {
         </div>
         <Skeleton className="h-7 w-24 rounded-full" />
       </div>
-      <Skeleton className="h-36 rounded-2xl sm:h-32" />
+      <Skeleton className="h-36 rounded-xl sm:h-32" />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border bg-card lg:col-span-2">
+        <div className="rounded-xl border bg-card lg:col-span-2">
           <div className="border-b px-5 py-4">
             <Skeleton className="h-5 w-24" />
           </div>
@@ -446,8 +443,8 @@ function OrderDetailSkeleton() {
           ))}
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-52 rounded-2xl" />
-          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-52 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl" />
         </div>
       </div>
     </div>

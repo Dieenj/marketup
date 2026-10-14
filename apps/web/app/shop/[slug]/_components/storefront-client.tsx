@@ -3,11 +3,12 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ImageIcon, ShoppingBag, Search, ArrowRight, Filter } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import SearchInput from '@/components/search-input';
+import { ImageIcon, ShoppingBag, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { FilterChip } from '@/components/ui/filter-chip';
 import { storefrontQueries, type StorefrontCategory } from '@/lib/storefront-queries';
 import { compareByPrice, getPriceRange } from '@/lib/price';
 import { matchesSearch } from '@/lib/search';
@@ -18,6 +19,7 @@ import StorefrontUnavailable from './storefront-unavailable';
 import ShopHero from '@/components/shop/shop-hero';
 import { StorefrontSkeleton } from './skeletons';
 import ShopNotFoundView from '@/components/shop/shop-not-found';
+import EmptyState from '@/components/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShopReviews from './shop-reviews';
 
@@ -86,9 +88,6 @@ export default function StorefrontClient() {
     enabled: !!shop?.id,
   });
 
-  const primaryColor = normalizeHexColor(shop?.primaryColor);
-  const primaryFg = getContrastColor(primaryColor);
-
   const categories: Category[] = shop?.categories || [];
 
   const filteredProducts = useMemo(() => {
@@ -144,110 +143,83 @@ export default function StorefrontClient() {
         </div>
 
         <TabsContent value="reviews" className="container mx-auto px-4 py-8">
-          <ShopReviews shopId={shop.id} slug={slug} stats={stats} primaryColor={primaryColor} />
+          <ShopReviews shopId={shop.id} slug={slug} shopName={shop.name} stats={stats} />
         </TabsContent>
 
         <TabsContent value="products" className="container mx-auto px-4 py-8">
           <section className="space-y-5" aria-label="Products">
             {/* Tìm + sắp xếp trên một hàng (điện thoại: xuống dòng) */}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="relative w-full max-w-md">
-                <Search
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                  aria-hidden
-                />
-                <Input
-                  aria-label="Search products"
-                  placeholder="Search products..."
-                  className="pl-10 h-11 bg-white rounded-xl border-border/70"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+              <SearchInput
+                label="Search products"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={setSearchQuery}
+                className="h-11 w-full max-w-md"
+              />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
                 </span>
-                <Filter className="h-4 w-4 text-muted-foreground" aria-hidden />
-                <select
+                <NativeSelect
                   aria-label="Sort products"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="text-sm bg-secondary border border-border rounded-xl px-3 py-1.5 text-foreground outline-none cursor-pointer"
                 >
                   {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
+                    <NativeSelectOption key={o.value} value={o.value}>
                       {o.label}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
 
             {/* Category chips */}
             {categories.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                <button
+                <FilterChip
+                  active={selectedCategory === null}
                   onClick={() => setSelectedCategory(null)}
-                  className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border"
-                  style={
-                    selectedCategory === null
-                      ? {
-                          backgroundColor: primaryColor,
-                          color: primaryFg,
-                          borderColor: primaryColor,
-                        }
-                      : {}
-                  }
                 >
                   All
-                </button>
+                </FilterChip>
                 {categories.map((cat) => (
-                  <button
+                  <FilterChip
                     key={cat.id}
+                    active={selectedCategory === cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className="px-4 py-1.5 rounded-xl text-sm font-medium transition-all border bg-white text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
-                    style={
-                      selectedCategory === cat.id
-                        ? {
-                            backgroundColor: primaryColor,
-                            color: primaryFg,
-                            borderColor: primaryColor,
-                          }
-                        : {}
-                    }
                   >
                     {cat.name}
-                  </button>
+                  </FilterChip>
                 ))}
               </div>
             )}
 
             {/* Product grid */}
             {filteredProducts.length === 0 ? (
-              <div className="py-24 text-center">
-                <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-muted mb-4">
-                  <ShoppingBag className="h-7 w-7 text-muted-foreground" />
-                </div>
-                <p className="font-semibold text-foreground">No products found</p>
-                <p className="text-muted-foreground text-sm mt-1">
-                  {searchQuery || selectedCategory
+              <EmptyState
+                icon={ShoppingBag}
+                title="No products found"
+                description={
+                  searchQuery || selectedCategory
                     ? 'Try adjusting your filters.'
-                    : 'Check back soon!'}
-                </p>
-                {(searchQuery || selectedCategory) && (
-                  <Button
-                    variant="outline"
-                    className="mt-4 rounded-xl"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory(null);
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                )}
-              </div>
+                    : 'Check back soon!'
+                }
+                action={
+                  (searchQuery || selectedCategory) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory(null);
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  )
+                }
+              />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredProducts.map((product: Product) => {
@@ -281,7 +253,7 @@ export default function StorefrontClient() {
                   return (
                     <div
                       key={product.id}
-                      className="group bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                      className="group bg-card rounded-xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                     >
                       <Link href={productHref} prefetch={false} className="block relative">
                         <div className="aspect-4/3 relative bg-secondary overflow-hidden">
@@ -311,8 +283,8 @@ export default function StorefrontClient() {
                             )}
                           </div>
                           {isOutOfStock && (
-                            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                              <span className="text-xs font-semibold text-muted-foreground bg-white border border-border px-3 py-1 rounded-full">
+                            <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-muted-foreground bg-card border border-border px-3 py-1 rounded-full">
                                 Out of stock
                               </span>
                             </div>
@@ -349,8 +321,9 @@ export default function StorefrontClient() {
                         <Link
                           href={productHref}
                           prefetch={false}
-                          className="mt-auto w-full h-9 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 group/btn"
-                          style={{ backgroundColor: primaryColor, color: primaryFg }}
+                          className={buttonVariants({
+                            className: 'group/btn mt-auto h-9 w-full gap-2 text-xs font-semibold',
+                          })}
                         >
                           View details
                           <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform" />

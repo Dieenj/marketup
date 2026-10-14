@@ -174,7 +174,7 @@ function OrderRow({ slug, order }: { slug: string; order: BuyerOrder }) {
   return (
     <Link
       href={`/shop/${slug}/orders/${encodeURIComponent(order.orderNumber)}`}
-      className="flex items-center gap-4 rounded-2xl border bg-card p-4 transition-colors hover:border-foreground/20 hover:bg-muted/30"
+      className="flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors hover:border-foreground/20 hover:bg-muted/30"
     >
       <OrderItemThumb src={order.items[0]?.productImage} className="size-14" />
       <div className="min-w-0 flex-1">
@@ -199,7 +199,7 @@ function OrderRowsSkeleton({ count }: { count: number }) {
         Loading orders…
       </span>
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex items-center gap-4 rounded-2xl border bg-card p-4">
+        <div key={i} className="flex items-center gap-4 rounded-xl border bg-card p-4">
           <Skeleton className="size-14 rounded-lg" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-40" />

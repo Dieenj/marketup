@@ -35,7 +35,7 @@ function statusMessage(order: BuyerOrder) {
 export default function OrderProgress({ order }: { order: BuyerOrder }) {
   if (order.status === 'CANCELLED') {
     return (
-      <div className="flex items-start gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+      <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-5">
         <XCircle className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden />
         <div>
           <p className="font-semibold text-destructive">
@@ -67,7 +67,7 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
   );
 
   return (
-    <div className="rounded-2xl border bg-card p-5 sm:p-6">
+    <div className="rounded-xl border bg-card p-5 sm:p-6">
       <p className="mb-5 text-sm font-medium">{statusMessage(order)}</p>
       <ol aria-label="Order progress" className="grid gap-3 sm:grid-cols-5 sm:gap-0">
         {STEPS.map((step, i) => {
@@ -84,7 +84,7 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
                   aria-hidden
                   className={cn(
                     'absolute top-4 right-1/2 hidden h-0.5 w-full -translate-y-1/2 sm:block',
-                    reached ? 'bg-(--shop-primary)' : 'bg-border',
+                    reached ? 'bg-primary' : 'bg-border',
                   )}
                 />
               )}
@@ -93,7 +93,7 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
                 className={cn(
                   'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold',
                   reached
-                    ? 'border-(--shop-primary) bg-(--shop-primary) text-(--shop-primary-fg)'
+                    ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border bg-card text-muted-foreground',
                 )}
               >

@@ -20,7 +20,7 @@ export interface VariantDef {
   sku: string;
 }
 
-export function cartesian(arrays: string[][]): string[][] {
+function cartesian(arrays: string[][]): string[][] {
   return arrays.reduce<string[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
     [[]],
@@ -127,13 +127,14 @@ export default function VariantsEditor({
                       {attr.options.length} option{attr.options.length !== 1 ? 's' : ''}
                     </span>
                   </div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost-destructive"
+                    size="icon-xs"
                     onClick={() => removeAttribute(i)}
-                    className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    aria-label={`Remove ${attr.name || 'attribute'}`}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                    <Trash2 />
+                  </Button>
                 </div>
 
                 {/* Các nhãn tùy chọn (Option pills) */}
@@ -147,6 +148,7 @@ export default function VariantsEditor({
                       <button
                         type="button"
                         onClick={() => removeOption(i, j)}
+                        aria-label={`Remove option ${opt}`}
                         className="text-muted-foreground hover:text-destructive transition-colors ml-0.5"
                       >
                         <X className="h-3 w-3" />

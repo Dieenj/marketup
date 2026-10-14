@@ -60,22 +60,22 @@ export default function RegisterPage() {
     <AuthShell
       aside={
         <>
-          <h2 className="text-4xl font-bold leading-snug text-white">
+          <h2 className="text-4xl font-bold leading-snug">
             Start selling
             <br />
             in minutes.
           </h2>
-          <p className="mt-4 text-white/50 text-lg leading-relaxed max-w-sm">
+          <p className="mt-4 text-sidebar-foreground/60 text-lg leading-relaxed max-w-sm">
             Create your free account and launch your personalized online storefront today.
           </p>
           <ul className="mt-10 space-y-3">
             {['No credit card required', 'Your own storefront URL', 'Unlimited products'].map(
               (f) => (
                 <li key={f} className="flex items-center gap-3">
-                  <span className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center">
-                    <Check className="h-3 w-3 text-white" aria-hidden />
+                  <span className="h-5 w-5 rounded-full bg-sidebar-accent flex items-center justify-center">
+                    <Check className="size-3" aria-hidden />
                   </span>
-                  <span className="text-white/60 text-sm">{f}</span>
+                  <span className="text-sidebar-foreground/70 text-sm">{f}</span>
                 </li>
               ),
             )}

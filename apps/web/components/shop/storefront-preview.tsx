@@ -6,7 +6,9 @@ import { ArrowRight, Move, ShoppingCart } from 'lucide-react';
 import ShopHero from '@/components/shop/shop-hero';
 import RemoteImage from '@/components/remote-image';
 import { cn } from '@/lib/utils';
-import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
+import { brandThemeStyle } from '@/components/shop/brand-theme';
+import { buttonVariants } from '@/components/ui/button';
+import { filterChipVariants } from '@/components/ui/filter-chip';
 import { storefrontQueries, type StorefrontShop } from '@/lib/storefront-queries';
 
 export interface BannerFocus {
@@ -28,43 +30,33 @@ export default function StorefrontPreview({
   shop: StorefrontShop;
   onBannerFocusChange?: (focus: BannerFocus) => void;
 }) {
-  const primary = normalizeHexColor(shop.primaryColor);
-  const fg = getContrastColor(primary);
   const editable = !!shop.bannerUrl && !!onBannerFocusChange;
-  // Điểm đánh giá thật của shop (cùng query với storefront)
-  const { data: stats } = useQuery(q.shopStats(shop.id));
+  // Điểm đánh giá thật của shop (cùng query với storefront); trang tạo shop chưa có shop → không gọi
+  const { data: stats } = useQuery({ ...q.shopStats(shop.id), enabled: !!shop.id });
 
   return (
     <div className="space-y-3">
-      <figure className="relative overflow-hidden rounded-xl border bg-[#fafafa]">
+      {/* Khung xem trước tô theo màu đang chọn, giống storefront thật (nút mẫu không bấm được) */}
+      <figure
+        className="relative overflow-hidden rounded-xl border bg-background"
+        style={brandThemeStyle(shop.primaryColor)}
+      >
         <ShopHero
           shop={shop}
           rating={stats?.averageRating}
           preview
           bannerOverlay={editable && <BannerDragArea shop={shop} onChange={onBannerFocusChange} />}
         />
-        <div className="flex flex-wrap items-center gap-2 border-t bg-white p-4">
+        <div className="flex flex-wrap items-center gap-2 border-t bg-card p-4" aria-hidden>
+          <span className={filterChipVariants({ active: true })}>All</span>
+          <span className={filterChipVariants()}>Category</span>
           <span
-            className="rounded-xl border px-4 py-1.5 text-sm font-medium"
-            style={{ backgroundColor: primary, color: fg, borderColor: primary }}
-          >
-            All
-          </span>
-          <span className="rounded-xl border bg-white px-4 py-1.5 text-sm font-medium text-muted-foreground">
-            Category
-          </span>
-          <span
-            className="ml-auto inline-flex h-9 items-center gap-2 rounded-xl px-4 text-xs font-semibold"
-            style={{ backgroundColor: primary, color: fg }}
+            className={buttonVariants({ className: 'ml-auto h-9 gap-2 text-xs font-semibold' })}
           >
             View details
-            <ArrowRight className="size-3.5" aria-hidden />
+            <ArrowRight className="size-3.5" />
           </span>
-          <span
-            className="inline-flex size-9 items-center justify-center rounded-xl"
-            style={{ backgroundColor: primary, color: fg }}
-            aria-hidden
-          >
+          <span className={buttonVariants({ size: 'icon', className: 'size-10' })}>
             <ShoppingCart className="size-4" />
           </span>
         </div>

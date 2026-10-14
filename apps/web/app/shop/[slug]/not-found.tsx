@@ -13,9 +13,9 @@ export default function ProductNotFound() {
   return (
     <div className="container mx-auto px-4 py-20 text-center">
       <Package className="mx-auto mb-4 h-16 w-16 text-muted-foreground" aria-hidden />
-      <h1 className="mb-4 text-3xl font-bold">Product Not Found</h1>
+      <h1 className="mb-4 text-3xl font-bold tracking-tight">Product Not Found</h1>
       <Link href={`/shop/${slug}`} className={buttonVariants()}>
-        Back to Shop
+        Back to shop
       </Link>
     </div>
   );

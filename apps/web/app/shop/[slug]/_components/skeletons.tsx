@@ -13,7 +13,7 @@ export function ProductDetailSkeleton() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[5fr_7fr] lg:gap-12">
         {/* Ảnh chính + thumbnail */}
         <div className="space-y-4">
-          <Skeleton className="aspect-square rounded-2xl" />
+          <Skeleton className="aspect-square rounded-xl" />
           <div className="flex gap-2 pb-2">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="size-20 shrink-0 rounded-lg" />
@@ -85,22 +85,22 @@ export function StorefrontSkeleton({ shop }: { shop?: StorefrontShop }) {
       <div className="container mx-auto px-4 py-8">
         <section className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Skeleton className="h-11 w-full max-w-md rounded-xl" />
-            <Skeleton className="h-8 w-48 rounded-xl" />
+            <Skeleton className="h-11 w-full max-w-md rounded-lg" />
+            <Skeleton className="h-8 w-48 rounded-lg" />
           </div>
           <div className="flex flex-wrap gap-2">
             {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-9 w-24 rounded-xl" />
+              <Skeleton key={i} className="h-8 w-24 rounded-full" />
             ))}
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div key={i} className="overflow-hidden rounded-xl border border-border bg-card">
                 <Skeleton className="aspect-4/3 rounded-none" />
                 <div className="space-y-3 p-4">
                   <Skeleton className="h-4 w-4/5" />
                   <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-9 w-full rounded-xl" />
+                  <Skeleton className="h-9 w-full rounded-lg" />
                 </div>
               </div>
             ))}

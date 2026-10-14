@@ -147,10 +147,10 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
+        <h1 className="mb-4 text-3xl font-bold tracking-tight">Your Cart is Empty</h1>
         <p className="text-muted-foreground mb-8">Add some products before checking out.</p>
         <Link href={`/shop/${slug}`} className={buttonVariants()}>
-          Back to Shop
+          Back to shop
         </Link>
       </div>
     );
@@ -163,14 +163,14 @@ export default function CheckoutPage() {
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
       >
         <ChevronLeft className="h-4 w-4" />
-        Back to Products
+        Back to shop
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Phía bên trái: Form nhập thông tin mua hàng */}
         <div className="space-y-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Checkout</h1>
+            <h1 className="mb-2 text-3xl font-bold tracking-tight">Checkout</h1>
             <p className="text-muted-foreground">
               Please fill in your shipping details to complete the order.
             </p>
@@ -178,7 +178,7 @@ export default function CheckoutPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Card className="border-2">
+              <Card>
                 <CardHeader>
                   <CardTitle>Shipping Information</CardTitle>
                 </CardHeader>
@@ -253,7 +253,7 @@ export default function CheckoutPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-primary/20 bg-primary/5">
+              <Card className="bg-muted/40">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
 
         {/* Phía bên phải: Tóm tắt thông tin đơn hàng và tổng tiền */}
         <div className="space-y-8">
-          <Card className="sticky top-24 border-2 shadow-lg">
+          <Card className="sticky top-24">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                 {available.map((line) => (
                   <div
                     key={line.variantId}
-                    className="flex gap-3 p-3 rounded-xl bg-[#fafafa] border border-border/40"
+                    className="flex gap-3 p-3 rounded-lg bg-muted/50 border border-border/40"
                   >
                     <LineThumb line={line} />
                     <div className="flex-1 min-w-0">
@@ -311,25 +311,25 @@ export default function CheckoutPage() {
                         <p className="text-xs text-amber-700">Only {line.stock} left</p>
                       )}
                       <div className="flex items-center gap-2 mt-1.5">
-                        <button
-                          type="button"
+                        <Button
+                          variant="outline"
+                          size="icon-xs"
                           onClick={() => setQuantity(shop.id, line.variantId, line.quantity - 1)}
                           disabled={line.quantity <= 1}
                           aria-label={`Decrease quantity of ${line.name}`}
-                          className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40"
                         >
-                          <Minus className="h-3 w-3" aria-hidden />
-                        </button>
+                          <Minus aria-hidden />
+                        </Button>
                         <span className="text-sm font-medium w-5 text-center">{line.quantity}</span>
-                        <button
-                          type="button"
+                        <Button
+                          variant="outline"
+                          size="icon-xs"
                           onClick={() => setQuantity(shop.id, line.variantId, line.quantity + 1)}
                           disabled={line.quantity >= line.stock}
                           aria-label={`Increase quantity of ${line.name}`}
-                          className="h-6 w-6 rounded-md border bg-white flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-40"
                         >
-                          <Plus className="h-3 w-3" aria-hidden />
-                        </button>
+                          <Plus aria-hidden />
+                        </Button>
                       </div>
                     </div>
                     <RemoveLineButton
@@ -423,14 +423,15 @@ function LineThumb({ line, className }: { line: CartLine; className?: string }) 
 
 function RemoveLineButton({ name, onRemove }: { name: string; onRemove: () => void }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost-destructive"
+      size="icon-sm"
+      className="self-start"
       onClick={onRemove}
       aria-label={`Remove ${name} from cart`}
-      className="text-muted-foreground hover:text-red-500 transition-colors self-start mt-0.5 p-1"
     >
-      <Trash2 className="h-4 w-4" aria-hidden />
-    </button>
+      <Trash2 aria-hidden />
+    </Button>
   );
 }
 

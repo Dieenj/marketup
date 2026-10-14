@@ -77,13 +77,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center h-14 px-4 border-b bg-background shrink-0 md:hidden">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            className="-ml-2"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
-            className="p-2 -ml-2 rounded-lg hover:bg-muted"
           >
-            <Menu className="h-5 w-5" />
-          </button>
+            <Menu className="size-5" />
+          </Button>
           {shop ? (
             <span className="ml-2 font-semibold text-sm truncate">{shop.name}</span>
           ) : (

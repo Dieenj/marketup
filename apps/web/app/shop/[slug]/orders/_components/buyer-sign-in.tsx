@@ -47,7 +47,7 @@ export function SignInPanel({
   return (
     <div className="container mx-auto max-w-md px-4 py-12 sm:py-20">
       {back}
-      <div className="rounded-2xl border bg-card p-6 sm:p-8">
+      <div className="rounded-xl border bg-card p-6 sm:p-8">
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
         <p className="mt-2 mb-6 text-sm text-muted-foreground">{description}</p>
         <BuyerSignIn slug={slug} />

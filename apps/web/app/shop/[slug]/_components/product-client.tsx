@@ -15,7 +15,8 @@ import {
 import { toast } from 'sonner';
 
 import { storefrontQueries, type PublicReview } from '@/lib/storefront-queries';
-import ReviewCard from '@/components/shop/review-card';
+import ReviewItem, { ReviewSummary } from '@/components/shop/review-item';
+import EmptyState from '@/components/empty-state';
 import { formatPriceRange, getPriceRange } from '@/lib/price';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -73,6 +74,8 @@ export default function ProductClient() {
     refetch: refetchProduct,
     isRefetching: isRefetchingProduct,
   } = useQuery(q.product<ProductDetail>(productId));
+  // Tên shop cho ô trả lời đánh giá (đã có sẵn trong cache từ layout)
+  const { data: shop } = useQuery(q.shop(slug));
   const cartLines = useShopCart(product?.shopId);
 
   const { data: reviews } = useQuery({
@@ -251,13 +254,13 @@ export default function ProductClient() {
         className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to all products
+        Back to shop
       </Link>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-[5fr_7fr] lg:gap-12">
         {/* Trình chiếu hình ảnh (Image Carousel) */}
         <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted group">
+          <div className="relative aspect-square overflow-hidden rounded-xl bg-muted group">
             {allImages.length > 0 ? (
               <>
                 <RemoteImage
@@ -343,12 +346,12 @@ export default function ProductClient() {
                 {product.category.name}
               </Badge>
             )}
-            <h1 className="text-4xl font-extrabold tracking-tight">{product.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{product.name}</h1>
             <div className="flex items-center gap-2 mt-2">
               <StarRating value={ratingInfo?.averageRating || 0} starClassName="size-4.5" />
               <span className="text-xs font-semibold text-muted-foreground">
                 {ratingInfo && ratingInfo.averageRating > 0
-                  ? `${ratingInfo.averageRating} (${ratingInfo.count} reviews)`
+                  ? `${ratingInfo.averageRating} (${ratingInfo.count} ${ratingInfo.count === 1 ? 'review' : 'reviews'})`
                   : 'No reviews yet'}
               </span>
             </div>
@@ -374,7 +377,7 @@ export default function ProductClient() {
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Description
               </h2>
-              <p className="text-base leading-relaxed text-gray-700">{product.description}</p>
+              <p className="text-base leading-relaxed text-foreground/80">{product.description}</p>
             </div>
           )}
 
@@ -511,46 +514,35 @@ export default function ProductClient() {
         </div>
       </div>
 
-      {/* Phần đánh giá và nhận xét của khách hàng */}
-      <div className="mt-16 border-t border-border/60 pt-12">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-10">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold tracking-tight">Customer Reviews</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-5xl font-extrabold text-foreground">
-                {ratingInfo?.averageRating || '0.0'}
-              </span>
-              <div>
-                <StarRating value={ratingInfo?.averageRating || 0} starClassName="size-5" />
-                <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-                  Based on {ratingInfo?.count || 0} customer reviews
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Danh sách các đánh giá của sản phẩm */}
+      {/* Đánh giá của khách đã nhận hàng */}
+      <section className="mt-16 space-y-6 border-t pt-12" aria-labelledby="reviews-heading">
+        <h2 id="reviews-heading" className="text-2xl font-bold tracking-tight">
+          Customer Reviews
+        </h2>
+        <ReviewSummary average={ratingInfo?.averageRating ?? 0} count={ratingInfo?.count ?? 0} />
         {!reviews || reviews.length === 0 ? (
-          <div className="text-center py-12 bg-muted/20 border border-dashed rounded-2xl">
-            <MessageSquare className="h-9 w-9 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-muted-foreground">No reviews yet</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Reviews come from buyers once their order has been delivered.
-            </p>
-          </div>
+          <EmptyState
+            icon={MessageSquare}
+            title="No reviews yet"
+            description="Reviews come from buyers once their order has been delivered."
+            className="py-12"
+          />
         ) : (
-          <div className="space-y-6">
+          <div className="divide-y">
             {reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+              <ReviewItem
+                key={review.id}
+                review={{ ...review, variantLabel: review.orderItem?.variantLabel }}
+                replyLabel={`Response from ${shop?.name ?? 'the shop'}`}
+              />
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Điện thoại: giá + nút thêm vào giỏ luôn trong tầm tay (giống Shopee).
           sticky trong trang → tới cuối trang thì dừng lại, không che footer */}
-      <div className="sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t bg-white/95 px-4 py-3 backdrop-blur md:hidden">
+      <div className="sticky bottom-0 z-40 -mx-4 mt-8 flex items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur md:hidden">
         <span className="min-w-0 shrink text-lg font-bold">{priceLabel}</span>
         <Button
           size="lg"

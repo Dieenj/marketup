@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { MessageSquare } from 'lucide-react';
-import StarRating from '@/components/star-rating';
-import ReviewCard from '@/components/shop/review-card';
+import Link from 'next/link';
+import { MessageSquare, ShoppingBag } from 'lucide-react';
+import ReviewItem, { ReviewSummary } from '@/components/shop/review-item';
+import EmptyState from '@/components/empty-state';
 import LoadMore from '@/components/load-more';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getContrastColor } from '@/lib/color-utils';
+import { FilterChip } from '@/components/ui/filter-chip';
 import { storefrontQueries, type RatingCounts, type ShopStats } from '@/lib/storefront-queries';
 
 const q = storefrontQueries();
@@ -17,13 +18,13 @@ const STAR_FILTERS = [5, 4, 3, 2, 1] as const;
 export default function ShopReviews({
   shopId,
   slug,
+  shopName,
   stats,
-  primaryColor,
 }: {
   shopId: string;
   slug: string;
+  shopName: string;
   stats?: ShopStats;
-  primaryColor: string;
 }) {
   const [rating, setRating] = useState<keyof RatingCounts | undefined>();
   const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -31,45 +32,16 @@ export default function ShopReviews({
   const reviews = data?.pages.flatMap((page) => page.items) ?? [];
   const total = stats?.count ?? 0;
 
-  const chip = (label: string, value: keyof RatingCounts | undefined, count?: number) => {
-    const active = rating === value;
-    return (
-      <button
-        key={label}
-        type="button"
-        aria-pressed={active}
-        onClick={() => setRating(value)}
-        className="rounded-xl border bg-white px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:border-foreground/30 hover:text-foreground"
-        style={
-          active
-            ? {
-                backgroundColor: primaryColor,
-                color: getContrastColor(primaryColor),
-                borderColor: primaryColor,
-              }
-            : undefined
-        }
-      >
-        {label}
-        {count !== undefined && <span className="tabular-nums opacity-75"> ({count})</span>}
-      </button>
-    );
-  };
+  const chip = (label: string, value: keyof RatingCounts | undefined, count?: number) => (
+    <FilterChip key={label} active={rating === value} onClick={() => setRating(value)}>
+      {label}
+      {count !== undefined && <span className="tabular-nums opacity-75">({count})</span>}
+    </FilterChip>
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:p-6">
-        <div className="flex items-center gap-3 sm:min-w-56">
-          <span className="text-5xl font-extrabold">
-            {total > 0 ? (stats?.averageRating ?? 0).toFixed(1) : '–'}
-          </span>
-          <div>
-            <StarRating value={stats?.averageRating ?? 0} starClassName="size-5" />
-            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-              {total} {total === 1 ? 'review' : 'reviews'}
-            </p>
-          </div>
-        </div>
+      <ReviewSummary average={stats?.averageRating ?? 0} count={total}>
         {total > 0 && (
           <div className="flex flex-wrap gap-2" aria-label="Filter reviews by rating">
             {chip('All', undefined)}
@@ -78,18 +50,19 @@ export default function ShopReviews({
             )}
           </div>
         )}
-      </div>
+      </ReviewSummary>
 
       {isPending ? (
-        <div className="space-y-4" aria-busy="true">
+        <div className="divide-y" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="space-y-3 rounded-2xl border border-border/50 bg-white p-5">
-              <div className="flex justify-between">
+            <div key={i} className="flex gap-3 py-5">
+              <Skeleton className="size-9 rounded-full" />
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-3.5 w-20" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
               </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
             </div>
           ))}
         </div>
@@ -98,23 +71,30 @@ export default function ShopReviews({
           Couldn&apos;t load reviews. Please try again.
         </p>
       ) : reviews.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-muted/20 py-12 text-center">
-          <MessageSquare className="mx-auto mb-3 h-9 w-9 text-muted-foreground/30" />
-          <p className="text-sm font-semibold text-muted-foreground">
-            {rating ? `No ${rating}-star reviews` : 'No reviews yet'}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Reviews come from buyers once their order has been delivered.
-          </p>
-        </div>
+        <EmptyState
+          icon={MessageSquare}
+          title={rating ? `No ${rating}-star reviews` : 'No reviews yet'}
+          description="Reviews come from buyers once their order has been delivered."
+          className="py-12"
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y">
           {reviews.map((review) => (
-            <ReviewCard
+            <ReviewItem
               key={review.id}
-              review={review}
-              productHref={
-                review.product ? `/shop/${slug}/products/${review.product.id}` : undefined
+              review={{ ...review, variantLabel: review.orderItem?.variantLabel }}
+              replyLabel={`Response from ${shopName}`}
+              product={
+                review.product && (
+                  <Link
+                    href={`/shop/${slug}/products/${review.product.id}`}
+                    prefetch={false}
+                    className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <ShoppingBag className="size-3.5 shrink-0" aria-hidden />
+                    {review.product.name}
+                  </Link>
+                )
               }
             />
           ))}

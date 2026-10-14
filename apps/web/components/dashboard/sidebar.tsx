@@ -148,7 +148,7 @@ export default function Sidebar({
                 prefetch={isActive ? undefined : false}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-150',
+                  'group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
@@ -176,7 +176,7 @@ export default function Sidebar({
                 href={`/shop/${shop.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                className="group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
               >
                 <Store className="h-4.5 w-4.5 text-sidebar-foreground/50 group-hover:text-sidebar-foreground shrink-0" />
                 <span className="truncate">View Your Shop</span>
@@ -212,7 +212,7 @@ export default function Sidebar({
             )}
           </div>
           <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl text-sidebar-foreground/50 hover:bg-red-500/10 hover:text-red-400 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg text-sidebar-foreground/50 hover:bg-red-500/10 hover:text-red-400 transition-all"
             onClick={() => {
               logout();
               window.location.href = '/login';
