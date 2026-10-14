@@ -126,33 +126,7 @@ export default function StorefrontClient() {
 
   return (
     <div className="min-h-screen">
-      <ShopHero shop={shop} />
-
-      {/* Stats bar */}
-      <section className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="font-semibold text-lg text-foreground">{products?.length ?? 0}</div>
-            <div className="text-muted-foreground text-xs">Products</div>
-          </div>
-          <div>
-            <div className="font-semibold text-lg text-foreground">
-              {overallRating > 0 ? `${overallRating}/5` : '–'}
-            </div>
-            <div className="text-muted-foreground text-xs">Avg. Rating</div>
-          </div>
-          <div>
-            <div className="font-semibold text-lg text-foreground">
-              {reviewCount > 0 ? reviewCount : '–'}
-            </div>
-            <div className="text-muted-foreground text-xs">Reviews</div>
-          </div>
-          <div>
-            <div className="font-semibold text-lg text-foreground">Nationwide</div>
-            <div className="text-muted-foreground text-xs">Delivery</div>
-          </div>
-        </div>
-      </section>
+      <ShopHero shop={shop} rating={overallRating} />
 
       <div className="container mx-auto px-4 py-10 space-y-14">
         {/* Reviews section */}

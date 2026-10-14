@@ -64,8 +64,8 @@ export function StorefrontSkeleton({ shop }: { shop?: StorefrontShop }) {
         <ShopHero shop={shop} />
       ) : (
         <section className="bg-secondary">
-          <div className="container mx-auto px-4 py-20 sm:py-28">
-            <div className="max-w-2xl space-y-4">
+          <div className="container mx-auto px-4">
+            <div className="flex max-w-2xl flex-col justify-center gap-4 py-12 md:min-h-96 md:py-16">
               <Skeleton className="h-10 w-3/4 bg-muted-foreground/15" />
               <Skeleton className="h-4 w-full bg-muted-foreground/10" />
               <Skeleton className="h-4 w-2/3 bg-muted-foreground/10" />
@@ -73,22 +73,6 @@ export function StorefrontSkeleton({ shop }: { shop?: StorefrontShop }) {
           </div>
         </section>
       )}
-
-      {/* Thanh thống kê: 4 ô (giá trị text-lg 28px + nhãn text-xs 16px) */}
-      <section className="bg-card border-b border-border">
-        <div className="container mx-auto grid grid-cols-2 gap-4 px-4 py-4 sm:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="flex h-7 items-center">
-                <Skeleton className="h-5 w-12" />
-              </div>
-              <div className="flex h-4 items-center">
-                <Skeleton className="h-3 w-16" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <div className="container mx-auto px-4 py-10">
         <section className="space-y-5">

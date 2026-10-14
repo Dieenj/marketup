@@ -221,8 +221,8 @@ export default function SettingsPage() {
             title="Storefront appearance"
             description="Your brand colour and banner. The preview updates as you change them; save to publish."
           >
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-6">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="primaryColor"
@@ -233,8 +233,9 @@ export default function SettingsPage() {
                         <ColorPicker value={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormDescription>
-                        Used for buttons, the selected category and the cart icon. If you don&apos;t
-                        add a banner image, it also fills the top of your storefront.
+                        Background behind your shop name and details, and the colour of buttons, the
+                        selected category and the cart icon. Text switches between black and white
+                        so it stays readable.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -261,9 +262,9 @@ export default function SettingsPage() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Background for the top of your storefront, behind your shop name. It&apos;s
-                        darkened so the text stays readable. Drag it in the preview to choose which
-                        part shows.
+                        Shown beside your shop details at the top of your storefront (above them on
+                        a phone). Drag it in the preview to choose which part shows. Without a
+                        banner, your brand colour fills the whole area.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

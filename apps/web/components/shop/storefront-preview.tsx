@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Move, ShoppingCart } from 'lucide-react';
 import ShopHero from '@/components/shop/shop-hero';
 import RemoteImage from '@/components/remote-image';
 import { cn } from '@/lib/utils';
 import { getContrastColor, normalizeHexColor } from '@/lib/color-utils';
-import type { StorefrontShop } from '@/lib/storefront-queries';
+import { storefrontQueries, type StorefrontShop } from '@/lib/storefront-queries';
 
 export interface BannerFocus {
   x: number;
@@ -15,9 +16,10 @@ export interface BannerFocus {
 
 const clamp = (value: number) => Math.round(Math.min(100, Math.max(0, value)));
 const KEY_STEP = 2;
+const q = storefrontQueries();
 
 // Xem trước storefront ngay khi người bán đổi màu / banner (trước khi lưu).
-// Phần đầu trang dùng đúng ShopHero của storefront; khung nhỏ bên dưới là cỡ điện thoại, nơi ảnh bị cắt khác.
+// Phần đầu trang dùng đúng ShopHero của storefront; khung nhỏ bên dưới cho thấy ảnh bị cắt thế nào.
 // Có banner + onBannerFocusChange: kéo ảnh (hoặc dùng phím mũi tên) để chọn phần ảnh hiện trong khung.
 export default function StorefrontPreview({
   shop,
@@ -29,13 +31,18 @@ export default function StorefrontPreview({
   const primary = normalizeHexColor(shop.primaryColor);
   const fg = getContrastColor(primary);
   const editable = !!shop.bannerUrl && !!onBannerFocusChange;
+  // Điểm đánh giá thật của shop (cùng query với storefront)
+  const { data: stats } = useQuery(q.shopStats<{ averageRating: number }>(shop.id));
 
   return (
     <div className="space-y-3">
       <figure className="relative overflow-hidden rounded-xl border bg-[#fafafa]">
-        <BannerDragArea shop={shop} onChange={editable ? onBannerFocusChange : undefined}>
-          <ShopHero shop={shop} preview />
-        </BannerDragArea>
+        <ShopHero
+          shop={shop}
+          rating={stats?.averageRating}
+          preview
+          bannerOverlay={editable && <BannerDragArea shop={shop} onChange={onBannerFocusChange} />}
+        />
         <div className="flex flex-wrap items-center gap-2 border-t bg-white p-4">
           <span
             className="rounded-xl border px-4 py-1.5 text-sm font-medium"
@@ -70,8 +77,8 @@ export default function StorefrontPreview({
             What shows at the top of your storefront. Drag the preview above to change it.
           </p>
           <div className="flex items-end gap-3">
-            <BannerCrop shop={shop} label="Computer" aspect="aspect-[11/3]" className="flex-1" />
-            <BannerCrop shop={shop} label="Phone" aspect="aspect-[10/9]" className="w-24" />
+            <BannerCrop shop={shop} label="Computer" aspect="aspect-[15/8]" className="w-60" />
+            <BannerCrop shop={shop} label="Phone" aspect="aspect-video" className="w-40" />
           </div>
         </div>
       )}
@@ -80,7 +87,7 @@ export default function StorefrontPreview({
 }
 
 // Phần ảnh banner thật sự hiện ra ở storefront, đúng tỉ lệ khung đầu trang
-// (đo trên storefront: máy tính ~1440×392 ≈ 11:3, điện thoại ~390×350 ≈ 10:9)
+// (đo trên storefront: máy tính nửa bên phải ~720×384 ≈ 15:8, điện thoại 16:9)
 function BannerCrop({
   shop,
   label,
@@ -103,72 +110,64 @@ function BannerCrop({
           className="object-cover"
           style={{ objectPosition: `${shop.bannerFocusX ?? 50}% ${shop.bannerFocusY ?? 50}%` }}
         />
-        <div className="absolute inset-0 bg-black/55" />
       </div>
       <figcaption className="text-[11px] text-muted-foreground">{label}</figcaption>
     </figure>
   );
 }
 
-// Lớp phủ trong suốt trên hero để kéo ảnh banner. Kéo ảnh sang phải → hiện phần bên trái của ảnh.
+// Lớp trong suốt phủ lên ảnh banner để kéo ảnh. Kéo ảnh sang phải → hiện phần bên trái của ảnh.
 function BannerDragArea({
   shop,
   onChange,
-  children,
 }: {
   shop: StorefrontShop;
-  onChange?: (focus: BannerFocus) => void;
-  children: React.ReactNode;
+  onChange: (focus: BannerFocus) => void;
 }) {
   const drag = useRef<{ x: number; y: number; focus: BannerFocus } | null>(null);
   const focus = { x: shop.bannerFocusX ?? 50, y: shop.bannerFocusY ?? 50 };
 
-  if (!onChange) return <>{children}</>;
-
   return (
-    <div className="relative">
-      {children}
-      <div
-        role="application"
-        tabIndex={0}
-        aria-label={`Banner position ${focus.x}% across, ${focus.y}% down. Drag, or use the arrow keys, to move the image.`}
-        className="group absolute inset-0 cursor-grab touch-none outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          drag.current = { x: e.clientX, y: e.clientY, focus };
-        }}
-        onPointerMove={(e) => {
-          if (!drag.current) return;
-          const { width, height } = e.currentTarget.getBoundingClientRect();
-          onChange({
-            x: clamp(drag.current.focus.x - ((e.clientX - drag.current.x) / width) * 100),
-            y: clamp(drag.current.focus.y - ((e.clientY - drag.current.y) / height) * 100),
-          });
-        }}
-        onPointerUp={() => {
-          drag.current = null;
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
-        }}
-        onKeyDown={(e) => {
-          const move: Record<string, [number, number]> = {
-            ArrowLeft: [KEY_STEP, 0],
-            ArrowRight: [-KEY_STEP, 0],
-            ArrowUp: [0, KEY_STEP],
-            ArrowDown: [0, -KEY_STEP],
-          };
-          const delta = move[e.key];
-          if (!delta) return;
-          e.preventDefault();
-          onChange({ x: clamp(focus.x + delta[0]), y: clamp(focus.y + delta[1]) });
-        }}
-      >
-        <span className="pointer-events-none absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white opacity-80 group-hover:opacity-100">
-          <Move className="size-3.5" aria-hidden />
-          Drag to reposition
-        </span>
-      </div>
+    <div
+      role="application"
+      tabIndex={0}
+      aria-label={`Banner position ${focus.x}% across, ${focus.y}% down. Drag, or use the arrow keys, to move the image.`}
+      className="group absolute inset-0 cursor-grab touch-none outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { x: e.clientX, y: e.clientY, focus };
+      }}
+      onPointerMove={(e) => {
+        if (!drag.current) return;
+        const { width, height } = e.currentTarget.getBoundingClientRect();
+        onChange({
+          x: clamp(drag.current.focus.x - ((e.clientX - drag.current.x) / width) * 100),
+          y: clamp(drag.current.focus.y - ((e.clientY - drag.current.y) / height) * 100),
+        });
+      }}
+      onPointerUp={() => {
+        drag.current = null;
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+      }}
+      onKeyDown={(e) => {
+        const move: Record<string, [number, number]> = {
+          ArrowLeft: [KEY_STEP, 0],
+          ArrowRight: [-KEY_STEP, 0],
+          ArrowUp: [0, KEY_STEP],
+          ArrowDown: [0, -KEY_STEP],
+        };
+        const delta = move[e.key];
+        if (!delta) return;
+        e.preventDefault();
+        onChange({ x: clamp(focus.x + delta[0]), y: clamp(focus.y + delta[1]) });
+      }}
+    >
+      <span className="pointer-events-none absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white opacity-80 group-hover:opacity-100">
+        <Move className="size-3.5" aria-hidden />
+        Drag to reposition
+      </span>
     </div>
   );
 }

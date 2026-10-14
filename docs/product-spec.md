@@ -32,8 +32,10 @@ Mỗi tài khoản người bán sở hữu đúng một shop. Enum `Role` có g
 - **Slug không đổi được sau khi tạo**, vì nó là địa chỉ storefront: đổi slug sẽ làm hỏng link đã chia sẻ và link trong email đơn hàng.
 - Slug trùng → 409. Một người tạo shop thứ hai → 409.
 - **Giao diện storefront** (Settings → Storefront appearance), có khung xem trước cập nhật ngay khi chỉnh:
-  - **Màu thương hiệu**: nút, danh mục đang chọn, nút giỏ hàng; khi không có banner thì cũng là nền phần đầu storefront.
-  - **Ảnh banner**: nền phần đầu storefront, phủ tối để chữ dễ đọc. Người bán kéo ảnh trong khung xem trước (hoặc dùng phím mũi tên) để chọn phần ảnh hiện ra; hai khung nhỏ cho thấy phần ảnh thật sự hiện trên máy tính (tỉ lệ ≈ 11:3) và điện thoại (≈ 10:9).
+  - Phần đầu storefront chia đôi: **bên trái** nền màu thương hiệu với tên, mô tả, điểm đánh giá trung bình (chỉ khi đã có đánh giá), địa chỉ, số điện thoại, email; **bên phải** là ảnh banner. Trên điện thoại ảnh nằm trên (16:9), thông tin ở dưới. Không có banner thì màu phủ cả khung. Không hiện số sản phẩm/số đánh giá ở đây.
+  - **Màu thương hiệu**: chọn trên bảng màu (vòng sắc màu + ô độ đậm/sáng), gõ mã hex hoặc chọn màu gợi ý. Dùng cho nền nửa trái, nút, danh mục đang chọn, nút giỏ hàng. Màu chữ không cho chọn: tự là đen hoặc trắng theo độ tương phản (WCAG) để luôn đọc được.
+  - **Ảnh banner**: người bán kéo ảnh trong khung xem trước (hoặc dùng phím mũi tên) để chọn phần ảnh hiện ra; hai khung nhỏ cho thấy phần ảnh hiện trên máy tính (≈ 15:8 ở màn 1440px, thay đổi theo bề rộng màn hình) và điện thoại (16:9).
+  - Chưa có lựa chọn nhiều layout: một layout mặc định cho mọi shop.
 - Logo và banner phải là ảnh đã upload lên Cloudinary của MarketUp (`https://res.cloudinary.com/<CLOUDINARY_CLOUD_NAME>/image/upload/…`) hoặc để trống. URL ngoài bị từ chối với lỗi 400.
 
 ### 2.2 Sản phẩm
