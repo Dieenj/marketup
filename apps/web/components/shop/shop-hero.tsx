@@ -6,7 +6,7 @@ import type { StorefrontShop } from '@/lib/storefront-queries';
 
 // Hero trang chủ shop. Dùng cả khi đang tải (loading.tsx) vì thông tin shop đã có sẵn từ layout —
 // chỉ phần sản phẩm/review bên dưới mới cần skeleton.
-// Chia đôi: bên trái nền màu thương hiệu với thông tin shop, bên phải ảnh banner
+// Chia đôi: bên trái nền màu thương hiệu với thông tin shop, bên phải ảnh banner — màn lớn ảnh rộng hơn (7/12)
 // (điện thoại: ảnh ở trên, thông tin ở dưới). Không có banner thì màu thương hiệu phủ cả khung.
 // `rating`: điểm trung bình của shop, chỉ hiện khi đã có đánh giá.
 // `preview`: bản xem trước ở trang Settings (không tải trước ảnh, tên shop không phải h1).
@@ -34,12 +34,12 @@ export default function ShopHero({
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="@container relative overflow-hidden"
       style={{ backgroundColor: primaryColor, color: fg }}
     >
       {shop.bannerUrl && (
         // Nằm trên khối chữ (khối chữ rộng cả khung nhưng chữ chỉ ở nửa trái) để kéo chỉnh được ảnh
-        <div className="relative z-10 aspect-video md:absolute md:inset-y-0 md:right-0 md:aspect-auto md:w-1/2">
+        <div className="relative z-10 aspect-video md:absolute md:inset-y-0 md:right-0 md:aspect-auto md:w-1/2 lg:w-7/12">
           {/* Ảnh lớn nhất trang (LCP): tải sớm, qua CDN Cloudinary để được nén + resize */}
           <RemoteImage
             src={shop.bannerUrl}
@@ -58,7 +58,11 @@ export default function ShopHero({
         <div
           className={cn(
             'flex flex-col justify-center py-12 md:min-h-96 md:py-16',
-            shop.bannerUrl ? 'md:w-1/2 md:pr-12' : 'max-w-2xl',
+            // Cột chữ dừng trước ảnh: ảnh bắt đầu ở 5/12 bề rộng khung (100cqw), mép trái nội dung
+            // container cách mép khung (100cqw - 100%) / 2; chừa 3rem khoảng cách
+            shop.bannerUrl
+              ? 'md:w-1/2 md:pr-12 lg:w-[calc(100cqw*5/12_-_(100cqw_-_100%)/2_-_3rem)] lg:pr-0'
+              : 'max-w-2xl',
           )}
         >
           {/* Bản xem trước nằm trong trang Settings (đã có h1 riêng) → không dùng h1 */}

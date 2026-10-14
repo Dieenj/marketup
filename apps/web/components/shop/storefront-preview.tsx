@@ -77,7 +77,7 @@ export default function StorefrontPreview({
             What shows at the top of your storefront. Drag the preview above to change it.
           </p>
           <div className="flex items-end gap-3">
-            <BannerCrop shop={shop} label="Computer" aspect="aspect-[15/8]" className="w-60" />
+            <BannerCrop shop={shop} label="Computer" aspect="aspect-[11/5]" className="w-60" />
             <BannerCrop shop={shop} label="Phone" aspect="aspect-video" className="w-40" />
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function StorefrontPreview({
 }
 
 // Phần ảnh banner thật sự hiện ra ở storefront, đúng tỉ lệ khung đầu trang
-// (đo trên storefront: máy tính nửa bên phải ~720×384 ≈ 15:8, điện thoại 16:9)
+// (đo trên storefront: máy tính 1440px ảnh ~840×384 ≈ 11:5, điện thoại 16:9)
 function BannerCrop({
   shop,
   label,
