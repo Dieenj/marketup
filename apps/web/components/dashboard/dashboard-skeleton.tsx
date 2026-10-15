@@ -45,9 +45,9 @@ function SectionTitleSkeleton({ className }: { className?: string }) {
 // Đủ 5 hàng như API trả về; mỗi hàng cùng khung với hàng thật (tên + mã đơn | tổng tiền + badge)
 export function RecentOrdersSkeleton() {
   return (
-    <ul className="divide-y">
+    <div className="divide-y">
       {[0, 1, 2, 3, 4].map((i) => (
-        <li
+        <div
           key={i}
           className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
         >
@@ -65,8 +65,8 @@ export function RecentOrdersSkeleton() {
             </div>
             <Skeleton className="h-5 w-16 rounded-full" />
           </div>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
