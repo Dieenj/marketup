@@ -495,7 +495,10 @@ function CheckoutSkeleton({ lineCount }: { lineCount: number }) {
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 {Array.from({ length: Math.max(1, lineCount) }, (_, i) => (
-                  <div key={i} className="flex gap-3 rounded-lg border border-border/40 bg-muted/50 p-3">
+                  <div
+                    key={i}
+                    className="flex gap-3 rounded-lg border border-border/40 bg-muted/50 p-3"
+                  >
                     <Skeleton className="size-14 shrink-0 rounded-lg" />
                     <div className="flex-1">
                       <div className="flex h-5 items-center">

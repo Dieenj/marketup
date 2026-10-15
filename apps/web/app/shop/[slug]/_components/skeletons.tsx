@@ -91,13 +91,7 @@ export function ProductDetailSkeleton() {
 
 // Trang chủ shop: hero hiện thật nếu đã có thông tin shop (layout tải sẵn), chỉ phần dữ liệu còn lại là skeleton.
 // rating: điểm trung bình nếu đã có; chưa có thì hero giữ chỗ cho hàng điểm để không bị đẩy xuống khi dữ liệu về
-export function StorefrontSkeleton({
-  shop,
-  rating,
-}: {
-  shop?: StorefrontShop;
-  rating?: number;
-}) {
+export function StorefrontSkeleton({ shop, rating }: { shop?: StorefrontShop; rating?: number }) {
   return (
     <div className="min-h-screen" aria-busy="true">
       <span className="sr-only" role="status">

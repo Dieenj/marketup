@@ -42,4 +42,3 @@ export function useMyShop({ enabled = true }: { enabled?: boolean } = {}) {
 
   return useQuery({ ...myShopQueryOptions, enabled: enabled && !!user });
 }
-

@@ -47,10 +47,7 @@ export function RecentOrdersSkeleton() {
   return (
     <div className="divide-y">
       {[0, 1, 2, 3, 4].map((i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-        >
+        <div key={i} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
           <div>
             <div className="flex h-5 items-center">
               <Skeleton className="h-3.5 w-28" />
