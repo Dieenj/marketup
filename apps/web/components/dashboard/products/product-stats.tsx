@@ -17,7 +17,7 @@ export default function ProductStats({
   outOfStockCount,
 }: ProductStatsProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 @xl:grid-cols-3 gap-4">
       <StatCard label="Total products" value={totalCount} hint="In your inventory" icon={Package} />
       <StatCard
         label="Visible in store"

@@ -157,6 +157,68 @@ export default function ProductsPage() {
     />
   );
 
+  // Các tab lọc theo danh mục: điện thoại vuốt ngang trên một hàng, màn lớn xuống dòng.
+  // Danh mục thường có trước sản phẩm → hiện luôn lúc đang tải (chưa có số lượng) để hàng chip cao đúng
+  const categoryChips = (
+    <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0">
+      <FilterChip active={selectedCategoryId === null} onClick={() => setSelectedCategoryId(null)}>
+        All Products
+        {products && <span className="text-xs font-normal">({products.length})</span>}
+      </FilterChip>
+
+      {categories?.map((cat) => {
+        const count = products?.filter((p: Product) => p.categoryId === cat.id).length;
+        const isActive = selectedCategoryId === cat.id;
+        return (
+          // Hai nút anh em (chọn / xoá) trong cùng một pill — không lồng button trong button
+          <div
+            key={cat.id}
+            className={cn(filterChipVariants({ active: isActive }), 'cursor-default gap-0 px-0')}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId(cat.id)}
+              aria-pressed={isActive}
+              className={cn(
+                'flex h-full items-center gap-1.5 rounded-full pl-3 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                isActive ? 'pr-1' : 'pr-3',
+              )}
+            >
+              <Tag className="h-3.5 w-3.5 opacity-70" />
+              {cat.name}
+              {products && <span className="text-xs font-normal">({count})</span>}
+            </button>
+            {isActive && (
+              <button
+                type="button"
+                aria-label={`Delete category ${cat.name}`}
+                disabled={deleteCategoryMutation.isPending}
+                className="mr-1.5 flex items-center justify-center rounded-full bg-primary-foreground/20 p-0.5 transition-colors hover:bg-primary-foreground/35 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                onClick={() => {
+                  if (confirm(`Delete category "${cat.name}"?`)) {
+                    deleteCategoryMutation.mutate(cat.id);
+                  }
+                }}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        );
+      })}
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1.5 text-muted-foreground"
+        onClick={() => setIsCategoryDialogOpen(true)}
+      >
+        <Settings2 className="h-3.5 w-3.5" />
+        Manage Categories
+      </Button>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="space-y-6" aria-busy="true">
@@ -164,17 +226,21 @@ export default function ProductsPage() {
           Loading products…
         </span>
         {header}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @xl:grid-cols-3 gap-4">
           {[0, 1, 2].map((i) => (
             <StatCardSkeleton key={i} />
           ))}
         </div>
         {toolbar}
-        <div className="flex gap-2 overflow-hidden pb-1 sm:flex-wrap">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-8 w-28 rounded-full" />
-          ))}
-        </div>
+        {categories ? (
+          categoryChips
+        ) : (
+          <div className="flex gap-2 overflow-hidden pb-1 sm:flex-wrap">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-8 w-28 rounded-full" />
+            ))}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <ProductCardSkeleton key={i} />
@@ -199,68 +265,7 @@ export default function ProductsPage() {
       {/* Thanh bộ lọc tìm kiếm, trạng thái kho & sắp xếp */}
       {toolbar}
 
-      {/* Các tab lọc theo danh mục sản phẩm: điện thoại vuốt ngang trên một hàng (số danh mục không
-          làm trang dài ra, skeleton cũng cao đúng một hàng), màn lớn xuống dòng */}
-      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0">
-        <FilterChip
-          active={selectedCategoryId === null}
-          onClick={() => setSelectedCategoryId(null)}
-        >
-          All Products
-          <span className="text-xs font-normal">({products?.length ?? 0})</span>
-        </FilterChip>
-
-        {categories?.map((cat) => {
-          const count = products?.filter((p: Product) => p.categoryId === cat.id).length ?? 0;
-          const isActive = selectedCategoryId === cat.id;
-          return (
-            // Hai nút anh em (chọn / xoá) trong cùng một pill — không lồng button trong button
-            <div
-              key={cat.id}
-              className={cn(filterChipVariants({ active: isActive }), 'cursor-default gap-0 px-0')}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedCategoryId(cat.id)}
-                aria-pressed={isActive}
-                className={cn(
-                  'flex h-full items-center gap-1.5 rounded-full pl-3 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
-                  isActive ? 'pr-1' : 'pr-3',
-                )}
-              >
-                <Tag className="h-3.5 w-3.5 opacity-70" />
-                {cat.name}
-                <span className="text-xs font-normal">({count})</span>
-              </button>
-              {isActive && (
-                <button
-                  type="button"
-                  aria-label={`Delete category ${cat.name}`}
-                  disabled={deleteCategoryMutation.isPending}
-                  className="mr-1.5 flex items-center justify-center rounded-full bg-primary-foreground/20 p-0.5 transition-colors hover:bg-primary-foreground/35 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
-                  onClick={() => {
-                    if (confirm(`Delete category "${cat.name}"?`)) {
-                      deleteCategoryMutation.mutate(cat.id);
-                    }
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          );
-        })}
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1.5 text-muted-foreground"
-          onClick={() => setIsCategoryDialogOpen(true)}
-        >
-          <Settings2 className="h-3.5 w-3.5" />
-          Manage Categories
-        </Button>
-      </div>
+      {categoryChips}
 
       {/* Lưới hiển thị danh sách sản phẩm hoặc trạng thái trống */}
       {filteredProducts.length === 0 ? (

@@ -51,6 +51,7 @@ Quy ước giao diện:
 - Skeleton phải trùng bố cục trang thật để không giật khi dữ liệu về: dùng cùng khung (card, padding, grid), mỗi hàng cao bằng line-height của chữ thật (bọc ô skeleton trong `flex h-5`/`h-[1lh]`), chữ tĩnh (tiêu đề, nhãn) hiện thật. Skeleton của một component đặt cạnh component đó (`StatCardSkeleton`, `ReviewItemSkeleton`, `OrderProgressSkeleton`…).
 - `loading.tsx` / skeleton không gọi `useQuery` cho dữ liệu mà page tải sẵn ở server (chỉ đọc cache bằng `getQueryData`): query rỗng tạo trong fallback khiến `HydrationBoundary` của page hoãn nạp dữ liệu → server render thiếu → lỗi hydration.
 - Dải tab/chip hẹp: vuốt ngang trên một hàng với `overflow-x-auto scrollbar-none` (utility trong `globals.css`).
+- Dashboard: từ `md` sidebar chiếm chỗ (màn 768px chỉ còn ~450px nội dung), nên lưới/bảng/thanh công cụ trong trang chia cột theo bề rộng vùng nội dung (`@container` ở layout hoặc card, biến thể `@xl:`/`@3xl:`), không theo bề rộng màn hình (`sm:`/`md:`).
 
 ### 3.2 Nhóm route
 

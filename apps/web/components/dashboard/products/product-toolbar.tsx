@@ -22,7 +22,7 @@ export default function ProductToolbar({
   setSortBy,
 }: ProductToolbarProps) {
   return (
-    <div className="bg-card border rounded-xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="bg-card border rounded-xl p-3 shadow-xs flex flex-col @3xl:flex-row @3xl:items-center justify-between gap-4">
       <SearchInput
         label="Search products"
         placeholder="Search products by name..."

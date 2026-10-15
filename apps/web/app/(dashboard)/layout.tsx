@@ -93,7 +93,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
         </header>
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">{content}</div>
+          {/* @container: lưới trong trang chia cột theo bề rộng vùng nội dung (sidebar chiếm chỗ từ md) */}
+          <div className="@container mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">
+            {content}
+          </div>
         </main>
       </div>
     </div>

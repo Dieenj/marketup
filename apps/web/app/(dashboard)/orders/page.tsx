@@ -189,12 +189,12 @@ export default function OrdersPage() {
         <Table className={isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
           <TableHeader>
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="hidden sm:table-cell pl-4">Order</TableHead>
-              <TableHead className="hidden md:table-cell">Date</TableHead>
-              <TableHead className="pl-4 sm:pl-2">Customer</TableHead>
+              <TableHead className="hidden @xl:table-cell pl-4">Order</TableHead>
+              <TableHead className="hidden @3xl:table-cell">Date</TableHead>
+              <TableHead className="pl-4 @xl:pl-2">Customer</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell w-12 pr-4">
+              <TableHead className="hidden @xl:table-cell w-12 pr-4">
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
@@ -204,13 +204,13 @@ export default function OrdersPage() {
               // Cùng chiều cao với hàng thật: cột khách hàng có 2 dòng (tên + email / mã đơn)
               [...Array(10)].map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell className="hidden sm:table-cell pl-4">
+                  <TableCell className="hidden @xl:table-cell pl-4">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden @3xl:table-cell">
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
-                  <TableCell className="pl-4 sm:pl-2">
+                  <TableCell className="pl-4 @xl:pl-2">
                     <div className="flex h-5 items-center">
                       <Skeleton className="h-3.5 w-28" />
                     </div>
@@ -224,7 +224,7 @@ export default function OrdersPage() {
                   <TableCell>
                     <Skeleton className="h-5 w-20 rounded-full" />
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell pr-4" />
+                  <TableCell className="hidden @xl:table-cell pr-4" />
                 </TableRow>
               ))
             ) : isError ? (
@@ -270,19 +270,19 @@ export default function OrdersPage() {
                   className="cursor-pointer"
                   onClick={() => setSelectedOrder(order)}
                 >
-                  <TableCell className="hidden sm:table-cell pl-4 font-mono text-xs">
+                  <TableCell className="hidden @xl:table-cell pl-4 font-mono text-xs">
                     #{order.orderNumber}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
+                  <TableCell className="hidden @3xl:table-cell text-muted-foreground">
                     {format(new Date(order.createdAt), 'MMM dd, h:mm a')}
                   </TableCell>
-                  <TableCell className="pl-4 sm:pl-2">
+                  <TableCell className="pl-4 @xl:pl-2">
                     <div className="flex flex-col min-w-0">
                       <span className="font-medium text-sm truncate">{order.buyerName}</span>
-                      <span className="sm:hidden font-mono text-xs text-muted-foreground">
+                      <span className="@xl:hidden font-mono text-xs text-muted-foreground">
                         #{order.orderNumber}
                       </span>
-                      <span className="hidden sm:block text-xs text-muted-foreground truncate">
+                      <span className="hidden @xl:block text-xs text-muted-foreground truncate">
                         {order.buyerEmail}
                       </span>
                     </div>
@@ -294,7 +294,7 @@ export default function OrdersPage() {
                     <OrderStatusBadge status={order.status} />
                   </TableCell>
                   <TableCell
-                    className="hidden sm:table-cell pr-4 text-right"
+                    className="hidden @xl:table-cell pr-4 text-right"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <DropdownMenu>

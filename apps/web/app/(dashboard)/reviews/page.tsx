@@ -104,7 +104,7 @@ export default function DashboardReviewsPage() {
         </span>
         {header}
         {/* Chỉ thẻ đầu có dòng gợi ý, như thẻ thật */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @xl:grid-cols-3 gap-4">
           {[true, false, false].map((hint, i) => (
             <StatCardSkeleton key={i} hint={hint} />
           ))}
@@ -139,7 +139,7 @@ export default function DashboardReviewsPage() {
       {header}
 
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @xl:grid-cols-3 gap-4">
           <StatCard
             label="Overall Rating"
             value={stats.count > 0 ? stats.averageRating.toFixed(1) : '–'}
