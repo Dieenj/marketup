@@ -59,6 +59,7 @@ export class ProductService {
           create: variants.map((v, i) => ({
             ...derived.variants[i],
             price: v.price,
+            comparePrice: v.comparePrice ?? null,
             stock: v.stock,
             sku: v.sku ?? null,
           })),
@@ -165,6 +166,7 @@ export class ProductService {
           const data = {
             ...derived.variants[i],
             price: v.price,
+            comparePrice: v.comparePrice ?? null,
             stock: v.stock,
             sku: v.sku ?? null,
           };

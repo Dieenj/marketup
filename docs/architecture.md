@@ -134,7 +134,8 @@ Token của đơn cố ý **không** phải phiên đăng nhập: ai cũng có t
 ### 4.3 Kiểm tra dữ liệu và lỗi
 
 - `ValidationPipe` toàn cục với `whitelist` + `forbidNonWhitelisted`: trường lạ bị từ chối với 400. DTO dùng class-validator; email được trim và chuyển chữ thường (`common/email.ts`).
-- Sản phẩm gửi dạng multipart, nên `variants` là chuỗi JSON; `product/product-payload.ts` parse và validate từng phần tử. Client chỉ gửi `options` của từng biến thể; `product/product-options.ts` suy ra thuộc tính và nhãn biến thể (trùng tổ hợp hoặc lệch tập thuộc tính → 400).
+- Sản phẩm gửi dạng multipart, nên `variants` là chuỗi JSON; `product/product-payload.ts` parse và validate từng phần tử. Client chỉ gửi `options` của từng biến thể; `product/product-options.ts` suy ra thuộc tính và nhãn biến thể (trùng tổ hợp, lệch tập thuộc tính hoặc quá 3 thuộc tính → 400). `comparePrice` phải cao hơn `price`. Không cần đủ mọi tổ hợp: tổ hợp thiếu hiện là hết hàng trên storefront.
+- Dashboard soạn biến thể bằng `components/dashboard/products/variant-matrix.ts` (logic thuần): danh sách biến thể luôn tính ra từ thuộc tính + dữ liệu theo tổ hợp, nên không thể lệch nhau; đổi tên lựa chọn giữ nguyên id biến thể.
 - `PrismaExceptionFilter` đổi lỗi ràng buộc của Prisma thành mã HTTP dễ hiểu: trùng unique → 409, không tìm thấy bản ghi → 404, khoá ngoại sai → 400.
 - Thông báo lỗi bằng tiếng Anh; frontend hiển thị nguyên văn `message` (`getErrorMessage`).
 

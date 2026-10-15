@@ -29,6 +29,13 @@ export class CreateVariantDto {
   @Max(MAX_PRICE)
   price: number;
 
+  // Giá gốc (gạch ngang trên storefront); null/không gửi = không có. Phải cao hơn price (product-payload.ts)
+  @IsNumber({ allowNaN: false, allowInfinity: false, maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(MAX_PRICE)
+  @IsOptional()
+  comparePrice?: number | null;
+
   @IsInt()
   @Min(0)
   @Max(MAX_STOCK)

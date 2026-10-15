@@ -68,8 +68,27 @@ describe('parseJsonArray', () => {
       { ...variant, hacked: true },
       /property hacked should not exist/,
     ],
+    [
+      'compare-at price equal to the price',
+      { ...variant, comparePrice: 12.5 },
+      /variants\[0\]: compare-at price must be higher than the price/,
+    ],
+    [
+      'negative compare-at price',
+      { ...variant, comparePrice: -1 },
+      /comparePrice must not be less than 0/,
+    ],
   ])('rejects %s', (_label, item, message) => {
     expect(errorOf(() => parseVariants([item]))).toMatch(message);
+  });
+
+  it('accepts a compare-at price above the price, or none', () => {
+    const [withCompare, withoutCompare] = parseVariants([
+      { ...variant, comparePrice: 20 },
+      { ...variant, comparePrice: null },
+    ])!;
+    expect(withCompare.comparePrice).toBe(20);
+    expect(withoutCompare.comparePrice).toBeNull();
   });
 
   it('rejects invalid JSON, non-arrays and too many items', () => {

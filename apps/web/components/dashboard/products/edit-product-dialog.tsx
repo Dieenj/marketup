@@ -32,7 +32,8 @@ import { toast } from 'sonner';
 import { ACCEPTED_IMAGE_TYPES, pickImageFiles } from '@/lib/image-upload';
 
 // Shared Subcomponent & Types
-import VariantsEditor, { AttributeDef, VariantDef } from './variants-editor';
+import VariantsEditor from './variants-editor';
+import { emptyMatrix, matrixFromProduct } from './variant-matrix';
 import FilePreviewImage from '@/components/file-preview-image';
 import RemoteImage from '@/components/remote-image';
 import CategorySelectField from './category-select-field';
@@ -50,6 +51,7 @@ interface ProductVariant {
   label: string;
   options: Record<string, string>;
   price?: number | string | null;
+  comparePrice?: number | string | null;
   stock: number;
   sku?: string | null;
 }
@@ -89,8 +91,8 @@ export default function EditProductDialog({
   const queryClient = useQueryClient();
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [attributes, setAttributes] = useState<AttributeDef[]>([]);
-  const [variants, setVariants] = useState<VariantDef[]>([]);
+  const [variants, setVariants] = useState(emptyMatrix);
+  const [showVariantErrors, setShowVariantErrors] = useState(false);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(editProductSchema),
@@ -108,16 +110,8 @@ export default function EditProductDialog({
         product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [],
       );
       setImages([]);
-      setAttributes(product.attributes?.map((a) => ({ name: a.name, options: a.options })) || []);
-      setVariants(
-        product.variants?.map((v) => ({
-          id: v.id,
-          options: v.options as Record<string, string>,
-          price: v.price ? String(v.price) : '',
-          stock: String(v.stock),
-          sku: v.sku || '',
-        })) || [],
-      );
+      setVariants(matrixFromProduct(product.attributes ?? [], product.variants ?? []));
+      setShowVariantErrors(false);
     }
   }
 
@@ -159,7 +153,13 @@ export default function EditProductDialog({
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4 py-2">
+          <form
+            onSubmit={form.handleSubmit((v) => {
+              setShowVariantErrors(true);
+              mutation.mutate(v);
+            })}
+            className="space-y-4 py-2"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -217,10 +217,9 @@ export default function EditProductDialog({
 
             {/* ─── Logic xây dựng các biến thể sản phẩm ─── */}
             <VariantsEditor
-              attributes={attributes}
-              setAttributes={setAttributes}
-              variants={variants}
-              setVariants={setVariants}
+              value={variants}
+              onChange={setVariants}
+              showErrors={showVariantErrors}
             />
 
             {/* ─── Hình ảnh sản phẩm ─── */}
@@ -283,11 +282,7 @@ export default function EditProductDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={mutation.isPending || variants.length === 0}
-                className="gap-2"
-              >
+              <Button type="submit" disabled={mutation.isPending} className="gap-2">
                 {mutation.isPending && <Spinner />}
                 Save Changes
               </Button>

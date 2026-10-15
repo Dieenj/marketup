@@ -88,10 +88,10 @@ describe('deriveProductOptions', () => {
 
   it('limits the number of attributes', () => {
     const options = Object.fromEntries(
-      Array.from({ length: 11 }, (_, i) => [`A${i}`, 'x']),
+      Array.from({ length: 4 }, (_, i) => [`A${i}`, 'x']),
     );
     expect(errorOf(() => deriveProductOptions([v(options)]))).toMatch(
-      /at most 10 attributes/,
+      /at most 3 attributes/,
     );
   });
 });

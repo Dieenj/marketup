@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
-const MAX_ATTRIBUTES = 10;
+// Như Shopify: trang sản phẩm chọn lần lượt từng thuộc tính, quá 3 thì người mua khó dùng
+const MAX_ATTRIBUTES = 3;
 const MAX_OPTIONS_PER_ATTRIBUTE = 50;
 const MAX_NAME_LENGTH = 50;
 

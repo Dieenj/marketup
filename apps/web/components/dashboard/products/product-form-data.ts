@@ -1,6 +1,5 @@
 import * as z from 'zod';
-import type { VariantDef } from './variants-editor';
-import { UserFacingError } from '@/lib/api-client';
+import { toVariantPayload, type VariantMatrix } from './variant-matrix';
 
 // Trường cơ bản của sản phẩm — dialog tạo dùng trực tiếp, dialog sửa mở rộng thêm isVisible
 export const productSchema = z.object({
@@ -15,32 +14,13 @@ export const productSchema = z.object({
 
 export type ProductBasicValues = z.infer<typeof productSchema>;
 
-// Chuẩn hoá biến thể trước khi gửi. API yêu cầu mọi biến thể có giá hợp lệ ở cả tạo lẫn sửa,
-// nên kiểm tra ngay ở client để báo lỗi sớm thay vì chờ 400 từ server.
-function serializeVariants(variants: VariantDef[]) {
-  if (variants.length === 0) throw new UserFacingError('Product must have at least one variant');
-
-  const normalized = variants.map((v) => ({
-    ...(v.id && { id: v.id }),
-    // Nhãn và thuộc tính do API suy ra từ options
-    options: v.options,
-    stock: Number(v.stock) || 0,
-    price: v.price ? Number(v.price) : undefined,
-    sku: v.sku || undefined,
-  }));
-
-  if (normalized.some((v) => v.price === undefined || Number.isNaN(v.price))) {
-    throw new UserFacingError('Each variant must have a valid price');
-  }
-  return normalized;
-}
-
 // FormData (multipart, kèm ảnh) cho POST /products/:shopId và PATCH /products/:id
 export function buildProductFormData(
   values: ProductBasicValues & { isVisible?: boolean },
-  { variants, images }: { variants: VariantDef[]; images: File[] },
+  { variants, images }: { variants: VariantMatrix; images: File[] },
 ) {
-  const variantsPayload = serializeVariants(variants);
+  // Kiểm tra ở client (UserFacingError) trước khi gửi; nhãn và thuộc tính do API suy ra
+  const variantsPayload = toVariantPayload(variants);
 
   const formData = new FormData();
   formData.append('name', values.name);

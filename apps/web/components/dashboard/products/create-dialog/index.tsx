@@ -26,7 +26,8 @@ import { cn } from '@/lib/utils';
 // Step Subcomponents & Types
 import BasicStep from './basic-step';
 import { buildProductFormData, productSchema, type ProductBasicValues } from '../product-form-data';
-import VariantsEditor, { AttributeDef, VariantDef } from '../variants-editor';
+import VariantsEditor from '../variants-editor';
+import { emptyMatrix, matrixError } from '../variant-matrix';
 import ImagesStep from './images-step';
 
 interface CreateProductDialogProps {
@@ -49,8 +50,8 @@ export default function CreateProductDialog({
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
-  const [attributes, setAttributes] = useState<AttributeDef[]>([]);
-  const [variants, setVariants] = useState<VariantDef[]>([]);
+  const [variants, setVariants] = useState(emptyMatrix);
+  const [showVariantErrors, setShowVariantErrors] = useState(false);
 
   const form = useForm<ProductBasicValues>({
     resolver: zodResolver(productSchema),
@@ -60,8 +61,8 @@ export default function CreateProductDialog({
   const resetAll = () => {
     form.reset();
     setImages([]);
-    setAttributes([]);
-    setVariants([]);
+    setVariants(emptyMatrix());
+    setShowVariantErrors(false);
     setStep(1);
   };
 
@@ -97,9 +98,13 @@ export default function CreateProductDialog({
       const valid = await form.trigger(['name']);
       if (!valid) return;
     }
-    if (step === 2 && variants.length === 0) {
-      toast.error('Please generate at least one variant before continuing.');
-      return;
+    if (step === 2) {
+      const error = matrixError(variants);
+      if (error) {
+        setShowVariantErrors(true);
+        toast.error(error);
+        return;
+      }
     }
     setStep((s) => Math.min(s + 1, 3));
   };
@@ -111,12 +116,12 @@ export default function CreateProductDialog({
   // ─── Logic kiểm tra trạng thái hoàn thành mỗi bước ───────────────────────────────────────────────────
   const watchedName = useWatch({ control: form.control, name: 'name' });
   const step1Done = (watchedName?.length ?? 0) >= 2;
-  const step2Done = variants.length > 0;
+  const step2Done = matrixError(variants) === null;
   const step3Done = images.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent className="p-0 gap-0 max-w-2xl w-full overflow-hidden rounded-xl border-border">
+      <DialogContent className="p-0 gap-0 w-full overflow-hidden rounded-xl border-border sm:max-w-2xl">
         {/* ── Phần đầu (Header) ── */}
         <DialogHeader className="px-6 pt-6 pb-0">
           <div className="flex items-center gap-3 mb-5">
@@ -182,10 +187,9 @@ export default function CreateProductDialog({
               {/* ── Bước 2: Các biến thể sản phẩm ── */}
               {step === 2 && (
                 <VariantsEditor
-                  attributes={attributes}
-                  setAttributes={setAttributes}
-                  variants={variants}
-                  setVariants={setVariants}
+                  value={variants}
+                  onChange={setVariants}
+                  showErrors={showVariantErrors}
                 />
               )}
 
@@ -244,7 +248,7 @@ export default function CreateProductDialog({
                   <Button
                     key="submit-btn"
                     type="submit"
-                    disabled={mutation.isPending || variants.length === 0}
+                    disabled={mutation.isPending}
                     className="gap-2 text-sm px-5"
                   >
                     {mutation.isPending ? (

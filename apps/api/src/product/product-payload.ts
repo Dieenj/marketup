@@ -56,6 +56,15 @@ export function parseJsonArray<T extends object>(
         `${field}[${index}]: options must be strings`,
       );
     }
+    if (
+      instance instanceof CreateVariantDto &&
+      instance.comparePrice != null &&
+      instance.comparePrice <= instance.price
+    ) {
+      throw new BadRequestException(
+        `${field}[${index}]: compare-at price must be higher than the price`,
+      );
+    }
     return instance;
   });
 }
