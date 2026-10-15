@@ -92,7 +92,6 @@ async function main() {
             options: { Size: 'M', Color: 'Sand' },
             price: 59.0,
             stock: 18,
-            isDefault: true,
           },
           {
             label: 'Size: L / Color: Sand',
@@ -177,7 +176,6 @@ async function main() {
             options: { Size: 'S', Color: 'Black' },
             price: 89.0,
             stock: 14,
-            isDefault: true,
           },
           {
             label: 'Size: M / Color: Black',
@@ -242,7 +240,6 @@ async function main() {
             price: 45.0,
             comparePrice: 65.0,
             stock: 20,
-            isDefault: true,
           },
           {
             label: 'Print: Floral Ivory',
@@ -286,7 +283,6 @@ async function main() {
             options: { Color: 'Tan', Length: 'S' },
             price: 38.0,
             stock: 18,
-            isDefault: true,
           },
           {
             label: 'Color: Tan / Length: M',
@@ -331,7 +327,6 @@ async function main() {
             options: { Color: 'Natural' },
             price: 78.0,
             stock: 25,
-            isDefault: true,
           },
           { label: 'Color: Black', options: { Color: 'Black' }, price: 78.0, stock: 30 },
           {
@@ -366,7 +361,6 @@ async function main() {
             options: { Color: 'Cream' },
             price: 69.0,
             stock: 14,
-            isDefault: true,
           },
           { label: 'Color: Black', options: { Color: 'Black' }, price: 69.0, stock: 18 },
         ],
@@ -403,7 +397,6 @@ async function main() {
             options: { Size: 'M', Color: 'Oatmeal' },
             price: 120.0,
             stock: 14,
-            isDefault: true,
           },
           {
             label: 'Size: L / Color: Oatmeal',
@@ -478,7 +471,6 @@ async function main() {
             price: 145.0,
             comparePrice: 189.0,
             stock: 12,
-            isDefault: true,
           },
           {
             label: 'Size: L / Color: Sand',
@@ -571,7 +563,6 @@ async function main() {
             options: { Color: 'Space Grey' },
             price: 49.99,
             stock: 50,
-            isDefault: true,
           },
           { label: 'Color: Silver', options: { Color: 'Silver' }, price: 49.99, stock: 35 },
         ],
@@ -600,7 +591,6 @@ async function main() {
             options: { Color: 'Black' },
             price: 55.0,
             stock: 60,
-            isDefault: true,
           },
           { label: 'Color: Dark Brown', options: { Color: 'Dark Brown' }, price: 55.0, stock: 45 },
           { label: 'Color: Tan', options: { Color: 'Tan' }, price: 55.0, stock: 30 },
@@ -633,7 +623,6 @@ async function main() {
             options: { Length: '1m', Color: 'Black' },
             price: 18.0,
             stock: 80,
-            isDefault: true,
           },
           {
             label: 'Length: 1m / Color: White',
@@ -691,7 +680,6 @@ async function main() {
             options: { Port: '1×USB-C' },
             price: 39.0,
             stock: 55,
-            isDefault: true,
           },
           { label: 'Port: 2×USB-C', options: { Port: '2×USB-C' }, price: 49.0, stock: 32 },
         ],
@@ -721,7 +709,6 @@ async function main() {
             price: 129.0,
             comparePrice: 159.0,
             stock: 40,
-            isDefault: true,
           },
           {
             label: 'Color: Pearl White',
@@ -763,7 +750,6 @@ async function main() {
             options: { Finish: 'Black' },
             price: 89.0,
             stock: 28,
-            isDefault: true,
           },
           { label: 'Finish: Silver', options: { Finish: 'Silver' }, price: 89.0, stock: 24 },
         ],
@@ -791,7 +777,6 @@ async function main() {
             options: { Finish: 'Midnight Black' },
             price: 85.0,
             stock: 30,
-            isDefault: true,
           },
           {
             label: 'Finish: Brushed Silver',
@@ -828,7 +813,6 @@ async function main() {
             options: { Model: 'iPhone 15 Pro', Color: 'Clear' },
             price: 29.0,
             stock: 45,
-            isDefault: true,
           },
           {
             label: 'Model: iPhone 15 Pro / Color: Midnight',
