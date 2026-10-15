@@ -18,7 +18,10 @@ import {
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import AuthShell from '@/components/auth/auth-shell';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { myShopQueryOptions } from '@/hooks/use-my-shop';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import { toast } from 'sonner';
 
 const loginSchema = z.object({
@@ -29,7 +32,13 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+
+  // Tải sẵn code trang dashboard trong lúc người dùng gõ → bấm đăng nhập xong là chuyển trang ngay
+  useEffect(() => {
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -44,11 +53,17 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', values);
       setAuth(data.user, data.token);
+      // Gọi luôn shop rồi số liệu Overview, song song với chuyển trang (không chờ) — dashboard dùng lại cache
+      // (lỗi bỏ qua: layout dashboard tự xử lý 404 chưa có shop / 401)
+      queryClient
+        .fetchQuery(myShopQueryOptions)
+        .then((shop) => queryClient.prefetchQuery(dashboardStatsQuery(shop.id)))
+        .catch(() => {});
       toast.success('Login successful!');
+      // Giữ nút ở trạng thái "Signing in..." tới khi rời trang
       router.push('/dashboard');
     } catch (error) {
       toast.error(getErrorMessage(error, 'Login failed. Please check your credentials.'));
-    } finally {
       setLoading(false);
     }
   }

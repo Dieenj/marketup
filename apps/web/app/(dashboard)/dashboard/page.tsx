@@ -14,7 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import api from '@/lib/api-client';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import { useAuthStore } from '@/hooks/use-auth';
 import { formatCurrency } from '@/lib/format';
 import EmptyState from '@/components/empty-state';
@@ -23,28 +23,12 @@ import StatCard from '@/components/dashboard/stat-card';
 import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
 
-interface RecentOrder {
-  id: string;
-  orderNumber: string;
-  buyerName: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-}
-
 export default function DashboardPage() {
   const { user } = useAuthStore();
 
   const { data: shop } = useMyShop();
 
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats', shop?.id],
-    queryFn: async () => {
-      const { data } = await api.get(`/dashboard/stats/${shop!.id}`);
-      return data;
-    },
-    enabled: !!shop?.id,
-  });
+  const { data: stats, isLoading } = useQuery(dashboardStatsQuery(shop?.id));
 
   const pendingOrders = stats?.pendingOrders ?? 0;
 
@@ -176,7 +160,7 @@ export default function DashboardPage() {
             />
           ) : (
             <ul className="divide-y">
-              {stats.recentOrders.map((order: RecentOrder) => (
+              {stats.recentOrders.map((order) => (
                 <li
                   key={order.id}
                   className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
