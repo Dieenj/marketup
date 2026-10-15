@@ -10,7 +10,7 @@ import { bannerImageStyle } from '@/components/shop/banner-style';
 // chỉ phần sản phẩm/review bên dưới mới cần skeleton.
 // Chia đôi: bên trái nền màu thương hiệu với thông tin shop, bên phải ảnh banner — màn lớn ảnh rộng hơn (7/12)
 // (điện thoại: ảnh ở trên, thông tin ở dưới). Không có banner thì màu thương hiệu phủ cả khung.
-// `rating`: điểm trung bình của shop, chỉ hiện khi đã có đánh giá.
+// `rating`: điểm trung bình của shop, chỉ hiện khi đã có đánh giá; 'loading' = giữ chỗ khi đang tải (skeleton).
 // `preview`: bản xem trước ở trang Settings (không tải trước ảnh, tên shop không phải h1).
 // `bannerOverlay`: lớp đặt trên ảnh banner (Settings dùng để kéo chỉnh vị trí ảnh).
 export default function ShopHero({
@@ -20,7 +20,7 @@ export default function ShopHero({
   bannerOverlay,
 }: {
   shop: StorefrontShop;
-  rating?: number;
+  rating?: number | 'loading';
   preview?: boolean;
   bannerOverlay?: React.ReactNode;
 }) {
@@ -72,7 +72,12 @@ export default function ShopHero({
           <p className="mb-6 max-w-lg text-base leading-relaxed opacity-75">
             {shop.description || 'Welcome to our store! Browse our collection of products.'}
           </p>
-          {!!rating && rating > 0 && (
+          {rating === 'loading' && (
+            <div className="mb-6 flex h-6 items-center" aria-hidden>
+              <span className="h-4 w-14 animate-pulse rounded-md bg-primary-foreground/20" />
+            </div>
+          )}
+          {typeof rating === 'number' && rating > 0 && (
             <div
               role="img"
               aria-label={`Rated ${rating} out of 5`}

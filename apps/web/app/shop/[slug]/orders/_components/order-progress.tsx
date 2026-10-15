@@ -1,5 +1,6 @@
 import { Check, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
 import type { BuyerOrder } from '@/lib/buyer-api';
 import { cancelReasonLabels } from '@/lib/order-status';
@@ -109,6 +110,27 @@ export default function OrderProgress({ order }: { order: BuyerOrder }) {
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+// Cùng khung với thanh tiến trình (dòng trạng thái + 5 bước; điện thoại: các bước xếp dọc)
+export function OrderProgressSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card p-5 sm:p-6">
+      <div className="mb-5 flex h-5 items-center">
+        <Skeleton className="h-3.5 w-52" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-5 sm:gap-0">
+        {STEPS.map((step) => (
+          <div key={step.status} className="flex items-center gap-3 sm:flex-col sm:gap-2">
+            <Skeleton className="size-8 rounded-full" />
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-3.5 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

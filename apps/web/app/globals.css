@@ -117,6 +117,14 @@
   --sidebar-ring: oklch(0.45 0 0);
 }
 
+/* Dải cuộn ngang không hiện thanh cuộn (vuốt trên điện thoại), như thanh tab/chip của các app mua sắm */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -170,7 +170,7 @@ export default function ProductsPage() {
           ))}
         </div>
         {toolbar}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-hidden pb-1 sm:flex-wrap">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-8 w-28 rounded-full" />
           ))}
@@ -199,8 +199,9 @@ export default function ProductsPage() {
       {/* Thanh bộ lọc tìm kiếm, trạng thái kho & sắp xếp */}
       {toolbar}
 
-      {/* Các tab lọc theo danh mục sản phẩm */}
-      <div className="flex items-center gap-2 flex-wrap pb-1">
+      {/* Các tab lọc theo danh mục sản phẩm: điện thoại vuốt ngang trên một hàng (số danh mục không
+          làm trang dài ra, skeleton cũng cao đúng một hàng), màn lớn xuống dòng */}
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0">
         <FilterChip
           active={selectedCategoryId === null}
           onClick={() => setSelectedCategoryId(null)}

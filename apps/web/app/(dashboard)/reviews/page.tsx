@@ -13,7 +13,7 @@ import StatCard, { StatCardSkeleton } from '@/components/dashboard/stat-card';
 import EmptyState from '@/components/empty-state';
 import { cn } from '@/lib/utils';
 import { Star, MessageSquare, Reply, Filter, ShoppingBag } from 'lucide-react';
-import ReviewItem from '@/components/shop/review-item';
+import ReviewItem, { ReviewItemSkeleton } from '@/components/shop/review-item';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'sonner';
 import { useMyShop } from '@/hooks/use-my-shop';
@@ -103,30 +103,29 @@ export default function DashboardReviewsPage() {
           Loading reviews…
         </span>
         {header}
+        {/* Chỉ thẻ đầu có dòng gợi ý, như thẻ thật */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[0, 1, 2].map((i) => (
-            <StatCardSkeleton key={i} />
+          {[true, false, false].map((hint, i) => (
+            <StatCardSkeleton key={i} hint={hint} />
           ))}
         </div>
-        <Skeleton className="h-[66px] w-full rounded-xl" />
-        <div className="space-y-4">
+        {/* Cùng khung với thanh lọc thật (xuống 2 dòng trên điện thoại) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="mr-1 size-4" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-32 rounded-full" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="mr-1 h-3 w-14" />
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-7 w-10 rounded-full" />
+            ))}
+          </div>
+        </div>
+        <div className="divide-y rounded-xl border bg-card px-5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="space-y-4 rounded-xl border bg-card p-5 shadow-xs">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2.5">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-5 w-24 rounded-full" />
-                  </div>
-                  <Skeleton className="h-3.5 w-48" />
-                </div>
-                <Skeleton className="h-7 w-12 rounded-full" />
-              </div>
-              <div className="space-y-2 pl-6">
-                <Skeleton className="h-3.5 w-full" />
-                <Skeleton className="h-3.5 w-4/5" />
-              </div>
-            </div>
+            <ReviewItemSkeleton key={i} reply />
           ))}
         </div>
       </div>

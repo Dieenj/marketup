@@ -201,14 +201,25 @@ function OrderRowsSkeleton({ count }: { count: number }) {
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="flex items-center gap-4 rounded-xl border bg-card p-4">
           <Skeleton className="size-14 rounded-lg" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-4 w-28" />
+          {/* Cùng chiều cao với hàng thật: dòng ngày · số món xuống 2 dòng trên điện thoại */}
+          <div className="min-w-0 flex-1">
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-3.5 w-40 max-w-full" />
+            </div>
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-3.5 w-28" />
+            </div>
+            <div className="flex h-5 items-center sm:hidden">
+              <Skeleton className="h-3.5 w-12" />
+            </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <div className="flex h-6 items-center">
+              <Skeleton className="h-4 w-16" />
+            </div>
           </div>
+          <div className="size-4 shrink-0" />
         </div>
       ))}
     </div>

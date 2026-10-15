@@ -108,7 +108,8 @@ export default function StorefrontClient() {
 
   const overallRating = stats?.averageRating ?? 0;
 
-  if (shopLoading || productsLoading) return <StorefrontSkeleton shop={shop} />;
+  if (shopLoading || productsLoading)
+    return <StorefrontSkeleton shop={shop} rating={stats?.averageRating} />;
 
   if (!shop) {
     // Thường layout đã trả 404 từ server; tới đây nghĩa là server không gọi được API lúc render

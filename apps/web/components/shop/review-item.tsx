@@ -1,4 +1,5 @@
 import StarRating from '@/components/star-rating';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/format';
 
@@ -86,6 +87,48 @@ export default function ReviewItem({
   );
 }
 
+// Skeleton cùng khung với ReviewItem: avatar, tên, hàng sao, dòng ngày, chip sản phẩm, một dòng nhận xét.
+//   product: có chip tên sản phẩm (danh sách nhiều sản phẩm; trang sản phẩm thì không)
+//   reply: thêm ô trả lời của shop (dashboard: ô trả lời có nút Edit, hoặc nút Reply cao tương đương)
+export function ReviewItemSkeleton({
+  product = true,
+  reply = false,
+}: {
+  product?: boolean;
+  reply?: boolean;
+}) {
+  return (
+    <div className="flex gap-3 py-5">
+      <Skeleton className="size-9 shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="space-y-1">
+          <div className="flex h-5 items-center">
+            <Skeleton className="h-3.5 w-24" />
+          </div>
+          <Skeleton className="h-3.5 w-20" />
+          <div className="flex h-4 items-center">
+            <Skeleton className="h-3 w-48 max-w-full" />
+          </div>
+        </div>
+        {product && <Skeleton className="h-6 w-40 rounded-md" />}
+        <div className="flex h-[1lh] items-center text-sm leading-relaxed">
+          <Skeleton className="h-3.5 w-3/4" />
+        </div>
+        {reply && (
+          <div className="rounded-lg bg-muted/70 px-3.5 py-3">
+            <div className="mb-1 flex h-6 items-center">
+              <Skeleton className="h-3 w-16 bg-muted-foreground/10" />
+            </div>
+            <div className="flex h-[1lh] items-center text-sm leading-relaxed">
+              <Skeleton className="h-3.5 w-1/2 bg-muted-foreground/10" />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Điểm trung bình + số đánh giá ở đầu danh sách (trang sản phẩm, tab Reviews).
 // "Đã mua hàng" ghi một lần ở đây thay vì gắn nhãn vào từng đánh giá: mọi đánh giá đều từ đơn đã giao.
 // children: bộ lọc (tab Reviews lọc theo số sao)
@@ -117,6 +160,21 @@ export function ReviewSummary({
         </div>
       </div>
       {children}
+    </div>
+  );
+}
+
+// Cùng khung với ReviewSummary khi không có bộ lọc (trang sản phẩm): điểm lớn + hàng sao + dòng mô tả
+export function ReviewSummarySkeleton() {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-5 sm:w-fit sm:min-w-[22rem] sm:pr-8">
+      <div className="flex h-10 items-center">
+        <Skeleton className="h-9 w-14" />
+      </div>
+      <div className="flex-1 space-y-1.5">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-3 w-full max-w-64" />
+      </div>
     </div>
   );
 }

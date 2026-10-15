@@ -34,7 +34,9 @@ export default function StatCard({
         )}
       </div>
       {isLoading ? (
-        <Skeleton className="mt-2 h-8 w-24" />
+        <div className="mt-1 flex h-8 items-center">
+          <Skeleton className="h-6 w-24" />
+        </div>
       ) : (
         <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">{value}</p>
       )}
@@ -44,7 +46,8 @@ export default function StatCard({
 }
 
 // Skeleton cùng khung với StatCard (nhãn, giá trị, dòng gợi ý) để chiều cao khớp khi dữ liệu về
-export function StatCardSkeleton() {
+//   hint = false: thẻ không có dòng gợi ý (thấp hơn khi đứng riêng một hàng trên điện thoại)
+export function StatCardSkeleton({ hint = true }: { hint?: boolean }) {
   return (
     <div className="rounded-xl border bg-card p-5 shadow-xs">
       {/* Mỗi hàng giữ đúng line-height của StatCard: nhãn 20px, giá trị 32px, gợi ý 16px */}
@@ -55,9 +58,11 @@ export function StatCardSkeleton() {
       <div className="mt-1 flex h-8 items-center">
         <Skeleton className="h-6 w-20" />
       </div>
-      <div className="mt-1 flex h-4 items-center">
-        <Skeleton className="h-3 w-28" />
-      </div>
+      {hint && (
+        <div className="mt-1 flex h-4 items-center">
+          <Skeleton className="h-3 w-28" />
+        </div>
+      )}
     </div>
   );
 }

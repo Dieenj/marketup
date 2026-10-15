@@ -28,7 +28,7 @@ export default function OrderStatusTabs({
       className={cn('min-w-0', className)}
     >
       {/* Hẹp thì vuốt ngang, không hiện thanh cuộn (như thanh tab của các app mua sắm) */}
-      <TabsList className="max-w-full justify-start overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <TabsList className="max-w-full justify-start overflow-x-auto overflow-y-hidden scrollbar-none">
         {ORDER_TABS.map((tab) => (
           <TabsTrigger key={tab} value={tab} className="flex-none px-2.5">
             {tab === 'ALL' ? 'All' : statusLabels[tab]}

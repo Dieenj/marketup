@@ -48,6 +48,9 @@ Quy ước giao diện:
 - Storefront: `brandThemeStyle()` (`components/shop/brand-theme.ts`) đặt màu thương hiệu thành `--primary` ở layout của shop và ở khung xem trước, nên mọi `Button`/`FilterChip`/`bg-primary` bên trong tự theo màu shop.
 - Bo góc: nút/ô nhập `rounded-lg`, thẻ/khung `rounded-xl`, nhãn/nút lọc `rounded-full`.
 - Dùng chung: `SearchInput`, `EmptyState`, `FilterChip`, `ReviewItem`/`ReviewSummary`, `StorefrontPreview`.
+- Skeleton phải trùng bố cục trang thật để không giật khi dữ liệu về: dùng cùng khung (card, padding, grid), mỗi hàng cao bằng line-height của chữ thật (bọc ô skeleton trong `flex h-5`/`h-[1lh]`), chữ tĩnh (tiêu đề, nhãn) hiện thật. Skeleton của một component đặt cạnh component đó (`StatCardSkeleton`, `ReviewItemSkeleton`, `OrderProgressSkeleton`…).
+- `loading.tsx` / skeleton không gọi `useQuery` cho dữ liệu mà page tải sẵn ở server (chỉ đọc cache bằng `getQueryData`): query rỗng tạo trong fallback khiến `HydrationBoundary` của page hoãn nạp dữ liệu → server render thiếu → lỗi hydration.
+- Dải tab/chip hẹp: vuốt ngang trên một hàng với `overflow-x-auto scrollbar-none` (utility trong `globals.css`).
 
 ### 3.2 Nhóm route
 

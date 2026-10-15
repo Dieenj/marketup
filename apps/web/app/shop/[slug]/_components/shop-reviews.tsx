@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { MessageSquare, ShoppingBag } from 'lucide-react';
-import ReviewItem, { ReviewSummary } from '@/components/shop/review-item';
+import ReviewItem, { ReviewItemSkeleton, ReviewSummary } from '@/components/shop/review-item';
 import EmptyState from '@/components/empty-state';
 import LoadMore from '@/components/load-more';
-import { Skeleton } from '@/components/ui/skeleton';
 import { FilterChip } from '@/components/ui/filter-chip';
 import { storefrontQueries, type RatingCounts, type ShopStats } from '@/lib/storefront-queries';
 
@@ -55,15 +54,7 @@ export default function ShopReviews({
       {isPending ? (
         <div className="divide-y" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex gap-3 py-5">
-              <Skeleton className="size-9 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3.5 w-20" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
-              </div>
-            </div>
+            <ReviewItemSkeleton key={i} />
           ))}
         </div>
       ) : isError ? (

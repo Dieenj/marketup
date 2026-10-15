@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, ChevronLeft, CreditCard, Trash2, Minus, Plus } from 'lucide-react';
@@ -126,7 +127,7 @@ export default function CheckoutPage() {
   }
 
   // Đã đặt xong, giỏ vừa được xoá: giữ khung trang tới khi chuyển sang trang đặt hàng thành công
-  if (mutation.isSuccess) return <CheckoutSkeleton />;
+  if (mutation.isSuccess) return <CheckoutSkeleton lineCount={1} />;
 
   if (shopError && !shop) {
     return <StorefrontUnavailable onRetry={() => refetchShop()} />;
@@ -134,7 +135,7 @@ export default function CheckoutPage() {
 
   // Giỏ chỉ có ở trình duyệt; chờ hydrate và dữ liệu sản phẩm để không hiện giá/tồn kho cũ
   if (!hydrated || !shop || (lines.length > 0 && !products && !productsError)) {
-    return <CheckoutSkeleton />;
+    return <CheckoutSkeleton lineCount={hydrated ? lines.length : 1} />;
   }
 
   if (lines.length > 0 && !products) {
@@ -169,12 +170,7 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Phía bên trái: Form nhập thông tin mua hàng */}
         <div className="space-y-8">
-          <div>
-            <h1 className="mb-2 text-3xl font-bold tracking-tight">Checkout</h1>
-            <p className="text-muted-foreground">
-              Please fill in your shipping details to complete the order.
-            </p>
-          </div>
+          <CheckoutHeading />
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -253,20 +249,7 @@ export default function CheckoutPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-muted/40">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm font-medium">Cash on Delivery (COD)</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Pay with cash upon receiving your order.
-                  </p>
-                </CardContent>
-              </Card>
+              <PaymentMethodCard />
 
               <Button
                 type="submit"
@@ -435,20 +418,117 @@ function RemoveLineButton({ name, onRemove }: { name: string; onRemove: () => vo
   );
 }
 
-function CheckoutSkeleton() {
+// Phần không phụ thuộc dữ liệu: dùng chung cho trang thật và skeleton để hai bên y hệt nhau
+function CheckoutHeading() {
+  return (
+    <div>
+      <h1 className="mb-2 text-3xl font-bold tracking-tight">Checkout</h1>
+      <p className="text-muted-foreground">
+        Please fill in your shipping details to complete the order.
+      </p>
+    </div>
+  );
+}
+
+function PaymentMethodCard() {
+  return (
+    <Card className="bg-muted/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Payment Method
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm font-medium">Cash on Delivery (COD)</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Pay with cash upon receiving your order.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Cùng khung với trang checkout: tiêu đề, thẻ thông tin giao hàng, thanh toán, nút đặt | tóm tắt đơn.
+// lineCount: số dòng trong giỏ (giỏ nằm sẵn ở trình duyệt) để thẻ tóm tắt cao đúng
+function CheckoutSkeleton({ lineCount }: { lineCount: number }) {
+  const field = (label: string) => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Skeleton className="h-8 rounded-lg" />
+    </div>
+  );
   return (
     <div
       className="container mx-auto px-4 py-8 max-w-6xl"
       aria-busy="true"
       aria-label="Loading checkout"
     >
-      <Skeleton className="h-4 w-36 mb-8" />
+      <Skeleton className="mb-8 h-5 w-28" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="space-y-4">
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-80 w-full rounded-xl" />
+        <div className="space-y-8">
+          <CheckoutHeading />
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {field('Full Name')}
+                <div className="grid grid-cols-2 gap-4">
+                  {field('Email')}
+                  {field('Phone Number')}
+                </div>
+                {field('Home Address')}
+                {field('City')}
+              </CardContent>
+            </Card>
+            <PaymentMethodCard />
+            <Skeleton className="h-[50px] w-full rounded-lg" />
+          </div>
         </div>
-        <Skeleton className="h-96 w-full rounded-xl" />
+        <div className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                {Array.from({ length: Math.max(1, lineCount) }, (_, i) => (
+                  <div key={i} className="flex gap-3 rounded-lg border border-border/40 bg-muted/50 p-3">
+                    <Skeleton className="size-14 shrink-0 rounded-lg" />
+                    <div className="flex-1">
+                      <div className="flex h-5 items-center">
+                        <Skeleton className="h-3.5 w-40 max-w-full" />
+                      </div>
+                      <div className="flex h-4 items-center">
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <div className="mt-0.5 flex h-5 items-center">
+                        <Skeleton className="h-3.5 w-14" />
+                      </div>
+                      <Skeleton className="mt-1.5 h-6 w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <div className="space-y-1.5">
+                {[0, 1].map((i) => (
+                  <div key={i} className="flex h-5 items-center justify-between">
+                    <Skeleton className="h-3.5 w-16" />
+                    <Skeleton className="h-3.5 w-14" />
+                  </div>
+                ))}
+                <Separator className="my-2" />
+                <div className="flex h-7 items-center justify-between">
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

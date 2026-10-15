@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 import StorefrontUnavailable from '../../_components/storefront-unavailable';
 import { SignInPanel } from './buyer-sign-in';
 import OrderItemThumb from './order-item-thumb';
-import OrderProgress from './order-progress';
+import OrderProgress, { OrderProgressSkeleton } from './order-progress';
 
 const q = storefrontQueries();
 
@@ -72,7 +72,7 @@ export default function OrderDetailClient({
 
   // Phiên lưu trong localStorage → chỉ biết sau khi hydrate
   if (!hydrated || (token && query.isPending)) {
-    return <OrderDetailSkeleton />;
+    return <OrderDetailSkeleton slug={slug} />;
   }
 
   if (!token || denied) {
@@ -411,7 +411,15 @@ function ItemReview({
   );
 }
 
-function OrderDetailSkeleton() {
+// Cùng bố cục với trang đơn: tiêu đề, tiến trình, danh sách món | tóm tắt, giao hàng, liên hệ shop
+function OrderDetailSkeleton({ slug }: { slug: string }) {
+  const { data: shop } = useQuery(q.shop(slug));
+  const contactLines = [shop?.contactPhone, shop?.contactEmail].filter(Boolean).length;
+  const line = (width: string) => (
+    <div className="flex h-5 items-center">
+      <Skeleton className={cn('h-3.5', width)} />
+    </div>
+  );
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8" aria-busy="true">
       <span className="sr-only" role="status">
@@ -425,26 +433,67 @@ function OrderDetailSkeleton() {
         </div>
         <Skeleton className="h-7 w-24 rounded-full" />
       </div>
-      <Skeleton className="h-36 rounded-xl sm:h-32" />
+      <OrderProgressSkeleton />
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-3">
         <div className="rounded-xl border bg-card lg:col-span-2">
-          <div className="border-b px-5 py-4">
-            <Skeleton className="h-5 w-24" />
+          <div className="flex h-[57px] items-center border-b px-5">
+            <Skeleton className="h-4 w-24" />
           </div>
-          {[0, 1].map((i) => (
-            <div key={i} className="flex gap-4 px-5 py-4">
-              <Skeleton className="size-16 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-24" />
+          <div className="divide-y">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex gap-4 px-5 py-4">
+                <Skeleton className="size-16 shrink-0 rounded-lg" />
+                <div className="flex-1">
+                  <div className="flex h-6 items-center">
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  {line('w-24')}
+                  <div className="mt-1">{line('w-20')}</div>
+                </div>
+                <div className="flex h-6 items-center">
+                  <Skeleton className="h-4 w-16" />
+                </div>
               </div>
-              <Skeleton className="h-5 w-16" />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-52 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
+          <div className="rounded-xl border bg-card p-5">
+            <div className="mb-4 flex h-6 items-center">
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="space-y-2">
+              {[0, 1].map((i) => (
+                <div key={i} className="flex h-5 items-center justify-between">
+                  <Skeleton className="h-3.5 w-16" />
+                  <Skeleton className="h-3.5 w-14" />
+                </div>
+              ))}
+              <div className="flex h-[37px] items-end justify-between border-t">
+                <Skeleton className="mb-1 h-4 w-12" />
+                <Skeleton className="mb-1 h-4 w-16" />
+              </div>
+            </div>
+            {/* Ghi chú thanh toán: cột hẹp (lg) xuống 2 dòng */}
+            <Skeleton className="mt-4 h-8 rounded-lg lg:h-12" />
+          </div>
+          <div className="rounded-xl border bg-card p-5">
+            <div className="mb-3">{line('w-20')}</div>
+            {line('w-32')}
+            {line('w-40')}
+            {line('w-28')}
+          </div>
+          {contactLines > 0 && (
+            <div className="space-y-3 rounded-xl border bg-card p-5">
+              {line('w-24')}
+              {line('w-48')}
+              <div className="space-y-2">
+                {Array.from({ length: contactLines }, (_, i) => (
+                  <div key={i}>{line('w-36')}</div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

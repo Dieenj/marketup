@@ -201,7 +201,8 @@ export default function OrdersPage() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              [...Array(5)].map((_, i) => (
+              // Cùng chiều cao với hàng thật: cột khách hàng có 2 dòng (tên + email / mã đơn)
+              [...Array(10)].map((_, i) => (
                 <TableRow key={i}>
                   <TableCell className="hidden sm:table-cell pl-4">
                     <Skeleton className="h-4 w-20" />
@@ -210,7 +211,12 @@ export default function OrdersPage() {
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
                   <TableCell className="pl-4 sm:pl-2">
-                    <Skeleton className="h-4 w-32" />
+                    <div className="flex h-5 items-center">
+                      <Skeleton className="h-3.5 w-28" />
+                    </div>
+                    <div className="flex h-4 items-center">
+                      <Skeleton className="h-3 w-36" />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Skeleton className="ml-auto h-4 w-16" />

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RecentOrdersSkeleton } from '@/components/dashboard/dashboard-skeleton';
 import { ArrowRight, DollarSign, Package, ShoppingBag, Clock } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -165,11 +166,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
+            <RecentOrdersSkeleton />
           ) : !stats?.recentOrders?.length ? (
             <EmptyState
               icon={ShoppingBag}

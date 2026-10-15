@@ -165,14 +165,17 @@ export function ProductCardSkeleton() {
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border bg-card shadow-xs">
       <Skeleton className="aspect-4/3 rounded-none" />
+      {/* Chiều cao mỗi hàng theo line-height của chữ thật (1lh) */}
       <div className="flex flex-1 flex-col gap-3.5 p-5">
-        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-[calc(1lh+4px)] w-20 rounded-md text-[11px]" />
         <div className="min-h-[40px] space-y-2">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-2/3" />
         </div>
         <div className="mt-auto flex items-center justify-between border-t border-border/40 pt-3">
-          <Skeleton className="h-5 w-16" />
+          <div className="flex h-[1lh] items-center text-[15px]">
+            <Skeleton className="h-4 w-16" />
+          </div>
           <Skeleton className="h-5 w-20 rounded-full" />
         </div>
       </div>

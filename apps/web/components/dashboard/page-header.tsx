@@ -26,13 +26,21 @@ export default function PageHeader({
   );
 }
 
-// Bản skeleton cùng kích thước với PageHeader (tiêu đề text-2xl + mô tả text-sm)
+// Bản skeleton cùng kích thước với PageHeader (tiêu đề text-2xl + mô tả text-sm,
+// mô tả xuống 2 dòng trên điện thoại)
 export function PageHeaderSkeleton({ withAction = false }: { withAction?: boolean }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-72 max-w-full" />
+      <div className="min-w-0">
+        <div className="flex h-8 items-center">
+          <Skeleton className="h-6 w-40" />
+        </div>
+        <div className="mt-1 flex h-5 items-center">
+          <Skeleton className="h-3.5 w-72 max-w-full" />
+        </div>
+        <div className="flex h-5 items-center sm:hidden">
+          <Skeleton className="h-3.5 w-40" />
+        </div>
       </div>
       {withAction && <Skeleton className="h-9 w-32" />}
     </div>
