@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import CategoryForm from '@/components/dashboard/categories/category-form';
-import { useCategories, useCreateCategory, useDeleteCategory } from '@/hooks/use-categories';
+import DeleteCategoryDialog from '@/components/dashboard/categories/delete-category-dialog';
+import { useCategories, useCreateCategory, type Category } from '@/hooks/use-categories';
 
 interface ManageCategoryDialogProps {
   open: boolean;
@@ -21,7 +23,7 @@ export default function ManageCategoryDialog({
 }: ManageCategoryDialogProps) {
   const { data: categories = [] } = useCategories(shopId);
   const createMutation = useCreateCategory(shopId, { onSuccess: () => onOpenChange(false) });
-  const deleteMutation = useDeleteCategory(shopId, { onSuccess: onDeleted });
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,12 +49,7 @@ export default function ManageCategoryDialog({
                   variant="ghost-destructive"
                   size="icon"
                   aria-label={`Delete category ${cat.name}`}
-                  onClick={() => {
-                    if (confirm(`Delete category "${cat.name}"?`)) {
-                      deleteMutation.mutate(cat.id);
-                    }
-                  }}
-                  disabled={deleteMutation.isPending}
+                  onClick={() => setDeleteTarget(cat)}
                 >
                   <Trash2 />
                 </Button>
@@ -71,6 +68,14 @@ export default function ManageCategoryDialog({
             onCancel={() => onOpenChange(false)}
           />
         </div>
+        {deleteTarget && (
+          <DeleteCategoryDialog
+            shopId={shopId}
+            category={deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onDeleted={onDeleted}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

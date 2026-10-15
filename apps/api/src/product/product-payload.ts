@@ -3,7 +3,7 @@ import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { CreateVariantDto } from './dto/product-variant.dto';
 
-// attributes/variants đến dưới dạng chuỗi JSON trong multipart → ValidationPipe không kiểm tra được bên trong.
+// variants đến dưới dạng chuỗi JSON trong multipart → ValidationPipe không kiểm tra được bên trong.
 // Parse + validate từng phần tử bằng class-validator; undefined = client không gửi trường này.
 export function parseJsonArray<T extends object>(
   raw: string | undefined,

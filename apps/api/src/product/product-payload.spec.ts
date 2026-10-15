@@ -1,12 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
-import {
-  CreateAttributeDto,
-  CreateVariantDto,
-} from './dto/product-variant.dto';
+import { CreateVariantDto } from './dto/product-variant.dto';
 import { parseJsonArray } from './product-payload';
 
 const variant = {
-  label: 'M / Red',
   options: { Size: 'M' },
   price: 12.5,
   stock: 3,
@@ -57,7 +53,11 @@ describe('parseJsonArray', () => {
       { ...variant, stock: 1.5 },
       /stock must be an integer/,
     ],
-    ['empty label', { ...variant, label: '' }, /label should not be empty/],
+    [
+      'label sent by the client (derived by the API)',
+      { ...variant, label: 'M' },
+      /property label should not exist/,
+    ],
     [
       'non-string option value',
       { ...variant, options: { Size: 5 } },
@@ -86,20 +86,6 @@ describe('parseJsonArray', () => {
     );
     expect(errorOf(() => parseVariants([null]))).toMatch(
       /variants\[0\] is invalid/,
-    );
-  });
-
-  it('validates attributes too', () => {
-    const parse = (value: unknown) =>
-      parseJsonArray(
-        JSON.stringify(value),
-        CreateAttributeDto,
-        'attributes',
-        10,
-      );
-    expect(parse([{ name: 'Size', options: ['S', 'M'] }])).toHaveLength(1);
-    expect(errorOf(() => parse([{ name: 'Size', options: [] }]))).toMatch(
-      /options should not be empty/,
     );
   });
 });

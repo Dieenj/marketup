@@ -42,6 +42,7 @@ import {
   type OrderTab,
 } from '@/lib/order-status';
 import { formatCurrency } from '@/lib/format';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import PageHeader from '@/components/dashboard/page-header';
 import OrderStatusBadge from '@/components/order-status-badge';
 import { useMyShop } from '@/hooks/use-my-shop';
@@ -55,6 +56,7 @@ interface OrderItem {
   id: string;
   productName: string;
   productImage?: string;
+  variantLabel?: string | null;
   quantity: number;
   priceAtPurchase: number | string;
 }
@@ -68,6 +70,8 @@ interface Order {
   buyerPhone?: string;
   shippingAddress?: string;
   shippingCity?: string;
+  shippingDistrict?: string | null;
+  shippingNote?: string | null;
   totalAmount: number | string;
   subtotal: number | string;
   status: string;
@@ -148,6 +152,7 @@ export default function OrdersPage() {
       ).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders', shop?.id] });
+      queryClient.invalidateQueries({ queryKey: dashboardStatsQuery(shop?.id).queryKey });
       toast.success('Order status updated');
     },
     onError: (error) => {
@@ -364,7 +369,16 @@ export default function OrdersPage() {
                     Shipping Address
                   </p>
                   <p className="font-medium">{selectedOrder.shippingAddress}</p>
-                  <p className="text-muted-foreground">{selectedOrder.shippingCity}</p>
+                  <p className="text-muted-foreground">
+                    {[selectedOrder.shippingDistrict, selectedOrder.shippingCity]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </p>
+                  {selectedOrder.shippingNote && (
+                    <p className="mt-1 italic text-muted-foreground">
+                      Note: {selectedOrder.shippingNote}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-1">
@@ -415,7 +429,9 @@ export default function OrdersPage() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.productName}</p>
-                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.variantLabel && `${item.variantLabel} · `}Qty: {item.quantity}
+                          </p>
                         </div>
                         <p className="text-sm font-semibold">
                           {formatCurrency(Number(item.priceAtPurchase) * item.quantity)}

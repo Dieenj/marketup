@@ -37,18 +37,9 @@ export class ProductController {
     @GetUser('id') userId: string,
     @Param('shopId') shopId: string,
     @Body() dto: CreateProductDto,
-    @Body('attributes') attributesRaw?: string,
-    @Body('variants') variantsRaw?: string,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
-    return this.productService.create(
-      userId,
-      shopId,
-      dto,
-      images,
-      attributesRaw,
-      variantsRaw,
-    );
+    return this.productService.create(userId, shopId, dto, images);
   }
 
   @Get('shop/:shopId')
@@ -80,18 +71,9 @@ export class ProductController {
     @GetUser('id') userId: string,
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
-    @Body('attributes') attributesRaw?: string,
-    @Body('variants') variantsRaw?: string,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
-    return this.productService.update(
-      userId,
-      id,
-      dto,
-      images,
-      attributesRaw,
-      variantsRaw,
-    );
+    return this.productService.update(userId, id, dto, images);
   }
 
   @Delete(':id')

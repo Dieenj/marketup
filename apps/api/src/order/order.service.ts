@@ -247,15 +247,20 @@ export class OrderService {
   ) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { shop: true, items: true },
+      include: {
+        items: true,
+        shop: { select: { ownerId: true, name: true, slug: true } },
+      },
     });
 
     if (!order || order.shop.ownerId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
+    // Không đổi gì → trả cùng dạng với khi đổi trạng thái (shop chỉ có tên + slug)
     if (order.status === status) {
-      return order;
+      const { ownerId, ...shop } = order.shop;
+      return { ...order, shop };
     }
 
     if (!SELLER_TRANSITIONS[order.status].includes(status)) {

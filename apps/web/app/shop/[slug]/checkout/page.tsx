@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -33,12 +34,18 @@ import { storefrontQueries } from '@/lib/storefront-queries';
 import { reconcileCart, type CatalogProduct } from '@/lib/cart-checkout';
 import StorefrontUnavailable from '../_components/storefront-unavailable';
 
+// Giới hạn khớp CreateOrderDto ở API (apps/api/src/order/dto/create-order.dto.ts)
 const checkoutSchema = z.object({
-  buyerName: z.string().min(2, 'Name is required'),
-  buyerEmail: z.string().email('Invalid email'),
-  buyerPhone: z.string().min(10, 'Invalid phone number'),
-  shippingAddress: z.string().min(5, 'Address is required'),
-  shippingCity: z.string().min(2, 'City is required'),
+  buyerName: z.string().trim().min(2, 'Name is required').max(100, 'Name is too long'),
+  buyerEmail: z.string().trim().email('Invalid email').max(254, 'Email is too long'),
+  buyerPhone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9][0-9 .-]{7,19}$/, 'Invalid phone number'),
+  shippingAddress: z.string().trim().min(5, 'Address is required').max(255, 'Address is too long'),
+  shippingCity: z.string().trim().min(2, 'City is required').max(100, 'City is too long'),
+  shippingDistrict: z.string().trim().max(100, 'District is too long'),
+  shippingNote: z.string().trim().max(500, 'Note is too long'),
 });
 
 const q = storefrontQueries();
@@ -88,14 +95,19 @@ export default function CheckoutPage() {
       buyerPhone: '',
       shippingAddress: '',
       shippingCity: '',
+      shippingDistrict: '',
+      shippingNote: '',
     },
   });
 
   const mutation = useMutation({
     // Chỉ đặt các món còn bán, với số lượng đã giới hạn theo tồn kho; giá do API tính
-    mutationFn: (values: z.infer<typeof checkoutSchema>) =>
+    mutationFn: ({ shippingDistrict, shippingNote, ...values }: z.infer<typeof checkoutSchema>) =>
       api.post<{ orderNumber: string; accessToken: string }>('/orders', {
         ...values,
+        // Trường tuỳ chọn: bỏ trống thì không gửi
+        shippingDistrict: shippingDistrict || undefined,
+        shippingNote: shippingNote || undefined,
         shopId,
         items: available.map(({ productId, variantId, quantity }) => ({
           productId,
@@ -233,14 +245,47 @@ export default function CheckoutPage() {
                       </FormItem>
                     )}
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="shippingDistrict"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>District (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="District 1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="shippingCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ho Chi Minh City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
-                    name="shippingCity"
+                    name="shippingNote"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>City</FormLabel>
+                        <FormLabel>Note for the shop (optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ho Chi Minh City" {...field} />
+                          <Textarea
+                            placeholder="Delivery instructions, preferred time…"
+                            maxLength={500}
+                            rows={2}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

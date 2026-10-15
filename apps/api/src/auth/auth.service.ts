@@ -65,11 +65,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Tách passwordHash ra để không bao giờ trả về client
-    const { passwordHash, ...safeUser } = user;
-
+    // Cùng dạng với register: không bao giờ trả passwordHash hay trường nội bộ
     return {
-      user: safeUser,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
       token: this.tokens.signSeller(user),
     };
   }

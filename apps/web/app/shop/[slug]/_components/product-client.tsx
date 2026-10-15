@@ -408,8 +408,9 @@ export default function ProductClient() {
                   >
                     {attribute.options.map((option) => {
                       const isSelected = selectedOptions[attribute.name] === option;
-                      const isAvailable = canSelectOption(attributeIndex, option);
-                      const isDisabled = isLocked || !isAvailable;
+                      // Chưa chọn thuộc tính trước thì chỉ mờ đi; gạch ngang chỉ dành cho lựa chọn hết hàng
+                      const isSoldOut = !isLocked && !canSelectOption(attributeIndex, option);
+                      const isDisabled = isLocked || isSoldOut;
 
                       return (
                         <button
@@ -422,10 +423,8 @@ export default function ProductClient() {
                               ? 'border-primary bg-primary text-primary-foreground'
                               : 'border-border hover:border-primary/50'
                           } ${
-                            isDisabled
-                              ? 'cursor-not-allowed opacity-40 line-through'
-                              : 'cursor-pointer'
-                          }`}
+                            isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'
+                          } ${isSoldOut ? 'line-through' : ''}`}
                           disabled={isDisabled}
                         >
                           {option}

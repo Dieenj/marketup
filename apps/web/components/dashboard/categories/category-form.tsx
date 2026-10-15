@@ -19,10 +19,15 @@ import { slugify } from '@/lib/slugify';
 import type { CategoryInput } from '@/hooks/use-categories';
 
 const categorySchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name must be at most 50 characters'),
   slug: z
     .string()
     .min(2, 'Slug is required')
+    .max(60, 'Slug must be at most 60 characters')
     .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers and hyphens only'),
 });
 

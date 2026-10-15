@@ -30,7 +30,11 @@ export default function CategorySelectField<T extends FieldValues>({
       render={({ field }) => (
         <FormItem>
           <FormLabel>Category</FormLabel>
-          <Select onValueChange={field.onChange} value={field.value || null}>
+          {/* null = "No category" → '' (API: categoryId rỗng = bỏ danh mục) */}
+          <Select
+            onValueChange={(value) => field.onChange(value ?? '')}
+            value={field.value || null}
+          >
             <FormControl>
               <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder={placeholder}>
@@ -39,6 +43,7 @@ export default function CategorySelectField<T extends FieldValues>({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
+              <SelectItem value={null}>No category</SelectItem>
               {categories?.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}

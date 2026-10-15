@@ -56,7 +56,7 @@ Unique `(shopId, slug)`. Xoá danh mục thì `products.categoryId` thành `NULL
 
 - `products.imageUrl` là ảnh đại diện; `images` là mảng URL.
 - `isVisible = false`: ẩn khỏi storefront, không đặt được, đánh giá không được tính. Sản phẩm đã có đơn chỉ được ẩn, không xoá được (`order_items.productId` là `onDelete: Restrict`).
-- `product_attributes`: `name` + `options[]`, ví dụ `Size` + `["S","M","L"]`.
+- `product_attributes`: `name` + `options[]`, ví dụ `Size` + `["S","M","L"]`. API suy ra từ `options` của các biến thể mỗi lần lưu (client không gửi riêng); `label` của biến thể cũng vậy.
 - `product_variants`: `label` (ví dụ `"Size: M / Color: Red"`), `options` (JSON `{"Size":"M","Color":"Red"}`), `price`, `comparePrice`, `stock`, `sku`, `isDefault`. Mọi sản phẩm có ít nhất một biến thể.
 
 ### `orders`

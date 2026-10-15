@@ -81,22 +81,67 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'S / Sand', options: { Size: 'S', Color: 'Sand' }, price: 59.0, stock: 12 },
           {
-            label: 'M / Sand',
+            label: 'Size: S / Color: Sand',
+            options: { Size: 'S', Color: 'Sand' },
+            price: 59.0,
+            stock: 12,
+          },
+          {
+            label: 'Size: M / Color: Sand',
             options: { Size: 'M', Color: 'Sand' },
             price: 59.0,
             stock: 18,
             isDefault: true,
           },
-          { label: 'L / Sand', options: { Size: 'L', Color: 'Sand' }, price: 59.0, stock: 10 },
-          { label: 'S / Slate', options: { Size: 'S', Color: 'Slate' }, price: 59.0, stock: 8 },
-          { label: 'M / Slate', options: { Size: 'M', Color: 'Slate' }, price: 59.0, stock: 14 },
-          { label: 'L / Slate', options: { Size: 'L', Color: 'Slate' }, price: 59.0, stock: 6 },
-          { label: 'S / White', options: { Size: 'S', Color: 'White' }, price: 59.0, stock: 15 },
-          { label: 'M / White', options: { Size: 'M', Color: 'White' }, price: 59.0, stock: 20 },
-          { label: 'L / White', options: { Size: 'L', Color: 'White' }, price: 59.0, stock: 9 },
-          { label: 'XL / White', options: { Size: 'XL', Color: 'White' }, price: 59.0, stock: 4 },
+          {
+            label: 'Size: L / Color: Sand',
+            options: { Size: 'L', Color: 'Sand' },
+            price: 59.0,
+            stock: 10,
+          },
+          {
+            label: 'Size: S / Color: Slate',
+            options: { Size: 'S', Color: 'Slate' },
+            price: 59.0,
+            stock: 8,
+          },
+          {
+            label: 'Size: M / Color: Slate',
+            options: { Size: 'M', Color: 'Slate' },
+            price: 59.0,
+            stock: 14,
+          },
+          {
+            label: 'Size: L / Color: Slate',
+            options: { Size: 'L', Color: 'Slate' },
+            price: 59.0,
+            stock: 6,
+          },
+          {
+            label: 'Size: S / Color: White',
+            options: { Size: 'S', Color: 'White' },
+            price: 59.0,
+            stock: 15,
+          },
+          {
+            label: 'Size: M / Color: White',
+            options: { Size: 'M', Color: 'White' },
+            price: 59.0,
+            stock: 20,
+          },
+          {
+            label: 'Size: L / Color: White',
+            options: { Size: 'L', Color: 'White' },
+            price: 59.0,
+            stock: 9,
+          },
+          {
+            label: 'Size: XL / Color: White',
+            options: { Size: 'XL', Color: 'White' },
+            price: 59.0,
+            stock: 4,
+          },
         ],
       },
     },
@@ -121,20 +166,55 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'XS / Black', options: { Size: 'XS', Color: 'Black' }, price: 89.0, stock: 6 },
           {
-            label: 'S / Black',
+            label: 'Size: XS / Color: Black',
+            options: { Size: 'XS', Color: 'Black' },
+            price: 89.0,
+            stock: 6,
+          },
+          {
+            label: 'Size: S / Color: Black',
             options: { Size: 'S', Color: 'Black' },
             price: 89.0,
             stock: 14,
             isDefault: true,
           },
-          { label: 'M / Black', options: { Size: 'M', Color: 'Black' }, price: 89.0, stock: 18 },
-          { label: 'L / Black', options: { Size: 'L', Color: 'Black' }, price: 89.0, stock: 8 },
-          { label: 'S / Cream', options: { Size: 'S', Color: 'Cream' }, price: 89.0, stock: 10 },
-          { label: 'M / Cream', options: { Size: 'M', Color: 'Cream' }, price: 89.0, stock: 12 },
-          { label: 'S / Mocha', options: { Size: 'S', Color: 'Mocha' }, price: 89.0, stock: 5 },
-          { label: 'M / Mocha', options: { Size: 'M', Color: 'Mocha' }, price: 89.0, stock: 7 },
+          {
+            label: 'Size: M / Color: Black',
+            options: { Size: 'M', Color: 'Black' },
+            price: 89.0,
+            stock: 18,
+          },
+          {
+            label: 'Size: L / Color: Black',
+            options: { Size: 'L', Color: 'Black' },
+            price: 89.0,
+            stock: 8,
+          },
+          {
+            label: 'Size: S / Color: Cream',
+            options: { Size: 'S', Color: 'Cream' },
+            price: 89.0,
+            stock: 10,
+          },
+          {
+            label: 'Size: M / Color: Cream',
+            options: { Size: 'M', Color: 'Cream' },
+            price: 89.0,
+            stock: 12,
+          },
+          {
+            label: 'Size: S / Color: Mocha',
+            options: { Size: 'S', Color: 'Mocha' },
+            price: 89.0,
+            stock: 5,
+          },
+          {
+            label: 'Size: M / Color: Mocha',
+            options: { Size: 'M', Color: 'Mocha' },
+            price: 89.0,
+            stock: 7,
+          },
         ],
       },
     },
@@ -157,7 +237,7 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Floral Black',
+            label: 'Print: Floral Black',
             options: { Print: 'Floral Black' },
             price: 45.0,
             comparePrice: 65.0,
@@ -165,14 +245,14 @@ async function main() {
             isDefault: true,
           },
           {
-            label: 'Floral Ivory',
+            label: 'Print: Floral Ivory',
             options: { Print: 'Floral Ivory' },
             price: 45.0,
             comparePrice: 65.0,
             stock: 15,
           },
           {
-            label: 'Geometric Blue',
+            label: 'Print: Geometric Blue',
             options: { Print: 'Geometric Blue' },
             price: 45.0,
             comparePrice: 65.0,
@@ -202,15 +282,30 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Tan / S',
+            label: 'Color: Tan / Length: S',
             options: { Color: 'Tan', Length: 'S' },
             price: 38.0,
             stock: 18,
             isDefault: true,
           },
-          { label: 'Tan / M', options: { Color: 'Tan', Length: 'M' }, price: 38.0, stock: 22 },
-          { label: 'Black / M', options: { Color: 'Black', Length: 'M' }, price: 38.0, stock: 16 },
-          { label: 'Black / L', options: { Color: 'Black', Length: 'L' }, price: 38.0, stock: 12 },
+          {
+            label: 'Color: Tan / Length: M',
+            options: { Color: 'Tan', Length: 'M' },
+            price: 38.0,
+            stock: 22,
+          },
+          {
+            label: 'Color: Black / Length: M',
+            options: { Color: 'Black', Length: 'M' },
+            price: 38.0,
+            stock: 16,
+          },
+          {
+            label: 'Color: Black / Length: L',
+            options: { Color: 'Black', Length: 'L' },
+            price: 38.0,
+            stock: 12,
+          },
         ],
       },
     },
@@ -232,14 +327,19 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Natural',
+            label: 'Color: Natural',
             options: { Color: 'Natural' },
             price: 78.0,
             stock: 25,
             isDefault: true,
           },
-          { label: 'Black', options: { Color: 'Black' }, price: 78.0, stock: 30 },
-          { label: 'Forest Green', options: { Color: 'Forest Green' }, price: 78.0, stock: 12 },
+          { label: 'Color: Black', options: { Color: 'Black' }, price: 78.0, stock: 30 },
+          {
+            label: 'Color: Forest Green',
+            options: { Color: 'Forest Green' },
+            price: 78.0,
+            stock: 12,
+          },
         ],
       },
     },
@@ -261,8 +361,14 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'Cream', options: { Color: 'Cream' }, price: 69.0, stock: 14, isDefault: true },
-          { label: 'Black', options: { Color: 'Black' }, price: 69.0, stock: 18 },
+          {
+            label: 'Color: Cream',
+            options: { Color: 'Cream' },
+            price: 69.0,
+            stock: 14,
+            isDefault: true,
+          },
+          { label: 'Color: Black', options: { Color: 'Black' }, price: 69.0, stock: 18 },
         ],
       },
     },
@@ -287,50 +393,50 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'S / Oatmeal',
+            label: 'Size: S / Color: Oatmeal',
             options: { Size: 'S', Color: 'Oatmeal' },
             price: 120.0,
             stock: 10,
           },
           {
-            label: 'M / Oatmeal',
+            label: 'Size: M / Color: Oatmeal',
             options: { Size: 'M', Color: 'Oatmeal' },
             price: 120.0,
             stock: 14,
             isDefault: true,
           },
           {
-            label: 'L / Oatmeal',
+            label: 'Size: L / Color: Oatmeal',
             options: { Size: 'L', Color: 'Oatmeal' },
             price: 120.0,
             stock: 8,
           },
           {
-            label: 'S / Charcoal',
+            label: 'Size: S / Color: Charcoal',
             options: { Size: 'S', Color: 'Charcoal' },
             price: 120.0,
             stock: 12,
           },
           {
-            label: 'M / Charcoal',
+            label: 'Size: M / Color: Charcoal',
             options: { Size: 'M', Color: 'Charcoal' },
             price: 120.0,
             stock: 16,
           },
           {
-            label: 'L / Charcoal',
+            label: 'Size: L / Color: Charcoal',
             options: { Size: 'L', Color: 'Charcoal' },
             price: 120.0,
             stock: 6,
           },
           {
-            label: 'S / Dusty Rose',
+            label: 'Size: S / Color: Dusty Rose',
             options: { Size: 'S', Color: 'Dusty Rose' },
             price: 120.0,
             stock: 7,
           },
           {
-            label: 'M / Dusty Rose',
+            label: 'Size: M / Color: Dusty Rose',
             options: { Size: 'M', Color: 'Dusty Rose' },
             price: 120.0,
             stock: 9,
@@ -360,14 +466,14 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'S / Sand',
+            label: 'Size: S / Color: Sand',
             options: { Size: 'S', Color: 'Sand' },
             price: 145.0,
             comparePrice: 189.0,
             stock: 10,
           },
           {
-            label: 'M / Sand',
+            label: 'Size: M / Color: Sand',
             options: { Size: 'M', Color: 'Sand' },
             price: 145.0,
             comparePrice: 189.0,
@@ -375,21 +481,21 @@ async function main() {
             isDefault: true,
           },
           {
-            label: 'L / Sand',
+            label: 'Size: L / Color: Sand',
             options: { Size: 'L', Color: 'Sand' },
             price: 145.0,
             comparePrice: 189.0,
             stock: 8,
           },
           {
-            label: 'S / Olive',
+            label: 'Size: S / Color: Olive',
             options: { Size: 'S', Color: 'Olive' },
             price: 145.0,
             comparePrice: 189.0,
             stock: 9,
           },
           {
-            label: 'M / Olive',
+            label: 'Size: M / Color: Olive',
             options: { Size: 'M', Color: 'Olive' },
             price: 145.0,
             comparePrice: 189.0,
@@ -461,13 +567,13 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Space Grey',
+            label: 'Color: Space Grey',
             options: { Color: 'Space Grey' },
             price: 49.99,
             stock: 50,
             isDefault: true,
           },
-          { label: 'Silver', options: { Color: 'Silver' }, price: 49.99, stock: 35 },
+          { label: 'Color: Silver', options: { Color: 'Silver' }, price: 49.99, stock: 35 },
         ],
       },
     },
@@ -489,9 +595,15 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'Black', options: { Color: 'Black' }, price: 55.0, stock: 60, isDefault: true },
-          { label: 'Dark Brown', options: { Color: 'Dark Brown' }, price: 55.0, stock: 45 },
-          { label: 'Tan', options: { Color: 'Tan' }, price: 55.0, stock: 30 },
+          {
+            label: 'Color: Black',
+            options: { Color: 'Black' },
+            price: 55.0,
+            stock: 60,
+            isDefault: true,
+          },
+          { label: 'Color: Dark Brown', options: { Color: 'Dark Brown' }, price: 55.0, stock: 45 },
+          { label: 'Color: Tan', options: { Color: 'Tan' }, price: 55.0, stock: 30 },
         ],
       },
     },
@@ -517,32 +629,42 @@ async function main() {
       variants: {
         create: [
           {
-            label: '1m / Black',
+            label: 'Length: 1m / Color: Black',
             options: { Length: '1m', Color: 'Black' },
             price: 18.0,
             stock: 80,
             isDefault: true,
           },
           {
-            label: '1m / White',
+            label: 'Length: 1m / Color: White',
             options: { Length: '1m', Color: 'White' },
             price: 18.0,
             stock: 65,
           },
-          { label: '1m / Sage', options: { Length: '1m', Color: 'Sage' }, price: 18.0, stock: 40 },
           {
-            label: '2m / Black',
+            label: 'Length: 1m / Color: Sage',
+            options: { Length: '1m', Color: 'Sage' },
+            price: 18.0,
+            stock: 40,
+          },
+          {
+            label: 'Length: 2m / Color: Black',
             options: { Length: '2m', Color: 'Black' },
             price: 22.0,
             stock: 60,
           },
           {
-            label: '2m / White',
+            label: 'Length: 2m / Color: White',
             options: { Length: '2m', Color: 'White' },
             price: 22.0,
             stock: 50,
           },
-          { label: '2m / Sage', options: { Length: '2m', Color: 'Sage' }, price: 22.0, stock: 28 },
+          {
+            label: 'Length: 2m / Color: Sage',
+            options: { Length: '2m', Color: 'Sage' },
+            price: 22.0,
+            stock: 28,
+          },
         ],
       },
     },
@@ -565,13 +687,13 @@ async function main() {
       variants: {
         create: [
           {
-            label: '1×USB-C',
+            label: 'Port: 1×USB-C',
             options: { Port: '1×USB-C' },
             price: 39.0,
             stock: 55,
             isDefault: true,
           },
-          { label: '2×USB-C', options: { Port: '2×USB-C' }, price: 49.0, stock: 32 },
+          { label: 'Port: 2×USB-C', options: { Port: '2×USB-C' }, price: 49.0, stock: 32 },
         ],
       },
     },
@@ -594,7 +716,7 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Obsidian',
+            label: 'Color: Obsidian',
             options: { Color: 'Obsidian' },
             price: 129.0,
             comparePrice: 159.0,
@@ -602,14 +724,14 @@ async function main() {
             isDefault: true,
           },
           {
-            label: 'Pearl White',
+            label: 'Color: Pearl White',
             options: { Color: 'Pearl White' },
             price: 129.0,
             comparePrice: 159.0,
             stock: 35,
           },
           {
-            label: 'Slate Blue',
+            label: 'Color: Slate Blue',
             options: { Color: 'Slate Blue' },
             price: 129.0,
             comparePrice: 159.0,
@@ -636,8 +758,14 @@ async function main() {
       },
       variants: {
         create: [
-          { label: 'Black', options: { Finish: 'Black' }, price: 89.0, stock: 28, isDefault: true },
-          { label: 'Silver', options: { Finish: 'Silver' }, price: 89.0, stock: 24 },
+          {
+            label: 'Finish: Black',
+            options: { Finish: 'Black' },
+            price: 89.0,
+            stock: 28,
+            isDefault: true,
+          },
+          { label: 'Finish: Silver', options: { Finish: 'Silver' }, price: 89.0, stock: 24 },
         ],
       },
     },
@@ -659,14 +787,14 @@ async function main() {
       variants: {
         create: [
           {
-            label: 'Midnight Black',
+            label: 'Finish: Midnight Black',
             options: { Finish: 'Midnight Black' },
             price: 85.0,
             stock: 30,
             isDefault: true,
           },
           {
-            label: 'Brushed Silver',
+            label: 'Finish: Brushed Silver',
             options: { Finish: 'Brushed Silver' },
             price: 85.0,
             stock: 22,
@@ -696,50 +824,50 @@ async function main() {
       variants: {
         create: [
           {
-            label: '15 Pro / Clear',
+            label: 'Model: iPhone 15 Pro / Color: Clear',
             options: { Model: 'iPhone 15 Pro', Color: 'Clear' },
             price: 29.0,
             stock: 45,
             isDefault: true,
           },
           {
-            label: '15 Pro / Midnight',
+            label: 'Model: iPhone 15 Pro / Color: Midnight',
             options: { Model: 'iPhone 15 Pro', Color: 'Midnight' },
             price: 29.0,
             stock: 38,
           },
           {
-            label: '15 Pro / Starlight',
+            label: 'Model: iPhone 15 Pro / Color: Starlight',
             options: { Model: 'iPhone 15 Pro', Color: 'Starlight' },
             price: 29.0,
             stock: 30,
           },
           {
-            label: '15 Pro / Deep Purple',
+            label: 'Model: iPhone 15 Pro / Color: Deep Purple',
             options: { Model: 'iPhone 15 Pro', Color: 'Deep Purple' },
             price: 29.0,
             stock: 25,
           },
           {
-            label: '15 Pro Max / Clear',
+            label: 'Model: iPhone 15 Pro Max / Color: Clear',
             options: { Model: 'iPhone 15 Pro Max', Color: 'Clear' },
             price: 32.0,
             stock: 40,
           },
           {
-            label: '15 Pro Max / Midnight',
+            label: 'Model: iPhone 15 Pro Max / Color: Midnight',
             options: { Model: 'iPhone 15 Pro Max', Color: 'Midnight' },
             price: 32.0,
             stock: 35,
           },
           {
-            label: '15 Pro Max / Starlight',
+            label: 'Model: iPhone 15 Pro Max / Color: Starlight',
             options: { Model: 'iPhone 15 Pro Max', Color: 'Starlight' },
             price: 32.0,
             stock: 28,
           },
           {
-            label: '15 Pro Max / Deep Purple',
+            label: 'Model: iPhone 15 Pro Max / Color: Deep Purple',
             options: { Model: 'iPhone 15 Pro Max', Color: 'Deep Purple' },
             price: 32.0,
             stock: 18,
@@ -752,11 +880,11 @@ async function main() {
   console.log('✅ Created 8 products for Volt Tech');
 
   // ─── ĐƠN HÀNG — Cửa hàng Lumière ──────────────────────────────────────────────────────
-  const linenShirtV = linenShirt.variants.find((v) => v.label === 'M / Sand')!;
-  const trousersV = trousers.variants.find((v) => v.label === 'S / Black')!;
-  const toteV = canvasTote.variants.find((v) => v.label === 'Black')!;
-  const sweaterV = merinoSweater.variants.find((v) => v.label === 'M / Oatmeal')!;
-  const trenchV = trenchCoat.variants.find((v) => v.label === 'M / Sand')!;
+  const linenShirtV = linenShirt.variants.find((v) => v.label === 'Size: M / Color: Sand')!;
+  const trousersV = trousers.variants.find((v) => v.label === 'Size: S / Color: Black')!;
+  const toteV = canvasTote.variants.find((v) => v.label === 'Color: Black')!;
+  const sweaterV = merinoSweater.variants.find((v) => v.label === 'Size: M / Color: Oatmeal')!;
+  const trenchV = trenchCoat.variants.find((v) => v.label === 'Size: M / Color: Sand')!;
 
   // ORD-2025-001 — ĐÃ GIAO HÀNG (COD, quá 30 ngày → không còn đánh giá được)
   await prisma.order.create({
@@ -894,7 +1022,7 @@ async function main() {
             priceAtPurchase: 59.0,
             productName: linenShirt.name,
             productImage: linenShirt.imageUrl,
-            variantLabel: 'L / White',
+            variantLabel: 'Size: L / Color: White',
             productId: linenShirt.id,
           },
         ],
@@ -926,7 +1054,7 @@ async function main() {
             priceAtPurchase: 89.0,
             productName: trousers.name,
             productImage: trousers.imageUrl,
-            variantLabel: 'M / Cream',
+            variantLabel: 'Size: M / Color: Cream',
             productId: trousers.id,
           },
         ],
@@ -956,7 +1084,7 @@ async function main() {
             priceAtPurchase: 120.0,
             productName: merinoSweater.name,
             productImage: merinoSweater.imageUrl,
-            variantLabel: 'S / Dusty Rose',
+            variantLabel: 'Size: S / Color: Dusty Rose',
             productId: merinoSweater.id,
           },
           {
@@ -964,7 +1092,7 @@ async function main() {
             priceAtPurchase: 145.0,
             productName: trenchCoat.name,
             productImage: trenchCoat.imageUrl,
-            variantLabel: 'L / Sand',
+            variantLabel: 'Size: L / Color: Sand',
             productId: trenchCoat.id,
           },
         ],
@@ -975,12 +1103,12 @@ async function main() {
   console.log('✅ Created 6 orders for Lumière');
 
   // ─── ĐƠN HÀNG — Cửa hàng Volt Tech ────────────────────────────────────────────────────
-  const hubV = usbHub.variants.find((v) => v.label === 'Space Grey')!;
-  const matV = deskMat.variants.find((v) => v.label === 'Black')!;
-  const cableV = braidedCable.variants.find((v) => v.label === '2m / Black')!;
-  const chargerV = ganCharger.variants.find((v) => v.label === '2×USB-C')!;
-  const earbudsV = probuds.variants.find((v) => v.label === 'Obsidian')!;
-  const standV = magStand.variants.find((v) => v.label === 'Midnight Black')!;
+  const hubV = usbHub.variants.find((v) => v.label === 'Color: Space Grey')!;
+  const matV = deskMat.variants.find((v) => v.label === 'Color: Black')!;
+  const cableV = braidedCable.variants.find((v) => v.label === 'Length: 2m / Color: Black')!;
+  const chargerV = ganCharger.variants.find((v) => v.label === 'Port: 2×USB-C')!;
+  const earbudsV = probuds.variants.find((v) => v.label === 'Color: Obsidian')!;
+  const standV = magStand.variants.find((v) => v.label === 'Finish: Midnight Black')!;
 
   // ORD-2025-007 — ĐÃ GIAO HÀNG (giỏ hàng lớn)
   await prisma.order.create({
@@ -1023,7 +1151,7 @@ async function main() {
             priceAtPurchase: 18.0,
             productName: braidedCable.name,
             productImage: braidedCable.imageUrl,
-            variantLabel: '1m / White',
+            variantLabel: 'Length: 1m / Color: White',
             productId: braidedCable.id,
           },
         ],
@@ -1133,7 +1261,7 @@ async function main() {
             priceAtPurchase: 49.99,
             productName: usbHub.name,
             productImage: usbHub.imageUrl,
-            variantLabel: 'Silver',
+            variantLabel: 'Color: Silver',
             productId: usbHub.id,
           },
         ],

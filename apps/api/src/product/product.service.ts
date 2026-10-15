@@ -8,13 +8,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryProvider } from '../upload/cloudinary.provider';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import {
-  CreateVariantDto,
-  CreateAttributeDto,
-  MAX_ATTRIBUTES,
-  MAX_VARIANTS,
-} from './dto/product-variant.dto';
+import { CreateVariantDto, MAX_VARIANTS } from './dto/product-variant.dto';
 import { parseJsonArray } from './product-payload';
+import { deriveProductOptions } from './product-options';
 
 @Injectable()
 export class ProductService {
@@ -28,32 +24,24 @@ export class ProductService {
     shopId: string,
     dto: CreateProductDto,
     images?: Express.Multer.File[],
-    attributesRaw?: string,
-    variantsRaw?: string,
   ) {
     const shop = await this.prisma.shop.findUnique({ where: { id: shopId } });
     if (!shop || shop.ownerId !== userId) {
       throw new ForbiddenException('You do not own this shop');
     }
 
-    const { attributes: attrField, variants: varField, ...productData } = dto;
-    const attributes =
-      parseJsonArray(
-        attributesRaw ?? attrField,
-        CreateAttributeDto,
-        'attributes',
-        MAX_ATTRIBUTES,
-      ) ?? [];
+    const { variants: variantsRaw, ...productData } = dto;
     const variants = parseJsonArray(
-      variantsRaw ?? varField,
+      variantsRaw,
       CreateVariantDto,
       'variants',
       MAX_VARIANTS,
     );
     // Sản phẩm phải có ít nhất một biến thể (variant)
-    if (!variants || variants.length === 0) {
+    if (!variants) {
       throw new BadRequestException('Product must have at least one variant');
     }
+    const derived = deriveProductOptions(variants);
     await this.assertCategoryInShop(productData.categoryId, shopId);
 
     // Chỉ upload sau khi dữ liệu hợp lệ → không để lại ảnh mồ côi trên Cloudinary
@@ -66,13 +54,10 @@ export class ProductService {
         shopId,
         imageUrl: imageUrls[0] || null, // Lấy ảnh đầu tiên làm ảnh đại diện chính
         images: imageUrls,
-        attributes: {
-          create: attributes.map((a) => ({ name: a.name, options: a.options })),
-        },
+        attributes: { create: derived.attributes },
         variants: {
-          create: variants.map((v) => ({
-            label: v.label,
-            options: v.options,
+          create: variants.map((v, i) => ({
+            ...derived.variants[i],
             price: v.price,
             stock: v.stock,
             sku: v.sku ?? null,
@@ -85,9 +70,10 @@ export class ProductService {
     return this.addTotalStock(product);
   }
 
+  // Storefront: như findOne, shop ngừng hoạt động thì không liệt kê sản phẩm
   async findAllByShop(shopId: string) {
     const products = await this.prisma.product.findMany({
-      where: { shopId, isVisible: true },
+      where: { shopId, isVisible: true, shop: { isActive: true } },
       include: { category: true, attributes: true, variants: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -122,8 +108,6 @@ export class ProductService {
     id: string,
     dto: UpdateProductDto,
     images?: Express.Multer.File[],
-    attributesRaw?: string,
-    variantsRaw?: string,
   ) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -133,22 +117,15 @@ export class ProductService {
       throw new ForbiddenException('Access denied');
     }
 
-    const { attributes: attrField, variants: varField, ...productData } = dto;
-    const attributes = parseJsonArray(
-      attributesRaw ?? attrField,
-      CreateAttributeDto,
-      'attributes',
-      MAX_ATTRIBUTES,
-    );
+    const { variants: variantsRaw, ...productData } = dto;
+    // Không gửi variants (vd. chỉ bật/tắt hiển thị) → giữ nguyên biến thể và thuộc tính
     const variants = parseJsonArray(
-      variantsRaw ?? varField,
+      variantsRaw,
       CreateVariantDto,
       'variants',
       MAX_VARIANTS,
     );
-    if (variants && variants.length === 0) {
-      throw new BadRequestException('Product must have at least one variant');
-    }
+    const derived = variants && deriveProductOptions(variants);
 
     // Chỉ được sửa biến thể của chính sản phẩm này — id do client gửi lên, trước đây không kiểm tra
     // nên người bán này sửa được giá/tồn kho biến thể của shop khác
@@ -167,20 +144,15 @@ export class ProductService {
 
     // Một transaction: lỗi giữa chừng không để lại sản phẩm nửa cũ nửa mới
     const updated = await this.prisma.$transaction(async (tx) => {
-      if (attributes) {
+      if (variants && derived) {
+        // Thuộc tính luôn dựng lại từ biến thể
         await tx.productAttribute.deleteMany({ where: { productId: id } });
-        if (attributes.length > 0) {
+        if (derived.attributes.length > 0) {
           await tx.productAttribute.createMany({
-            data: attributes.map((a) => ({
-              name: a.name,
-              options: a.options,
-              productId: id,
-            })),
+            data: derived.attributes.map((a) => ({ ...a, productId: id })),
           });
         }
-      }
 
-      if (variants) {
         // Biến thể có trong DB nhưng không còn trong danh sách gửi lên → xoá
         // (OrderItem giữ snapshot nhãn/giá; variantId tự về null)
         const keptIds = variants
@@ -189,10 +161,9 @@ export class ProductService {
         await tx.productVariant.deleteMany({
           where: { productId: id, id: { notIn: keptIds } },
         });
-        for (const v of variants) {
+        for (const [i, v] of variants.entries()) {
           const data = {
-            label: v.label,
-            options: v.options,
+            ...derived.variants[i],
             price: v.price,
             stock: v.stock,
             sku: v.sku ?? null,

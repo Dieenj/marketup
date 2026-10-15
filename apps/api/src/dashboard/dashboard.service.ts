@@ -57,12 +57,16 @@ export class DashboardService {
       }),
     ]);
 
+    // Decimal ra JSON là chuỗi → đổi sang number như revenueTrend (FE nhận number)
     return {
       totalOrders,
-      totalRevenue: totalRevenueAgg._sum.totalAmount || 0,
+      totalRevenue: Number(totalRevenueAgg._sum.totalAmount ?? 0),
       totalProducts,
       pendingOrders,
-      recentOrders,
+      recentOrders: recentOrders.map((order) => ({
+        ...order,
+        totalAmount: Number(order.totalAmount),
+      })),
       revenueTrend: buildRevenueTrend(recentDeliveries, now, TREND_DAYS),
     };
   }

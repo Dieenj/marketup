@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChevronLeft, Mail, Phone } from 'lucide-react';
@@ -48,6 +49,7 @@ export default function OrderDetailClient({
   const sessionToken = useBuyerSession((s) => s.token);
   const sessionEmail = useBuyerSession((s) => s.email);
   const signOut = useBuyerSession((s) => s.signOut);
+  const router = useRouter();
 
   // Ưu tiên link (?t=); link hết hạn/không hợp lệ → dùng phiên đăng nhập nếu có
   const linkQuery = useQuery({
@@ -70,8 +72,17 @@ export default function OrderDetailClient({
     if (!usingLink && status === 401) signOut();
   }, [usingLink, status, signOut]);
 
+  // Phiên người mua dùng chung mọi shop → đơn của shop khác mở dưới slug này thì chuyển về đúng shop
+  const orderSlug = query.data?.shop.slug;
+  const wrongShop = !!orderSlug && orderSlug !== slug;
+  useEffect(() => {
+    if (!wrongShop) return;
+    const search = usingLink ? `?t=${encodeURIComponent(linkToken!)}` : '';
+    router.replace(`/shop/${orderSlug}/orders/${encodeURIComponent(orderNumber)}${search}`);
+  }, [wrongShop, orderSlug, orderNumber, usingLink, linkToken, router]);
+
   // Phiên lưu trong localStorage → chỉ biết sau khi hydrate
-  if (!hydrated || (token && query.isPending)) {
+  if (!hydrated || (token && query.isPending) || wrongShop) {
     return <OrderDetailSkeleton slug={slug} />;
   }
 

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import {
   Dialog,
   DialogContent,
@@ -111,7 +112,6 @@ export default function EditProductDialog({
       setVariants(
         product.variants?.map((v) => ({
           id: v.id,
-          label: v.label,
           options: v.options as Record<string, string>,
           price: v.price ? String(v.price) : '',
           stock: String(v.stock),
@@ -138,11 +138,12 @@ export default function EditProductDialog({
   // ─── Logic lưu sản phẩm (Submit) ───────────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (values: ProductFormValues) => {
-      const formData = buildProductFormData(values, { attributes, variants, images });
+      const formData = buildProductFormData(values, { variants, images });
       return api.patch(`/products/${product!.id}`, formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products', shopId] });
+      queryClient.invalidateQueries({ queryKey: dashboardStatsQuery(shopId).queryKey });
       toast.success('Product updated successfully');
       onOpenChange(false);
     },

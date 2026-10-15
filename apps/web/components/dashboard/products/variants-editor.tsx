@@ -6,6 +6,12 @@ import { Trash2, X, Plus, Sparkles, DollarSign, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+// Cùng giới hạn với API (apps/api/src/product/product-options.ts) — báo ngay trong form thay vì đợi lỗi 400
+const MAX_ATTRIBUTES = 10;
+const MAX_OPTIONS_PER_ATTRIBUTE = 50;
+const MAX_NAME_LENGTH = 50;
+
+// Nhóm lựa chọn chỉ dùng để sinh biến thể trong form; API tự suy ra thuộc tính từ options của biến thể
 export interface AttributeDef {
   name: string;
   options: string[];
@@ -13,12 +19,25 @@ export interface AttributeDef {
 
 export interface VariantDef {
   id?: string;
-  label: string;
   options: Record<string, string>;
   price: string;
   stock: string;
   sku: string;
 }
+
+// Cùng định dạng nhãn API sinh ra (apps/api/src/product/product-options.ts): "Size: M / Color: Red"
+function formatVariantLabel(attributes: AttributeDef[], options: Record<string, string>) {
+  const entries = attributes.length
+    ? attributes.filter((a) => a.name in options).map((a) => [a.name, options[a.name]])
+    : Object.entries(options);
+  return entries.length
+    ? entries.map(([name, value]) => `${name}: ${value}`).join(' / ')
+    : 'Default';
+}
+
+// Khoá của một tổ hợp lựa chọn — giữ giá/tồn kho/id của biến thể cũ khi sinh lại
+const comboKey = (attributes: AttributeDef[], options: Record<string, string>) =>
+  JSON.stringify(attributes.map((a) => options[a.name] ?? null));
 
 function cartesian(arrays: string[][]): string[][] {
   return arrays.reduce<string[][]>(
@@ -26,6 +45,15 @@ function cartesian(arrays: string[][]): string[][] {
     [[]],
   );
 }
+
+// Mọi tổ hợp lựa chọn, giá/tồn kho để trống
+const combosOf = (attributes: AttributeDef[]): VariantDef[] =>
+  cartesian(attributes.map((a) => a.options)).map((combo) => ({
+    options: Object.fromEntries(attributes.map((a, i) => [a.name, combo[i]])),
+    price: '',
+    stock: '0',
+    sku: '',
+  }));
 
 interface VariantsEditorProps {
   attributes: AttributeDef[];
@@ -41,11 +69,18 @@ export default function VariantsEditor({
   setVariants,
 }: VariantsEditorProps) {
   const [newAttrName, setNewAttrName] = useState('');
+  const [attrError, setAttrError] = useState('');
   const [optionInputs, setOptionInputs] = useState<Record<number, string>>({});
+  const [optionErrors, setOptionErrors] = useState<Record<number, string>>({});
 
   const addAttribute = () => {
-    if (!newAttrName.trim()) return;
-    const updated = [...attributes, { name: newAttrName.trim(), options: [] }];
+    const name = newAttrName.trim();
+    if (!name) return;
+    if (attributes.some((a) => a.name === name)) {
+      setAttrError(`"${name}" is already an attribute.`);
+      return;
+    }
+    const updated = [...attributes, { name, options: [] }];
     setNewAttrName('');
     setAttributes(updated);
     setVariants([]);
@@ -54,38 +89,50 @@ export default function VariantsEditor({
   const removeAttribute = (i: number) => {
     setAttributes(attributes.filter((_, idx) => idx !== i));
     setVariants([]);
+    // Ô nhập theo chỉ số thuộc tính → xoá một thuộc tính làm lệch chỉ số
+    setOptionInputs({});
+    setOptionErrors({});
+    setAttrError('');
   };
 
   const addOption = (attrIdx: number) => {
     const val = (optionInputs[attrIdx] || '').trim();
     if (!val) return;
+    const attr = attributes[attrIdx];
+    if (attr.options.includes(val)) {
+      setOptionErrors((prev) => ({ ...prev, [attrIdx]: `${attr.name} already has "${val}".` }));
+      return;
+    }
     const updated = attributes.map((a, i) =>
       i === attrIdx ? { ...a, options: [...a.options, val] } : a,
     );
     setOptionInputs((prev) => ({ ...prev, [attrIdx]: '' }));
     setAttributes(updated);
+    // API suy ra lựa chọn từ biến thể → thêm ngay biến thể cho lựa chọn mới, không thì lưu sẽ mất nó
+    if (variants.length > 0) {
+      setVariants([...variants, ...combosOf(updated).filter((v) => v.options[attr.name] === val)]);
+    }
   };
 
   const removeOption = (attrIdx: number, optIdx: number) => {
+    const { name, options } = attributes[attrIdx];
     const updated = attributes.map((a, i) =>
       i === attrIdx ? { ...a, options: a.options.filter((_, j) => j !== optIdx) } : a,
     );
     setAttributes(updated);
+    // Biến thể còn lựa chọn này thì API vẫn suy ra nó → bỏ luôn các biến thể đó
+    setVariants(variants.filter((v) => v.options[name] !== options[optIdx]));
+    setOptionErrors((prev) => ({ ...prev, [attrIdx]: '' }));
   };
 
   const generateVariants = () => {
     if (attributes.length === 0 || attributes.some((a) => a.options.length === 0)) return;
-    const combos = cartesian(attributes.map((a) => a.options));
-    const newVariants: VariantDef[] = combos.map((combo) => {
-      const options: Record<string, string> = {};
-      attributes.forEach((a, i) => {
-        options[a.name] = combo[i];
-      });
-      const label = attributes.map((a, i) => `${a.name}: ${combo[i]}`).join(' / ');
-      const existing = variants.find((v) => v.label === label);
-      return existing || { label, options, price: '', stock: '0', sku: '' };
-    });
-    setVariants(newVariants);
+    setVariants(
+      combosOf(attributes).map((combo) => {
+        const key = comboKey(attributes, combo.options);
+        return variants.find((v) => comboKey(attributes, v.options) === key) ?? combo;
+      }),
+    );
   };
 
   const updateVariant = (i: number, field: keyof VariantDef, value: string) => {
@@ -158,66 +205,88 @@ export default function VariantsEditor({
                 </div>
 
                 {/* Thêm tùy chọn mới */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={
-                      attr.name.toLowerCase().includes('color')
-                        ? 'e.g. Red, Blue, Black'
-                        : attr.name.toLowerCase().includes('size')
-                          ? 'e.g. S, M, L, XL'
-                          : 'Add option...'
-                    }
-                    className="h-7 text-xs"
-                    value={optionInputs[i] || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setOptionInputs((p) => ({ ...p, [i]: e.target.value }))
-                    }
-                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addOption(i);
+                {attr.options.length < MAX_OPTIONS_PER_ATTRIBUTE ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder={
+                        attr.name.toLowerCase().includes('color')
+                          ? 'e.g. Red, Blue, Black'
+                          : attr.name.toLowerCase().includes('size')
+                            ? 'e.g. S, M, L, XL'
+                            : 'Add option...'
                       }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-7 px-3 text-xs shrink-0"
-                    onClick={() => addOption(i)}
-                  >
-                    Add
-                  </Button>
-                </div>
+                      className="h-7 text-xs"
+                      maxLength={MAX_NAME_LENGTH}
+                      aria-invalid={!!optionErrors[i]}
+                      value={optionInputs[i] || ''}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setOptionInputs((p) => ({ ...p, [i]: e.target.value }));
+                        setOptionErrors((p) => ({ ...p, [i]: '' }));
+                      }}
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addOption(i);
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-3 text-xs shrink-0"
+                      onClick={() => addOption(i)}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Up to {MAX_OPTIONS_PER_ATTRIBUTE} options per attribute.
+                  </p>
+                )}
+                {optionErrors[i] && <p className="text-xs text-destructive">{optionErrors[i]}</p>}
               </div>
             ))}
           </div>
         )}
 
         {/* Nhập thông tin thuộc tính mới */}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Attribute name (e.g. Color, Size, Material)"
-            className="h-9 text-sm"
-            value={newAttrName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewAttrName(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addAttribute();
-              }
-            }}
-          />
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-9 px-3 shrink-0 gap-1.5"
-            onClick={addAttribute}
-          >
-            <Plus className="h-3.5 w-3.5" /> Add
-          </Button>
-        </div>
+        {attributes.length < MAX_ATTRIBUTES ? (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Attribute name (e.g. Color, Size, Material)"
+              className="h-9 text-sm"
+              maxLength={MAX_NAME_LENGTH}
+              aria-invalid={!!attrError}
+              value={newAttrName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setNewAttrName(e.target.value);
+                setAttrError('');
+              }}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addAttribute();
+                }
+              }}
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-9 px-3 shrink-0 gap-1.5"
+              onClick={addAttribute}
+            >
+              <Plus className="h-3.5 w-3.5" /> Add
+            </Button>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Up to {MAX_ATTRIBUTES} attributes per product.
+          </p>
+        )}
+        {attrError && <p className="text-xs text-destructive">{attrError}</p>}
       </div>
 
       {/* Nút tự động tạo các biến thể sản phẩm */}
@@ -249,8 +318,11 @@ export default function VariantsEditor({
                 key={i}
                 className="grid grid-cols-[1fr_90px_90px] gap-2 items-center rounded-lg border border-border bg-muted/20 px-3 py-2"
               >
-                <span className="text-xs font-medium truncate" title={v.label}>
-                  {v.label}
+                <span
+                  className="text-xs font-medium truncate"
+                  title={formatVariantLabel(attributes, v.options)}
+                >
+                  {formatVariantLabel(attributes, v.options)}
                 </span>
                 <Input
                   type="number"

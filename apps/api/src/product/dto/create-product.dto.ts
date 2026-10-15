@@ -11,7 +11,8 @@ const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
 // Gửi dạng multipart (kèm ảnh) → mọi trường đều là chuỗi;
-// attributes/variants là JSON, được kiểm tra chi tiết trong ProductService (parseProductOptions)
+// variants là JSON, được kiểm tra chi tiết trong ProductService (parseJsonArray + deriveProductOptions);
+// thuộc tính và nhãn biến thể do API suy ra từ options của các biến thể
 export class CreateProductDto {
   @Transform(trim)
   @IsString()
@@ -35,10 +36,6 @@ export class CreateProductDto {
     value === 'true' ? true : value === 'false' ? false : value,
   )
   isVisible?: boolean;
-
-  @IsString()
-  @IsOptional()
-  attributes?: string;
 
   @IsString()
   @IsOptional()

@@ -45,14 +45,14 @@ Ký hiệu cột **Quyền**:
 
 ## Sản phẩm
 
-| Method | Path                            | Quyền  | Mô tả                                                                                      |
-| ------ | ------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
-| POST   | `/products/:shopId`             | seller | Multipart: các trường sản phẩm, `images[]` (≤ 10), `attributes` và `variants` (chuỗi JSON) |
-| GET    | `/products/shop/:shopId`        | —      | Sản phẩm đang hiển thị                                                                     |
-| GET    | `/products/shop/:shopId/manage` | seller | Mọi sản phẩm, kể cả đang ẩn                                                                |
-| GET    | `/products/:id`                 | —      | Chi tiết; sản phẩm ẩn hoặc shop ngừng hoạt động thì 404                                    |
-| PATCH  | `/products/:id`                 | seller | Multipart, giống POST                                                                      |
-| DELETE | `/products/:id`                 | seller | Đã có đơn thì chỉ ẩn, chưa có thì xoá hẳn                                                  |
+| Method | Path                            | Quyền  | Mô tả                                                                                                                                           |
+| ------ | ------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/products/:shopId`             | seller | Multipart: các trường sản phẩm, `images[]` (≤ 10), `variants` (chuỗi JSON). Thuộc tính và nhãn biến thể do API suy ra từ `options` của biến thể |
+| GET    | `/products/shop/:shopId`        | —      | Sản phẩm đang hiển thị                                                                                                                          |
+| GET    | `/products/shop/:shopId/manage` | seller | Mọi sản phẩm, kể cả đang ẩn                                                                                                                     |
+| GET    | `/products/:id`                 | —      | Chi tiết; sản phẩm ẩn hoặc shop ngừng hoạt động thì 404                                                                                         |
+| PATCH  | `/products/:id`                 | seller | Multipart, giống POST                                                                                                                           |
+| DELETE | `/products/:id`                 | seller | Đã có đơn thì chỉ ẩn, chưa có thì xoá hẳn                                                                                                       |
 
 ## Upload
 

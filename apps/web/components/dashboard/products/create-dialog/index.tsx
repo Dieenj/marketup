@@ -5,6 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api, { getErrorMessage } from '@/lib/api-client';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import { useCategories } from '@/hooks/use-categories';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
@@ -75,11 +76,12 @@ export default function CreateProductDialog({
   // ─── Logic lưu sản phẩm (Submit) ──────────────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (values: ProductBasicValues) => {
-      const formData = buildProductFormData(values, { attributes, variants, images });
+      const formData = buildProductFormData(values, { variants, images });
       return api.post(`/products/${shopId}`, formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products', shopId] });
+      queryClient.invalidateQueries({ queryKey: dashboardStatsQuery(shopId).queryKey });
       toast.success('Product created successfully!');
       resetAll();
       onOpenChange(false);

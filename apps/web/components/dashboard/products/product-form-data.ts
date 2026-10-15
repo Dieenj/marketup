@@ -1,11 +1,15 @@
 import * as z from 'zod';
-import type { AttributeDef, VariantDef } from './variants-editor';
+import type { VariantDef } from './variants-editor';
 import { UserFacingError } from '@/lib/api-client';
 
 // Trường cơ bản của sản phẩm — dialog tạo dùng trực tiếp, dialog sửa mở rộng thêm isVisible
 export const productSchema = z.object({
-  name: z.string().min(2, 'Product name is required (min 2 characters)'),
-  description: z.string().optional(),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Product name is required (min 2 characters)')
+    .max(200, 'Product name must be at most 200 characters'),
+  description: z.string().max(5000, 'Description must be at most 5000 characters').optional(),
   categoryId: z.string().optional(),
 });
 
@@ -18,7 +22,7 @@ function serializeVariants(variants: VariantDef[]) {
 
   const normalized = variants.map((v) => ({
     ...(v.id && { id: v.id }),
-    label: v.label,
+    // Nhãn và thuộc tính do API suy ra từ options
     options: v.options,
     stock: Number(v.stock) || 0,
     price: v.price ? Number(v.price) : undefined,
@@ -34,11 +38,7 @@ function serializeVariants(variants: VariantDef[]) {
 // FormData (multipart, kèm ảnh) cho POST /products/:shopId và PATCH /products/:id
 export function buildProductFormData(
   values: ProductBasicValues & { isVisible?: boolean },
-  {
-    attributes,
-    variants,
-    images,
-  }: { attributes: AttributeDef[]; variants: VariantDef[]; images: File[] },
+  { variants, images }: { variants: VariantDef[]; images: File[] },
 ) {
   const variantsPayload = serializeVariants(variants);
 
@@ -46,10 +46,10 @@ export function buildProductFormData(
   formData.append('name', values.name);
   // Luôn gửi mô tả để khi sửa có thể xoá trắng mô tả cũ
   formData.append('description', values.description ?? '');
-  if (values.categoryId) formData.append('categoryId', values.categoryId);
+  // Luôn gửi danh mục: chuỗi rỗng = không có danh mục (khi sửa: bỏ danh mục cũ)
+  formData.append('categoryId', values.categoryId ?? '');
   if (values.isVisible !== undefined) formData.append('isVisible', String(values.isVisible));
   images.forEach((img) => formData.append('images', img));
-  formData.append('attributes', JSON.stringify(attributes));
   formData.append('variants', JSON.stringify(variantsPayload));
   return formData;
 }

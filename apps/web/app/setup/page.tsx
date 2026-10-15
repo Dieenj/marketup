@@ -35,7 +35,11 @@ import StorefrontPreview from '@/components/shop/storefront-preview';
 import { slugify } from '@/lib/slugify';
 
 const setupSchema = z.object({
-  name: z.string().min(2, 'Shop name must be at least 2 characters'),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Shop name must be at least 2 characters')
+    .max(100, 'Shop name must be at most 100 characters'),
   slug: z
     .string()
     .min(3, 'URL must be at least 3 characters')
@@ -45,7 +49,7 @@ const setupSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       'Use lowercase letters and numbers, separated by single hyphens',
     ),
-  description: z.string().optional(),
+  description: z.string().max(1000, 'Description must be at most 1000 characters').optional(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   primaryColor: z.string(),
 });

@@ -55,13 +55,13 @@ Quy ước giao diện:
 
 ### 3.2 Nhóm route
 
-| Nhóm          | Đường dẫn                                                                    | Render                                                                             |
-| ------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `(auth)`      | `/login`, `/register`                                                        | Client                                                                             |
-| `setup`       | `/setup`                                                                     | Client, cần đăng nhập                                                              |
-| `(dashboard)` | `/dashboard`, `/products`, `/categories`, `/orders`, `/reviews`, `/settings` | Client; layout chuyển về `/login` nếu chưa đăng nhập, về `/setup` nếu chưa có shop |
-| `shop/[slug]` | storefront, trang sản phẩm                                                   | **SSR** + `generateMetadata` (Open Graph)                                          |
-| `shop/[slug]` | `checkout`, `order-success`, `orders`, `orders/[orderNumber]`                | Client; trang đơn đặt `noindex`                                                    |
+| Nhóm          | Đường dẫn                                                     | Render                                                                             |
+| ------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `(auth)`      | `/login`, `/register`                                         | Client                                                                             |
+| `setup`       | `/setup`                                                      | Client, cần đăng nhập                                                              |
+| `(dashboard)` | `/dashboard`, `/products`, `/orders`, `/reviews`, `/settings` | Client; layout chuyển về `/login` nếu chưa đăng nhập, về `/setup` nếu chưa có shop |
+| `shop/[slug]` | storefront, trang sản phẩm                                    | **SSR** + `generateMetadata` (Open Graph)                                          |
+| `shop/[slug]` | `checkout`, `order-success`, `orders`, `orders/[orderNumber]` | Client; trang đơn đặt `noindex`                                                    |
 
 ### 3.3 Storefront SSR
 
@@ -134,7 +134,7 @@ Token của đơn cố ý **không** phải phiên đăng nhập: ai cũng có t
 ### 4.3 Kiểm tra dữ liệu và lỗi
 
 - `ValidationPipe` toàn cục với `whitelist` + `forbidNonWhitelisted`: trường lạ bị từ chối với 400. DTO dùng class-validator; email được trim và chuyển chữ thường (`common/email.ts`).
-- Sản phẩm gửi dạng multipart, nên `attributes`/`variants` là chuỗi JSON; `product/product-payload.ts` parse và validate từng phần tử.
+- Sản phẩm gửi dạng multipart, nên `variants` là chuỗi JSON; `product/product-payload.ts` parse và validate từng phần tử. Client chỉ gửi `options` của từng biến thể; `product/product-options.ts` suy ra thuộc tính và nhãn biến thể (trùng tổ hợp hoặc lệch tập thuộc tính → 400).
 - `PrismaExceptionFilter` đổi lỗi ràng buộc của Prisma thành mã HTTP dễ hiểu: trùng unique → 409, không tìm thấy bản ghi → 404, khoá ngoại sai → 400.
 - Thông báo lỗi bằng tiếng Anh; frontend hiển thị nguyên văn `message` (`getErrorMessage`).
 

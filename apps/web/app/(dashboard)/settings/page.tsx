@@ -30,8 +30,12 @@ import { DEFAULT_SHOP_COLOR } from '@/lib/color-utils';
 import PageHeader from '@/components/dashboard/page-header';
 
 const shopSchema = z.object({
-  name: z.string().min(2, 'Shop name is required'),
-  description: z.string().optional(),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Shop name is required')
+    .max(100, 'Shop name must be at most 100 characters'),
+  description: z.string().max(1000, 'Description must be at most 1000 characters').optional(),
   bannerUrl: z.string().optional(),
   bannerFocusX: z.number().int().min(0).max(100),
   bannerFocusY: z.number().int().min(0).max(100),
@@ -39,7 +43,7 @@ const shopSchema = z.object({
   primaryColor: z.string(),
   contactEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   contactPhone: z.string().optional(),
-  address: z.string().optional(),
+  address: z.string().max(255, 'Address must be at most 255 characters').optional(),
 });
 
 type ShopForm = z.infer<typeof shopSchema>;

@@ -15,7 +15,7 @@ export interface CategoryInput {
 
 const categoriesQueryKey = (shopId: string | undefined) => ['categories', shopId] as const;
 
-// Danh mục của shop — dùng chung cho trang Categories, trang Products và các dialog sản phẩm
+// Danh mục của shop — dùng chung cho trang Products và các dialog sản phẩm
 export function useCategories(
   shopId: string | undefined,
   { enabled = true }: { enabled?: boolean } = {},

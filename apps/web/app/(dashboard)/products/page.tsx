@@ -8,6 +8,7 @@ import { Plus, PackageOpen, Tag, Settings2, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FilterChip, filterChipVariants } from '@/components/ui/filter-chip';
 import { cn } from '@/lib/utils';
+import { dashboardStatsQuery } from '@/lib/dashboard-stats';
 import { toast } from 'sonner';
 import CreateProductDialog from '@/components/dashboard/products/create-dialog';
 import EditProductDialog from '@/components/dashboard/products/edit-product-dialog';
@@ -25,14 +26,16 @@ import ProductCard, {
   ProductCardSkeleton,
 } from '@/components/dashboard/products/product-card';
 import ManageCategoryDialog from '@/components/dashboard/products/manage-category-dialog';
+import DeleteCategoryDialog from '@/components/dashboard/categories/delete-category-dialog';
 import { useMyShop } from '@/hooks/use-my-shop';
-import { useCategories, useDeleteCategory } from '@/hooks/use-categories';
+import { useCategories, type Category } from '@/hooks/use-categories';
 
 export default function ProductsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [deleteCategory, setDeleteCategory] = useState<Category | null>(null);
 
   // State phục vụ cho Tìm kiếm, Bộ lọc và Sắp xếp
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,6 +66,7 @@ export default function ProductsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['products', shop?.id] });
+      queryClient.invalidateQueries({ queryKey: dashboardStatsQuery(shop?.id).queryKey });
       toast.success(data.isVisible ? 'Product is now visible' : 'Product is now hidden');
     },
     onError: () => {
@@ -73,7 +77,6 @@ export default function ProductsPage() {
   // Bỏ chọn bộ lọc nếu danh mục đang chọn vừa bị xoá
   const clearDeletedSelection = (id: string) =>
     setSelectedCategoryId((current) => (current === id ? null : current));
-  const deleteCategoryMutation = useDeleteCategory(shop?.id, { onSuccess: clearDeletedSelection });
 
   // Tính toán số liệu thống kê chung (Stat Cards)
   const totalProductsCount = products?.length ?? 0;
@@ -192,13 +195,8 @@ export default function ProductsPage() {
               <button
                 type="button"
                 aria-label={`Delete category ${cat.name}`}
-                disabled={deleteCategoryMutation.isPending}
                 className="mr-1.5 flex items-center justify-center rounded-full bg-primary-foreground/20 p-0.5 transition-colors hover:bg-primary-foreground/35 cursor-pointer outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
-                onClick={() => {
-                  if (confirm(`Delete category "${cat.name}"?`)) {
-                    deleteCategoryMutation.mutate(cat.id);
-                  }
-                }}
+                onClick={() => setDeleteCategory(cat)}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -331,6 +329,14 @@ export default function ProductsPage() {
             shopId={shop.id}
             onDeleted={clearDeletedSelection}
           />
+          {deleteCategory && (
+            <DeleteCategoryDialog
+              shopId={shop.id}
+              category={deleteCategory}
+              onClose={() => setDeleteCategory(null)}
+              onDeleted={clearDeletedSelection}
+            />
+          )}
         </>
       )}
     </div>
